@@ -16,33 +16,30 @@
 </head>
 <body class="select-none">
 
-    <!-- ШАПКА -->
     <header class="sticky top-0 z-50 bg-black/90 backdrop-blur-xl p-4 border-b border-yellow-500/20 flex justify-between items-center">
         <div>
             <h1 class="text-2xl font-black italic text-yellow-500 uppercase tracking-tighter leading-none">BOSS STORE</h1>
             <p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1 italic">Digital Agency</p>
         </div>
         <div class="flex gap-2">
-            <button onclick="tg.openTelegramLink('https://t.me/nmproda')" class="bg-yellow-500/10 px-3 py-2 rounded-xl text-[10px] font-black border border-yellow-500/20 text-yellow-500 uppercase italic tracking-widest">Поддержка</button>
-            <div class="bg-white/10 px-3 py-2 rounded-xl text-xs font-bold border border-white/10">🛒 <span id="cart-count">0</span></div>
+            <!-- ИСПРАВЛЕННАЯ КНОПКА ПОДДЕРЖКИ -->
+            <a href="https://t.me/nmproda" target="_blank" class="bg-yellow-500/10 px-3 py-2 rounded-xl text-[10px] font-black border border-yellow-500/20 text-yellow-500 uppercase italic tracking-widest flex items-center justify-center">Поддержка</a>
+            <div class="bg-white/10 px-3 py-2 rounded-xl text-xs font-bold border border-white/10 flex items-center">🛒 <span id="cart-count" class="ml-1">0</span></div>
         </div>
     </header>
 
-    <!-- КАТЕГОРИИ -->
     <div id="cat-list" class="flex gap-2 overflow-x-auto no-scrollbar p-4 sticky top-[72px] z-40 bg-black/50 backdrop-blur-sm border-b border-white/5"></div>
 
-    <!-- ВИТРИНА -->
     <main class="p-4 pb-48">
         <div id="catalog" class="grid grid-cols-2 gap-4">
-            <p class="col-span-2 text-center py-10 text-gray-500 animate-pulse uppercase text-[10px] font-bold">Загрузка товаров...</p>
+            <p id="loading-text" class="col-span-2 text-center py-10 text-gray-500 animate-pulse uppercase text-[10px] font-bold">Загрузка витрины...</p>
         </div>
     </main>
 
-    <!-- ПАНЕЛЬ КОРЗИНЫ -->
     <div id="checkout-bar" class="fixed bottom-6 left-4 right-4 z-50 glass p-5 rounded-[32px] hidden border-yellow-500/40 shadow-2xl shadow-yellow-500/10">
         <div class="flex justify-between items-center">
             <div>
-                              <p class="text-[10px] text-gray-400 uppercase font-black mb-1">К оплате:</p>
+                                <p class="text-[10px] text-gray-400 uppercase font-black mb-1">К оплате:</p>
                 <p id="total-price" class="text-2xl font-black text-yellow-500 italic leading-none">0 ₽</p>
             </div>
             <button onclick="confirmOrder()" id="main-confirm-btn" class="bg-yellow-500 text-black px-10 py-4 rounded-2xl font-black uppercase text-sm btn-click shadow-lg shadow-yellow-500/20 italic tracking-tighter">Оформить</button>
@@ -53,46 +50,49 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // --- ТВОИ НАСТРОЙКИ ---
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv'; 
         const BOT_TOKEN = '8730430332:AAGff_PCX2059o3EUwG-d9C19uTqcH4sAZ4'; 
         const ADMIN_ID = '7727345054'; 
         const BOT_USER = 'BossStore_robot';
 
         const REKVIZITY = `💰 РЕКВИЗИТЫ ДЛЯ ОПЛАТЫ:\n\n` +
-                          `💳 Т-Банк (Карта): 2200 7019 5529 9232\n` +
-                          `📞 СБП (Т-Банк): +7 950 170 07 87\n` +
+                          `💳 Т-Банк: 2200 7019 5529 9232\n` +
+                          `📞 СБП: +7 950 170 07 87\n` +
                           `🅿️ ЮMoney: 4100119121976236\n\n` +
-                          `✅ После оплаты обязательно пришлите скриншот чека @nmproda`;
+                          `✅ После оплаты пришлите скриншот чека @nmproda`;
 
         let products = [];
         let cart = [];
         let currentCat = 'Все';
 
-        // Загрузка данных напрямую из Google Таблицы
         async function loadData() {
             try {
                 const response = await fetch(CSV_URL);
                 const data = await response.text();
                 
-                // Разбиваем CSV на строки и колонки (учитывая твою структуру)
-                const rows = data.split('\n').slice(1); 
+                // Умный разбор строк
+                const rows = data.split(/\r?\n/).slice(1); 
                 products = rows.map(row => {
-                    // Простая очистка от лишних кавычек, если они есть
-                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); 
+                    // Пробуем разделить запятой или точкой с запятой
+                    let cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    if (cols.length < 3) cols = row.split(';');
+                    
                     return {
-                        Category: cols[0]?.replace(/"/g, '').trim() || 'Разное',
-                        Name: cols[1]?.replace(/"/g, '').trim(),
-                        Price: parseFloat(cols[2]) || 0,
-                        Description: cols[3]?.replace(/"/g, '').trim() || '',
-                                              Image: cols[4]?.replace(/"/g, '').trim() || 'https://via.placeholder.com/150'
+                        Category: (cols[0] || 'Разное').replace(/"/g, '').trim(),
+                        Name: (cols[1] || '').replace(/"/g, '').trim(),
+                        Price: parseFloat((cols[2] || '0').replace(/"/g, '').replace(',', '.')) || 0,
+                        Description: (cols[3] || '').replace(/"/g, '').trim(),
+                                                Image: (cols[4] || '').replace(/"/g, '').trim() || 'https://via.placeholder.com/300'
                     };
                 }).filter(p => p.Name && p.Price > 0);
+
+                if (products.length === 0) throw new Error("No items");
 
                 renderCats();
                 renderItems();
             } catch (e) {
-                document.getElementById('catalog').innerHTML = "<p class='col-span-2 text-center text-red-500'>Ошибка загрузки таблицы!</p>";
+                console.error(e);
+                document.getElementById('loading-text').innerText = "Ошибка загрузки данных из таблицы.";
             }
         }
 
@@ -107,7 +107,7 @@
             currentCat = c;
             renderCats();
             renderItems();
-            tg.HapticFeedback.impactOccurred('light');
+            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
 
         function renderItems() {
@@ -115,81 +115,7 @@
             const filtered = currentCat === 'Все' ? products : products.filter(p => p.Category === currentCat);
             grid.innerHTML = filtered.map((p, i) => `
                 <div class="glass p-3 rounded-[35px] flex flex-col h-full border-white/5 shadow-xl">
-                    <img src="${p.Image}" class="w-full aspect-square object-cover rounded
-                                    <p class="text-[10px] text-gray-400 uppercase font-black mb-1">К оплате:</p>
-                <p id="total-price" class="text-2xl font-black text-yellow-500 italic leading-none">0 ₽</p>
-            </div>
-            <button onclick="confirmOrder()" id="main-confirm-btn" class="bg-yellow-500 text-black px-10 py-4 rounded-2xl font-black uppercase text-sm btn-click shadow-lg shadow-yellow-500/20 italic tracking-tighter">Оформить</button>
-        </div>
-    </div>
-
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        // --- ТВОИ НАСТРОЙКИ ---
-        const CSV_URL = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv'; 
-        const BOT_TOKEN = '8730430332:AAGff_PCX2059o3EUwG-d9C19uTqcH4sAZ4'; 
-        const ADMIN_ID = '7727345054'; 
-        const BOT_USER = 'BossStore_robot';
-
-        const REKVIZITY = `💰 РЕКВИЗИТЫ ДЛЯ ОПЛАТЫ:\n\n` +
-                          `💳 Т-Банк (Карта): 2200 7019 5529 9232\n` +
-                          `📞 СБП (Т-Банк): +7 950 170 07 87\n` +
-                          `🅿️ ЮMoney: 4100119121976236\n\n` +
-                          `✅ После оплаты обязательно пришлите скриншот чека @nmproda`;
-
-        let products = [];
-        let cart = [];
-        let currentCat = 'Все';
-
-        // Загрузка данных напрямую из Google Таблицы
-        async function loadData() {
-            try {
-                const response = await fetch(CSV_URL);
-                const data = await response.text();
-                
-                // Разбиваем CSV на строки и колонки (учитывая твою структуру)
-                const rows = data.split('\n').slice(1); 
-                products = rows.map(row => {
-                    // Простая очистка от лишних кавычек, если они есть
-                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); 
-                    return {
-                        Category: cols[0]?.replace(/"/g, '').trim() || 'Разное',
-                        Name: cols[1]?.replace(/"/g, '').trim(),
-                        Price: parseFloat(cols[2]) || 0,
-                        Description: cols[3]?.replace(/"/g, '').trim() || '',
-                        Image: cols[4]?.replace(/"/g, '').trim() || 'https://via.placeholder.com/150'
-                    };
-                }).filter(p => p.Name && p.Price > 0);
-
-                renderCats();
-                renderItems();
-            } catch (e) {
-                document.getElementById('catalog').innerHTML = "<p class='col-span-2 text-center text-red-500'>Ошибка загрузки таблицы!</p>";
-            }
-        }
-
-        function renderCats() {
-            const list = ['Все', ...new Set(products.map(p => p.Category))];
-            document.getElementById('cat-list').innerHTML = list.map(c => `
-                <button onclick="setCat('${c}')" class="cat-btn bg-white/5 px-5 py-2.5 rounded-2xl whitespace-nowrap text-[10px] uppercase font-black border border-white/5 ${currentCat === c ? 'cat-active' : ''}">${c}</button>
-            `).join('');
-        }
-
-        function setCat(c) {
-            currentCat = c;
-            renderCats();
-            renderItems();
-            tg.HapticFeedback.impactOccurred('light');
-        }
-
-        function renderItems() {
-            const grid = document.getElementById('catalog');
-            const filtered = currentCat === 'Все' ? products : products.filter(p => p.Category === currentCat);
-            grid.innerHTML = filtered.map((p, i) => `
-                <div class="glass p-3 rounded-[35px] flex flex-col h-full border-white/5 shadow-xl">
-                    <img src="${p.Image}" class="w-full aspect-square object-cover rounded-[28px] mb-3 shadow-lg">
+                    <img src="${p.Image}" class="w-full aspect-square object-cover rounded-[28px] mb-3 shadow-lg" onerror="this.src='https://via.placeholder.com/300'">
                     <h3 class="text-[11px] font-black uppercase leading-tight mb-1 tracking-tighter">${p.Name}</h3>
                     <p class="text-[9px] text-gray-500 mb-3 flex-1 italic leading-none">${p.Description}</p>
                     <div class="flex justify-between items-center mt-auto pt-2 border-t border-white/5">
@@ -202,7 +128,7 @@
 
         function addToCart(idx) {
             cart.push(products[idx]);
-            tg.HapticFeedback.impactOccurred('medium');
+            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             updateUI();
         }
 
@@ -227,17 +153,15 @@
             const itemsList = cart.map(item => `• ${item.Name} (${item.Price}₽)`).join('\n');
 
             const adminText = `🚀 НОВЫЙ ЗАКАЗ!\n\n👤 Клиент: ${user.first_name}\n🆔 ID: ${user.id}\n🔗 Ник: @${user.username || 'нет'}\n\n🛒 Товары:\n${itemsList}\n\n💰 Итого: ${total} ₽`;
-            const userText = `✅ Заказ на сумму ${total} ₽ принят!\n\n${REKVIZITY}`;
+            const userText = `✅ Заказ принят!\nСумма: ${total} ₽\n\n${REKVIZITY}`;
 
             try {
-                // Отправка админу
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ chat_id: ADMIN_ID, text: adminText, parse_mode: 'Markdown' })
                 });
 
-                // Отправка клиенту через бота
                 if (user.id) {
                     const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                         method: 'POST',
@@ -246,29 +170,26 @@
                     });
 
                     if (res.ok) {
-                        tg.showAlert("Заказ принят! Реквизиты отправлены ботом @" + BOT_USER + " в личку.");
+                        tg.showAlert("Заказ принят! Реквизиты отправлены в личку.");
                     } else {
                         tg.showPopup({
-                            title: "Нужен запуск бота",
-                            message: "Пожалуйста, перейдите в @" + BOT_USER + " и нажмите 'Старт', чтобы получить реквизиты.",
+                            title: "Нужен старт бота",
+                            message: "Пожалуйста, перейдите в @"+BOT_USER+" и нажмите 'Старт', чтобы получить реквизиты.",
                             buttons: [{id: 'link', type: 'default', text: 'Перейти'}]
-                        }, (id) => { if(id === 'link') tg.openTelegramLink('https://t.me/'+BOT_USER); });
+                        }, (id) => { if(id === 'link') window.open('https://t.me/'+BOT_USER, '_blank'); });
                     }
                 }
-
-                // Очистка корзины
                 cart = [];
                 updateUI();
-
             } catch (e) {
-                tg.showAlert("Ошибка связи. Напишите в поддержку @nmproda");
+                tg.showAlert("Ошибка связи.");
             } finally {
                 btn.disabled = false;
-              btn.innerText = "Оформить";
+                btn.innerText = "Оформить";
             }
         }
 
-        window.onload = loadData;
+        loadData();
     </script>
 </body>
 </html>
