@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BOSS STORE | ULTIMATE</title>
+    <title>BOSS STORE | FINAL LUXE</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
@@ -21,10 +21,10 @@
         }
 
         .glass { 
-            background: rgba(255, 255, 255, 0.04); 
+            background: rgba(255, 255, 255, 0.05); 
             backdrop-filter: blur(15px); 
             -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border: 1px solid rgba(255, 255, 255, 0.12); 
             box-shadow: 0 8px 32px rgba(0,0,0,0.5);
         }
 
@@ -44,7 +44,7 @@
         .cart-badge {
             position: absolute; top: -5px; right: -5px;
             background: #ff0000; color: white; font-size: 9px;
-            width: 17px; height: 17px; border-radius: 50%;
+            width: 18px; height: 18px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             font-weight: bold; border: 1px solid black;
         }
@@ -54,10 +54,10 @@
         .reviews-scroll::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
                 .btn-click:active { transform: scale(0.92); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .modal { background: rgba(0,0,0,0.96); backdrop-filter: blur(20px); }
+        .modal { background: rgba(0,0,0,0.97); backdrop-filter: blur(20px); z-index: 1000; }
 
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes roll { 0% { transform: rotate(0deg); } 100% { transform: rotate(720deg); } }
+        .dice-rolling { animation: roll 1s ease-out; }
     </style>
 </head>
 <body>
@@ -71,16 +71,70 @@
             <h1 class="text-2xl font-black boss-title italic text-yellow-500 leading-none">BOSS STORE</h1>
             <p class="text-[8px] text-gray-400 font-bold uppercase mt-1 italic tracking-widest">Premium Quality</p>
         </div>
-        <div class="flex gap-3 items-center">
+        <div class="flex gap-2 items-center">
             <!-- КОРЗИНА -->
-            <div class="relative btn-click">
+            <div class="relative p-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
                 <div id="cart-count" class="cart-badge hidden">0</div>
             </div>
-            <button onclick="tg.openTelegramLink('https://t.me/nmproda')" class="bg-white/10 px-4 py-2 rounded-xl border border-white/10 btn-click">
-                <span class="text-[10px] font-black uppercase">Support</span>
+            <!-- УДАЧА -->
+            <button id="luck-btn" onclick="openLuckModal()" class="bg-red-600 px-3 py-2 rounded-xl text-[9px] font-black text-white uppercase italic btn-click">🍀 УДАЧА</button>
+            <!-- СВЯЗЬ -->
+            <button onclick="window.location.href='https://t.me/nmproda'" class="bg-white/10 px-3 py-2 rounded-xl border border-white/10 btn-click">
+                <span class="text-[9px] font-black uppercase">СВЯЗЬ</span>
+            </button>
+        </div>
+    </header>
+
+    <div id="cat-list" class="flex gap-2 overflow-x-auto no-scrollbar p-4 sticky top-[72px] z-40 bg-black/20 backdrop-blur-md border-b border-white/5"></div>
+
+    <main class="p-4 pb-10">
+        <div id="catalog" class="grid grid-cols-2 gap-4">
+                        <p id="loading-text" class="col-span-2 text-center py-20 text-yellow-500 font-black animate-pulse text-[10px]">ЗАГРУЗКА...</p>
+        </div>
+
+        <!-- СЕКЦИЯ ОТЗЫВОВ -->
+        <div class="mt-20 px-2 pb-20">
+            <h2 class="text-center text-yellow-500 font-black italic uppercase text-sm mb-6 tracking-widest">— ОТЗЫВЫ КЛИЕНТОВ —</h2>
+            <div class="reviews-scroll space-y-3">
+                <div class="glass p-4 rounded-[25px]"><p class="text-xs italic text-gray-300">"Стопе, это реально годно! Звезды прилетели за минуту."</p><p class="text-[9px] text-yellow-500 font-black mt-2 uppercase">★★★★★ КЛИЕНТ #482</p></div>
+                <div class="glass p-4 rounded-[25px]"><p class="text-xs italic text-gray-300">"Босс, от души за качество. Саппорт @nmproda лучший!"</p><p class="text-[9px] text-yellow-500 font-black mt-2 uppercase">★★★★★ КЛИЕНТ #912</p></div>
+                <div class="glass p-4 rounded-[25px]"><p class="text-xs italic text-gray-300">"Реально класс, всё прилетело быстро. Буду брать еще."</p><p class="text-[9px] text-yellow-500 font-black mt-2 uppercase">★★★★★ КЛИЕНТ #331</p></div>
+                <div class="glass p-4 rounded-[25px]"><p class="text-xs italic text-gray-300">"Сайт пушка, босс красава, всё четко оформили."</p><p class="text-[9px] text-yellow-500 font-black mt-2 uppercase">★★★★★ КЛИЕНТ #505</p></div>
+                <div class="glass p-4 rounded-[25px]"><p class="text-xs italic text-gray        .btn-click:active { transform: scale(0.92); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .modal { background: rgba(0,0,0,0.97); backdrop-filter: blur(20px); z-index: 1000; }
+
+        @keyframes roll { 0% { transform: rotate(0deg); } 100% { transform: rotate(720deg); } }
+        .dice-rolling { animation: roll 1s ease-out; }
+    </style>
+</head>
+<body>
+
+    <div class="marquee-container">
+        <div class="marquee-content">⚡️ ЛУЧШИЕ ЦЕНЫ — МОМЕНТАЛЬНАЯ ВЫДАЧА — БОЛЕЕ 1500 ОТЗЫВОВ — BOSS STORE ⚡️</div>
+    </div>
+
+    <header class="p-5 flex justify-between items-center sticky top-0 z-[51] bg-black/40 backdrop-blur-md">
+        <div>
+            <h1 class="text-2xl font-black boss-title italic text-yellow-500 leading-none">BOSS STORE</h1>
+            <p class="text-[8px] text-gray-400 font-bold uppercase mt-1 italic tracking-widest">Premium Quality</p>
+        </div>
+        <div class="flex gap-2 items-center">
+            <!-- КОРЗИНА -->
+            <div class="relative p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <div id="cart-count" class="cart-badge hidden">0</div>
+            </div>
+            <!-- УДАЧА -->
+            <button id="luck-btn" onclick="openLuckModal()" class="bg-red-600 px-3 py-2 rounded-xl text-[9px] font-black text-white uppercase italic btn-click">🍀 УДАЧА</button>
+            <!-- СВЯЗЬ -->
+            <button onclick="window.location.href='https://t.me/nmproda'" class="bg-white/10 px-3 py-2 rounded-xl border border-white/10 btn-click">
+                <span class="text-[9px] font-black uppercase">СВЯЗЬ</span>
             </button>
         </div>
     </header>
@@ -94,7 +148,7 @@
 
         <!-- СЕКЦИЯ ОТЗЫВОВ -->
         <div class="mt-20 px-2 pb-20">
-                        <h2 class="text-center text-yellow-500 font-black italic uppercase text-sm mb-6 tracking-widest">— ОТЗЫВЫ КЛИЕНТОВ —</h2>
+            <h2 class="text-center text-yellow-500 font-black italic uppercase text-sm mb-6 tracking-widest">— ОТЗЫВЫ КЛИЕНТОВ —</h2>
             <div class="reviews-scroll space-y-3">
                 <div class="glass p-4 rounded-[25px]"><p class="text-xs italic text-gray-300">"Стопе, это реально годно! Звезды прилетели за минуту."</p><p class="text-[9px] text-yellow-500 font-black mt-2 uppercase">★★★★★ КЛИЕНТ #482</p></div>
                 <div class="glass p-4 rounded-[25px]"><p class="text-xs italic text-gray-300">"Босс, от души за качество. Саппорт @nmproda лучший!"</p><p class="text-[9px] text-yellow-500 font-black mt-2 uppercase">★★★★★ КЛИЕНТ #912</p></div>
@@ -126,20 +180,31 @@
     <div id="checkout-bar" class="fixed bottom-8 left-4 right-4 z-[60] glass p-6 rounded-[35px] hidden border-yellow-500/30">
         <div class="flex justify-between items-center w-full">
             <div>
-                <p class="text-[9px] text-gray-400 uppercase font-black">Итого:</p>
-                <p id="total-price" class="text-2xl font-black text-white italic">0 ₽</p>
+                <p class="text-[9px] text-gray-500 uppercase font-black tracking-widest">Итого:</p>
+                <p id="total-price" class="text-2xl font-black text-white italic tracking-tighter">0 ₽</p>
             </div>
             <button onclick="confirmOrder()" id="main-confirm-btn" class="bg-yellow-500 text-black px-10 py-4 rounded-[22px] font-black uppercase text-xs italic btn-click">Оформить</button>
         </div>
     </div>
 
+    <!-- ОКНО УДАЧИ -->
+    <div id="luck-modal" class="fixed inset-0 hidden flex items-center justify-center p-8">
+        <div class="bg-zinc-900 border border-white/10 w-full rounded-[45px] p-10 text-center shadow-2xl">
+            <h2 class="text-2xl font-black uppercase italic text-yellow-500 mb-2">ТВОЙ ШАНС</h2>
+            <p class="text-[10px] text-gray-500 mb-10 uppercase font-bold">Выпадет 1-3 — дарим скидку!</p>
+            <div id="dice" class="text-8xl mb-12 transition-all">🎲</div>
+            <button id="roll-btn" onclick="playLuck()" class="w-full bg-white text-black font-black py-5 rounded-[25px] uppercase italic btn-click text-lg">БРОСИТЬ</button>
+            <button onclick="closeLuckModal()" class="mt-8 text-gray-600 text-[10px] uppercase font-black">ЗАКРЫТЬ</button>
+        </div>
+    </div>
+
     <!-- ОКНО ОПЛАТЫ -->
-    <div id="pay-modal" class="fixed inset-0 z-[110] modal hidden flex items-center justify-center p-6">
+    <div id="pay-modal" class="fixed inset-0 hidden flex items-center justify-center p-6">
         <div class="bg-zinc-900 border border-yellow-500/30 w-full rounded-[45px] p-8 text-center shadow-2xl">
-            <h2 class="text-2xl font-black uppercase italic mb-2 text-yellow-500">Заказ готов!</h2>
+            <h2 class="text-2xl font-black uppercase italic mb-2 text-yellow-500">ЗАКАЗ ПРИНЯТ</h2>
             <div class="space-y-4 bg-black/60 p-6 rounded-[30px] border border-white/5 text-left mb-8 shadow-inner">
                 <div onclick="copyText('2200701955299232')" class="btn-click">
-                    <p class="text-[8px] text-gray-500 font-black uppercase mb-1">💳 Карта Т-Банк</p>
+                    <p class="text-[8px] text-gray-500 font-black uppercase mb-1">💳 Т-Банк</p>
                     <p class="text-sm font-mono text-white font-bold tracking-tighter">2200 7019 5529 9232</p>
                 </div>
                 <div onclick="copyText('+79501700787')" class="btn-click">
@@ -151,8 +216,8 @@
                     <p class="text-sm font-mono text-white font-bold tracking-tighter">4100119121976236</p>
                 </div>
             </div>
-            <p class="text-[10px] text-gray-400 mb-8 italic">Скрин чека боту или: <span class="text-yellow-500 font-bold">@nmproda</span></p>
-            <button onclick="location.reload()" class="w-full bg-yellow-500 text-black font-black py-5 rounded-[25px] uppercase italic btn-click shadow-xl shadow-yellow-500/20">Я оплатил(а)</button>
+            <p class="text-[10px] text-gray-400 mb-8 italic">Чек в поддержку: <span class="text-yellow-500 font-bold">@nmproda</span></p>
+            <button onclick="location.reload()" class="w-full bg-yellow-500 text-black font-black py-5 rounded-[25px] uppercase italic btn-click">ОПЛАЧЕНО</button>
         </div>
     </div>
 
@@ -167,6 +232,7 @@
         let products = []; let cart = []; let currentCat = 'Все';
 
         async function loadData() {
+            if (localStorage.getItem('luck_played')) document.getElementById('luck-btn').style.display = 'none';
             try {
                 const r = await fetch(CSV_URL);
                 const d = await r.text();
@@ -189,17 +255,17 @@
         function renderCats() {
             const list = ['Все', ...new Set(products.map(p => p.Category))];
             document.getElementById('cat-list').innerHTML = list.map(c => `
-                <button onclick="setCat('${c}')" class="cat-btn glass px-6 py-2.5 rounded-xl whitespace-nowrap text-[10px] uppercase font-black border border-white/5 transition-all ${currentCat === c ? 'cat-active' : ''}">${c}</button>
+                <button onclick="setCat('${c}')" class="cat-btn glass px-6 py-2.5 rounded-xl whitespace-nowrap text-[10px] uppercase font-black border border-white/5 ${currentCat === c ? 'cat-active' : ''}">${c}</button>
             `).join('');
         }
 
-        function setCat(c) { currentCat = c; renderCats(); renderItems(); if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); }
+        function setCat(c) { currentCat = c; renderCats(); renderItems(); }
 
         function renderItems() {
             const grid = document.getElementById('catalog');
             const filtered = currentCat === 'Все' ? products : products.filter(p => p.Category === currentCat);
             grid.innerHTML = filtered.map((p, i) => `
-                <div class="glass p-3 rounded-[35px] flex flex-col h-full relative fade-in" style="animation-delay: ${i*0.05}s">
+                <div class="glass p-3 rounded-[35px] flex flex-col h-full relative">
                     <img src="${p.Image}" class="w-full aspect-square object-cover rounded-[28px] mb-3 shadow-lg" onerror="this.src='https://via.placeholder.com/400'">
                     <h3 class="text-[10px] font-black uppercase text-yellow-500 mb-1 px-1 tracking-tighter">${p.Name}</h3>
                     <p class="text-[8px] text-gray-400 mb-3 flex-1 px-1 leading-tight italic">${p.Description}</p>
@@ -222,25 +288,23 @@
             document.getElementById('total-price').innerText = total + ' ₽';
             const count = cart.length;
             const badge = document.getElementById('cart-count');
-            if(count > 0) { badge.innerText = count; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
+            if(count > 0) { badge.innerText = count; badge.classList.remove('hidden'); }
             const bar = document.getElementById('checkout-bar');
-            if (count > 0) bar.classList.remove('hidden'); else bar.classList.add('hidden');
+            if (count > 0) bar.classList.remove('hidden');
         }
 
         function copyText(t) {
             navigator.clipboard.writeText(t);
-            tg.showAlert("Скопировано!");
+            tg.showAlert("СКОПИРОВАНО!");
         }
 
         async function confirmOrder() {
             const btn = document.getElementById('main-confirm-btn');
             const total = cart.reduce((s, p) => s + p.Price, 0);
-            btn.innerText = "СЕКУНДУ...";
-            const user = tg.initDataUnsafe.user || { first_name: 'Покупатель', id: '?', username: '' };
-            const items = cart.map
-            (i => `• ${i.Name} (${i.Price}₽)`).join('\n');
+            btn.innerText = "WAIT...";
+            const user = tg.initDataUnsafe.user || { first_name: 'Покупатель', id: '7727345054', username: '' };
+            const items = cart.map(i => `• ${i.Name} (${i.Price}₽)`).join('\n');
             
-            // ССЫЛКИ НА ЛЮДЕЙ В МАРКДАУНЕ
             const adminText = `🚀 *НОВЫЙ ЗАКАЗ!*\n\n` +
                                `👤 Клиент: [${user.first_name}](tg://user?id=${user.id})\n` +
                                `🆔 ID: [${user.id}](tg://user?id=${user.id})\n` +
@@ -258,6 +322,28 @@
                 cart = []; updateUI();
             } catch (e) { tg.showAlert("Ошибка!"); }
             btn.innerText = "Оформить";
+        }
+
+        function openLuckModal() { document.getElementById('luck-modal').classList.remove('hidden'); }
+        function closeLuckModal() { document.getElementById('luck-modal').classList.add('hidden'); }
+
+        function playLuck() {
+            const dice = document.getElementById('dice');
+            const btn = document.getElementById('roll-btn');
+            btn.disabled = true;
+            dice.classList.add('dice-rolling');
+            const result = Math.floor(Math.random() * 3) + 4; 
+            const icons = {4: "4️⃣", 5: "5️⃣", 6: "6️⃣"};
+            setTimeout(() => {
+                dice.classList.remove('dice-rolling');
+                dice.innerText = icons[result];
+                localStorage.setItem('luck_played', 'true');
+                setTimeout(() => {
+                    tg.showAlert("ВЫПАЛО " + result + "! Попробуй в следующий раз!");
+                    closeLuckModal();
+                    document.getElementById('luck-btn').style.display = 'none';
+                }, 1000);
+            }, 1000);
         }
 
         loadData();
