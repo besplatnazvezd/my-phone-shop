@@ -3,140 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BOSS STORE | LUXE DIGITAL</title>
+    <title>BOSS STORE | LUXE</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap" rel="stylesheet">
     <style>
-        :root { --gold: #fbbf24; --gold-glow: rgba(251, 191, 36, 0.5); }
-        body { background: #050505; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        body { background: #000; color: white; font-family: sans-serif; overflow-x: hidden; margin: 0; }
         
-        /* Гравитация неонового фона */
-        body::before {
-            content: ""; position: fixed; top: -10%; left: -10%; width: 40%; height: 40%;
-            background: radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 70%);
-            z-index: -1; filter: blur(50px);
+        /* ИСПРАВЛЕННАЯ БЕГУЩАЯ СТРОКА (ОДНА ЛИНИЯ) */
+        .marquee-container { 
+            background: #fbbf24; 
+            color: black; 
+            padding: 8px 0; 
+            overflow: hidden; 
+            white-space: nowrap; 
+            width: 100%;
+        }
+        .marquee-content {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 15s linear infinite;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
         }
 
-        .boss-title { font-family: 'Montserrat', sans-serif; letter-spacing: -0.05em; text-shadow: 0 0 20px var(--gold-glow); }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.07); }
+        .boss-title { font-family: 'Montserrat', sans-serif; text-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); }
         
-        /* КАТЕГОРИИ КНОПКИ */
         .cat-active { 
-            background: linear-gradient(135deg, #fbbf24 0%, #ff9800 100%) !important; 
-            color: #000 !important; font-weight: 900; 
-            box-shadow: 0 0 25px var(--gold-glow);
-            transform: scale(1.05);
+            background: #fbbf24 !important; 
+            color: #000 !important; 
+            font-weight: 900; 
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
         }
 
-        /* ГРАНДИОЗНЫЕ БЕЙДЖИ */
+        /* ГРАНДИОЗНЫЙ БЕЙДЖ */
         .badge-premium {
-            position: absolute; top: 12px; left: -5px; z-index: 10;
+            position: absolute; top: 10px; left: -2px; z-index: 10;
             background: linear-gradient(90deg, #ef4444, #f59e0b);
-            color: white; font-size: 10px; font-weight: 900; padding: 4px 12px;
-            border-radius: 0 50px 50px 0; box-shadow: 5px 5px 15px rgba(239, 68, 68, 0.4);
-            text-transform: uppercase; letter-spacing: 1px;
-            animation: pulse-glow 2s infinite;
+            color: white; font-size: 9px; font-weight: 900; padding: 4px 10px;
+            border-radius: 0 10px 10px 0; box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+            text-transform: uppercase;
         }
 
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.4); }
-            50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
-            100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.4); }
+        @keyframes roll {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(360deg) scale(1.2); }
+            100% { transform: rotate(720deg) scale(1); }
         }
-
-        .btn-main {
-            background: linear-gradient(135deg, #fbbf24 0%, #ff9800 100%);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-                .btn-main:active { transform: scale(0.9); box-shadow: 0 0 5px var(--gold); }
-
-        .marquee { background: linear-gradient(90deg, #fbbf24, #ff9800); color: black; font-weight: 900; font-size: 11px; padding: 6px 0; }
-        .marquee div { display: inline-block; padding-left: 100%; animation: marquee 20s linear infinite; }
-        @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
-
-        .price-tag { font-family: 'Montserrat', sans-serif; font-style: italic; background: linear-gradient(to bottom, #fff 40%, #fbbf24 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .dice-rolling { animation: roll 1s ease-out; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .btn-click:active { transform: scale(0.95); }
+                .modal { background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); }
     </style>
 </head>
-<body class="select-none">
+<body>
 
-    <div class="marquee uppercase">
-        <div>💎 ГАРАНТИЯ ЛУЧШЕЙ ЦЕНЫ 💎 МОМЕНТАЛЬНАЯ ВЫДАЧА ТОВАРА 💎 БОЛЕЕ 1500 ОТЗЫВОВ 💎 ПОДДЕРЖКА 24/7 💎</div>
+    <!-- ПОЧИНЕННАЯ СТРОКА -->
+    <div class="marquee-container">
+        <div class="marquee-content">
+            ⚡️ ГАРАНТИЯ ЛУЧШЕЙ ЦЕНЫ — МОМЕНТАЛЬНАЯ ВЫДАЧА ТОВАРА — БОЛЕЕ 1500 ОТЗЫВОВ — ПОДДЕРЖКА 24/7 — ЛУЧШИЕ ТОВАРЫ ТОЛЬКО У НАС! ⚡️
+        </div>
     </div>
 
-    <header class="sticky top-0 z-50 bg-black/60 backdrop-blur-2xl p-5 border-b border-white/5 flex justify-between items-center">
+    <header class="p-5 flex justify-between items-center border-b border-white/5">
         <div>
-            <h1 class="text-3xl font-black boss-title italic text-yellow-500 leading-none">BOSS STORE</h1>
-            <p class="text-[9px] text-gray-500 font-bold uppercase tracking-[0.4em] mt-1 italic">Premium Solutions</p>
+            <h1 class="text-2xl font-black boss-title italic text-yellow-500 leading-none">BOSS STORE</h1>
+            <p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Premium Solutions</p>
         </div>
         <div class="flex gap-2">
-            <button id="luck-btn" onclick="openLuckModal()" class="bg-red-600 px-4 py-2 rounded-2xl text-[10px] font-black text-white uppercase border border-red-400/40 shadow-lg shadow-red-600/20">🍀 Удача</button>
-            <a href="https://t.me/nmproda" class="bg-white/5 p-3 rounded-2xl border border-white/10"><img src="https://cdn-icons-png.flaticon.com/512/2504/2504941.png" class="w-4 h-4 invert"></a>
+            <button id="luck-btn" onclick="openLuckModal()" class="bg-red-600 px-3 py-2 rounded-xl text-[10px] font-black text-white uppercase italic">🍀 Удача</button>
+            <a href="https://t.me/nmproda" class="bg-white/5 p-2.5 rounded-xl border border-white/10 flex items-center">
+                <img src="https://cdn-icons-png.flaticon.com/512/2504/2504941.png" class="w-4 h-4 invert">
+            </a>
         </div>
     </header>
 
-    <div id="cat-list" class="flex gap-3 overflow-x-auto no-scrollbar p-5 sticky top-[88px] z-40 bg-black/20 backdrop-blur-lg"></div>
+    <div id="cat-list" class="flex gap-2 overflow-x-auto no-scrollbar p-4 sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-white/5"></div>
 
-    <main class="p-5 pb-32">
-        <div id="catalog" class="grid grid-cols-2 gap-5">
-            <p id="loading-text" class="col-span-2 text-center py-20 text-yellow-500 font-black animate-pulse">ЗАГРУЖАЕМ ЛЮКС...</p>
-        </div>
-
-        <div class="mt-20">
-                        <h2 class="text-center text-yellow-500 font-black italic uppercase text-lg mb-8 tracking-tighter">Почему выбирают нас?</h2>
-            <div class="grid grid-cols-1 gap-4">
-                <div class="glass p-6 rounded-[35px] border-l-4 border-l-yellow-500">
-                    <h4 class="font-black text-sm uppercase mb-1">Скорость света</h4>
-                    <p class="text-xs text-gray-400 italic">Среднее время обработки заказа — 4.5 минуты.</p>
-                </div>
-                <div class="glass p-6 rounded-[35px] border-l-4 border-l-yellow-500">
-                    <h4 class="font-black text-sm uppercase mb-1">Честные отзывы</h4>
-                    <p class="text-xs text-gray-400 italic">Нам доверяют тысячи клиентов по всему СНГ.</p>
-                </div>
-            </div>
+    <main class="p-4 pb-32">
+        <div id="catalog" class="grid grid-cols-2 gap-4">
+            <p id="loading-text" class="col-span-2 text-center py-20 text-gray-500 font-bold uppercase animate-pulse text-xs">Загрузка витрины...</p>
         </div>
     </main>
 
     <!-- КОРЗИНА -->
-    <div id="checkout-bar" class="fixed bottom-8 left-5 right-5 z-[60] glass p-6 rounded-[40px] hidden border-yellow-500/50 shadow-[0_20px_50px_rgba(251,191,36,0.2)]">
-        <div class="flex justify-between items-center w-full">
+    <div id="checkout-bar" class="fixed bottom-6 left-4 right-4 z-[60] glass p-5 rounded-[30px] hidden border-yellow-500/30">
+        <div class="flex justify-between items-center">
             <div>
-                <p class="text-[10px] text-gray-400 uppercase font-black tracking-widest">К оплате:</p>
-                <p id="total-price" class="text-3xl font-black text-white italic">0 ₽</p>
+                <p class="text-[10px] text-gray-400 uppercase font-bold">Итого:</p>
+                <p id="total-price" class="text-2xl font-black text-yellow-500 italic">0 ₽</p>
             </div>
-            <button onclick="confirmOrder()" id="main-confirm-btn" class="btn-main text-black px-12 py-5 rounded-3xl font-black uppercase text-sm italic tracking-tighter shadow-xl">Оформить</button>
+            <button onclick="confirmOrder()" id="main-confirm-btn" class="bg-yellow-500 text-black px-10 py-4 rounded-2xl font-black uppercase text-sm italic btn-click">Оформить</button>
         </div>
     </div>
-    <!-- МОДАЛКА ОПЛАТЫ (ЭЛИТНАЯ) -->
-    <div id="pay-modal" class="fixed inset-0 z-[110] modal hidden flex items-center justify-center p-6">
-        <div class="bg-zinc-900 border border-yellow-500/40 w-full rounded-[50px] p-10 text-center shadow-2xl relative overflow-hidden">
-            <div class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-500/10 rounded-full blur-3xl"></div>
-            <h2 class="text-3xl font-black uppercase italic mb-2 tracking-tighter text-yellow-500">Почти ваше!</h2>
-            <p class="text-xs text-gray-400 mb-8 uppercase font-bold tracking-widest leading-relaxed">Оплатите заказ, чтобы бот выслал данные</p>
-            
-            <div class="space-y-5 bg-black/60 p-8 rounded-[40px] border border-white/5 text-left mb-8 shadow-inner">
-                <div onclick="copyText('2200701955299232')">
-                    <p class="text-[9px] uppercase text-gray-500 font-black mb-1">💳 Карта Т-Банк</p>
-                    <p class="text-lg font-mono text-white select-all font-bold tracking-tighter">2200 7019 5529 9232</p>
-                </div>
-                <div onclick="copyText('+79501700787')">
-                    <p class="text-[9px] uppercase text-gray-500 font-black mb-1">📞 СБП (Т-Банк)</p>
-                    <p class="text-lg font-mono text-white select-all font-bold tracking-tighter">+7 950 170 07 87</p>
-                </div>
-            </div>
-
-            <p class="text-[11px] text-gray-400 mb-8 italic px-4">Скриншот чека боту или в саппорт: <br> <span class="text-yellow-500 font-bold text-base not-italic">@nmproda</span></p>
-            <button onclick="location.reload()" class="w-full btn-main text-black font-black py-6 rounded-[30px] uppercase italic text-lg shadow-2xl">Я ОПЛАТИЛ(А)</button>
-        </div>
-    </div>
-
-    <!-- МОДАЛКА УДАЧИ -->
+        <!-- МОДАЛКА УДАЧИ -->
     <div id="luck-modal" class="fixed inset-0 z-[100] modal hidden flex items-center justify-center p-8">
-        <div class="bg-zinc-900 border border-white/10 w-full rounded-[50px] p-10 text-center">
-            <h2 class="text-3xl font-black uppercase italic text-yellow-500 mb-4">Твой Шанс!</h2>
-            <div id="dice" class="text-8xl mb-10 transition-all duration-500 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">🎲</div>
-            <button id="roll-btn" onclick="playLuck()" class="w-full bg-white text-black font-black py-6 rounded-[30px] uppercase italic text-lg btn-click shadow-2xl">Бросить кубик</button>
-            <button onclick="closeLuckModal()" class="mt-8 text-gray-600 text-xs uppercase font-black tracking-widest">Назад к покупкам</button>
+        <div class="bg-zinc-900 border border-white/10 w-full rounded-[40px] p-10 text-center">
+            <h2 class="text-2xl font-black uppercase italic text-yellow-500 mb-2">Твой шанс!</h2>
+            <p class="text-[10px] text-gray-500 uppercase mb-8">Выпадет 1-3 — дарим скидку!</p>
+            <div id="dice" class="text-7xl mb-10 transition-all duration-500">🎲</div>
+            <button id="roll-btn" onclick="playLuck()" class="w-full bg-white text-black font-black py-5 rounded-2xl uppercase italic btn-click">Бросить кубик</button>
+            <button onclick="closeLuckModal()" class="mt-6 text-gray-600 text-[10px] uppercase font-black">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ОПЛАТЫ -->
+    <div id="pay-modal" class="fixed inset-0 z-[110] modal hidden flex items-center justify-center p-6">
+        <div class="bg-zinc-900 border border-yellow-500/30 w-full rounded-[40px] p-8 text-center shadow-2xl">
+            <h2 class="text-2xl font-black uppercase italic mb-2 tracking-tighter text-yellow-500">Заказ принят!</h2>
+            <p class="text-[10px] text-gray-400 mb-8 uppercase font-bold">Оплатите по реквизитам:</p>
+            
+            <div class="space-y-4 bg-black/50 p-6 rounded-[30px] border border-white/5 text-left mb-8">
+                <div><p class="text-[8px] uppercase text-gray-500 font-black">Карта Т-Банк</p><p class="text-sm font-mono text-white font-bold tracking-tighter">2200 7019 5529 9232</p></div>
+                <div><p class="text-[8px] uppercase text-gray-500 font-black">СБП (Т-Банк)</p><p class="text-sm font-mono text-white font-bold tracking-tighter">+7 950 170 07 87</p></div>
+            </div>
+
+            <p class="text-[10px] text-gray-400 mb-8 italic text-center">Скриншот чека в поддержку: <span class="text-yellow-500 font-bold">@nmproda</span></p>
+            <button onclick="location.reload()" class="w-full bg-yellow-500 text-black font-black py-5 rounded-2xl uppercase italic btn-click">Оплачено</button>
         </div>
     </div>
 
@@ -154,51 +144,57 @@
 
         async function loadData() {
             if (localStorage.getItem('luck_played')) document.getElementById('luck-btn').style.display = 'none';
+
             try {
                 const response = await fetch(CSV_URL);
                 const data = await response.text();
                 const rows = data.split(/\r?\n/).slice(1); 
                 products = rows.map(row => {
+                    // Умный разделитель (запятая или точка с запятой)
                     let cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                     if (cols.length < 3) cols = row.split(';');
+                    
                     return {
                         Category: (cols[0] || 'Разное').replace(/"/g, '').trim(),
                         Name: (cols[1] || '').replace(/"/g, '').trim(),
                         Price: parseFloat((cols[2] || '0').replace(/"/g, '').replace(',', '.')) || 0,
                         Description: (cols[3] || '').replace(/"/g, '').trim(),
-                        Image: (cols[4] || '').replace(/"/g, '').trim() || 'https://via.placeholder.com/500'
+                        Image: (cols[4] || '').replace(/"/g, '').trim() || 'https://via.placeholder.com/400'
                     };
                 }).filter(p => p.Name && p.Price > 0);
-                renderCats();
-                renderItems();
+
+                if(products.length > 0) {
+                    renderCats();
+                    renderItems();
+                } else {
+                    document.getElementById('loading-text').innerText = "Таблица пуста.";
+                }
             } catch (e) {
-                document.getElementById('loading-text').innerText = "ОШИБКА ТАБЛИЦЫ";
+                document.getElementById('loading-text').innerText = "Ошибка загрузки.";
             }
         }
 
         function renderCats() {
             const list = ['Все', ...new Set(products.map(p => p.Category))];
             document.getElementById('cat-list').innerHTML = list.map(c => `
-                <button onclick="setCat('${c}')" class="cat-btn bg-white/5 px-8 py-4 rounded-[25px] whitespace-nowrap text-xs uppercase font-black border border-white/5 transition-all ${currentCat === c ? 'cat-active' : ''}">${c}</button>
+                <button onclick="setCat('${c}')" class="cat-btn bg-white/5 px-6 py-2.5 rounded-2xl whitespace-nowrap text-[10px] uppercase font-black border border-white/5 ${currentCat === c ? 'cat-active' : ''}">${c}</button>
             `).join('');
         }
 
-        function setCat(c) { currentCat = c; renderCats(); renderItems(); if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); }
+        function setCat(c) { currentCat = c; renderCats(); renderItems(); }
 
         function renderItems() {
             const grid = document.getElementById('catalog');
             const filtered = currentCat === 'Все' ? products : products.filter(p => p.Category === currentCat);
             grid.innerHTML = filtered.map((p, i) => `
-                <div class="glass p-4 rounded-[45px] flex flex-col h-full relative overflow-hidden shadow-2xl">
-                    ${p.Price > 499 ? '<div class="badge-premium">🔥 ХИТ ПРОДАЖ</div>' : ''}
-                    <div class="relative mb-4">
-                        <img src="${p.Image}" class="w-full aspect-square object-cover rounded-[35px] shadow-lg" onerror="this.src='https://via.placeholder.com/500'">
-                    </div>
-                    <h3 class="text-xs font-black uppercase leading-tight mb-2 tracking-tighter italic text-yellow-500 px-1">${p.Name}</h3>
-                    <p class="text-[9px] text-gray-500 mb-4 flex-1 italic leading-tight px-1">${p.Description}</p>
-                    <div class="flex justify-between items-center mt-auto bg-black/40 p-2 rounded-3xl border border-white/5">
-                        <span class="price-tag font-black text-lg px-2">${p.Price} ₽</span>
-                        <button onclick="addToCart(${products.indexOf(p)})" class="btn-main text-black w-10 h-10 rounded-2xl font-black flex items-center justify-center shadow-lg text-2xl">+</button>
+                <div class="glass p-3 rounded-[35px] flex flex-col h-full relative overflow-hidden">
+                    ${p.Price > 499 ? '<div class="badge-premium">🔥 ХИТ</div>' :''}
+                    <img src="${p.Image}" class="w-full aspect-square object-cover rounded-[25px] mb-3 shadow-lg" onerror="this.src='https://via.placeholder.com/400'">
+                    <h3 class="text-[10px] font-black uppercase leading-tight mb-1 tracking-tighter text-yellow-500">${p.Name}</h3>
+                    <p class="text-[9px] text-gray-500 mb-3 flex-1 italic leading-tight">${p.Description}</p>
+                    <div class="flex justify-between items-center mt-auto pt-2 border-t border-white/5">
+                        <span class="text-white font-black text-sm italic">${p.Price} ₽</span>
+                        <button onclick="addToCart(${products.indexOf(p)})" class="bg-white text-black w-8 h-8 rounded-xl font-black btn-click text-xl">+</button>
                     </div>
                 </div>
             `).join('');
@@ -214,42 +210,43 @@
             const total = cart.reduce((s, p) => s + p.Price, 0);
             document.getElementById('total-price').innerText = total + ' ₽';
             const bar = document.getElementById('checkout-bar');
-            if (cart.length > 0) { bar.classList.remove('hidden'); bar.classList.add('flex'); }
-            else { bar.classList.add('hidden'); bar.classList.remove('flex'); }
+            if (cart.length > 0) bar.classList.remove('hidden');
+            else bar.classList.add('hidden');
         }
 
         async function confirmOrder() {
             const btn = document.getElementById('main-confirm-btn');
             const total = cart.reduce((s, p) => s + p.Price, 0);
-            btn.innerText = "WAIT...";
-            const user = tg.initDataUnsafe.user || { first_name: 'Покупатель', id: '?', username: '' };
-            const itemsList = cart.map(item => `• ${item\ 
-.Name} (${item.Price}₽)`).join('\n');
-            const adminText = `🚀 VIP ЗАКАЗ!\n\n👤 Клиент: ${user.first_name}\n🆔 ID: ${user.id}\n🔗 Ник: @${user.username || 'нет'}\n\n🛒 Товары:\n${itemsList}\n\n💰 Итого: ${total} ₽`;
+            btn.innerText = "...";
+            const user = tg.initDataUnsafe.user || { first_name: 'Клиент', id: '?', username: '' };
+            const itemsList = cart.map(item => `• ${item.Name} (${item.Price}₽)`).join('\n');
+            const text = `🚀 ЗАКАЗ!\n👤 ${user.first_name}\n🆔 ${user.id}\n🛒 Товары:\n${itemsList}\n💰 Итого: ${total} ₽`;
 
             try {
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: ADMIN_ID, text: adminText, parse_mode: 'Markdown' })
+                    body: JSON.stringify({ chat_id: ADMIN_ID, text: text })
                 });
                 document.getElementById('pay-modal').classList.remove('hidden');
                 cart = []; updateUI();
-            } catch (e) { tg.showAlert("ОШИБКА"); }
-            btn.innerText = "ОФОРМИТЬ";
+            } catch (e) {}
+            btn.innerText = "Оформить";
         }
 
         function playLuck() {
             const dice = document.getElementById('dice');
             const btn = document.getElementById('roll-btn');
-            btn.disabled = true; dice.classList.add('dice-rolling');
+            btn.disabled = true;
+            dice.classList.add('dice-rolling');
             const result = Math.floor(Math.random() * 3) + 4; 
             const icons = {4: "4️⃣", 5: "5️⃣", 6: "6️⃣"};
             setTimeout(() => {
+                dice.classList.remove('dice-rolling');
                 dice.innerText = icons[result];
                 localStorage.setItem('luck_played', 'true');
                 setTimeout(() => {
-                    tg.showAlert("ВЫПАЛО " + result + "! Скидка не выпала, но товар уже в корзине!");
+                    tg.showAlert("Выпало " + result + "! Попробуйте в другой раз!");
                     document.getElementById('luck-modal').classList.add('hidden');
                     document.getElementById('luck-btn').style.display = 'none';
                 }, 1000);
@@ -258,7 +255,7 @@
 
         function openLuckModal() { document.getElementById('luck-modal').classList.remove('hidden'); }
         function closeLuckModal() { document.getElementById('luck-modal').classList.add('hidden'); }
-        
+
         loadData();
     </script>
 </body>
