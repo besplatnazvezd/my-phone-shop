@@ -244,14 +244,21 @@
             tg.showAlert("СКОПИРОВАНО!");
         }
 
-        async function confirmOrder() {
+                async function confirmOrder() {
             const btn = document.getElementById('main-confirm-btn');
             const total = cart.reduce((s, p) => s + p.Price, 0);
             btn.innerText = "WAIT...";
-            const user = tg.initDataUnsafe.user || { first_name: 'Покупатель', id: '7727345054', username: '' };
+            
+            // ПРОВЕРКА ДАННЫХ: берем данные того, кто нажал, или пишем "ТЕСТ", если данных нет
+            const userData = tg.initDataUnsafe.user;
+            const userName = userData ? userData.first_name : "ПОКУПАТЕЛЬ (ТЕСТ)";
+            const userId = userData ? userData.id : "ID_НЕ_ПЕРЕДАН";
+            const userLink = userData ? `tg://user?id=${userId}` : "#";
+
             const items = cart.map(i => `• ${i.Name} (${i.Price}₽)`).join('\n');
             
-            const adminText = `🚀 *НОВЫЙ ЗАКАЗ!*\n\n👤 Клиент: [${user.first_name}](tg://user?id=${user.id})\n🆔 ID: [${user.id}](tg://user?id=${user.id})\n🛒 Товары:\n${items}\n💰 Итого: *${total} ₽*`;
+            // Формируем текст для тебя
+            const adminText = `🚀 *НОВЫЙ ЗАКАЗ!*\n\n👤 Клиент: [${userName}](${userLink})\n🆔 ID: \`${userId}\`\n🛒 Товары:\n${items}\n💰 Итого: *${total} ₽*`;
 
             try {
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -261,9 +268,12 @@
                 });
                 document.getElementById('pay-modal').classList.remove('hidden');
                 cart = []; updateUI();
-            } catch (e) { tg.showAlert("Ошибка!"); }
+            } catch (e) { 
+                tg.showAlert("Ошибка отправки! Проверь интернет."); 
+            }
             btn.innerText = "Оформить";
-        }
+                }
+        
 
         function openLuckModal() { document.getElementById('luck-modal').classList.remove('hidden'); }
         function closeLuckModal() { document.getElementById('luck-modal').classList.add('hidden'); }
