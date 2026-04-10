@@ -237,4 +237,31 @@
             setTimeout(() => {
                 const res = Math.floor(Math.random() * 3) + 4; // Только 4, 5, 6
                 dice.innerText = res;
-                dice.classList.remove('dice-anim');
+                dice.classList.remove('dice-anim');tg.showAlert("Выпало " + res + "! Это Boss-удача! В следующий раз обязательно повезет на скидку!");
+                btn.disabled = false;
+            }, 600);
+        }
+
+        async function confirmOrder() {
+            const total = cart.reduce((s, p) => s + p.Price, 0);
+            const user = tg.initDataUnsafe.user || {first_name: "BOSS CLIENT", id: "0"};
+            const counts = {};
+            cart.forEach(p => counts[p.Name] = (counts[p.Name] || 0) + 1);
+            const itemsList = Object.entries(counts).map(([name, count]) => `• <b>${name}</b> x${count}`).join('\n');
+            const text = `🚀 <b>НОВЫЙ ЗАКАЗ</b>\n\n👤 Клиент: <b>${user.first_name}</b>\n🆔 ID: <code>${user.id}</code>\n\n🛒 Товары:\n${itemsList}\n\n💰 Итого: <b>${total} ₽</b>`;
+            
+            try {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ chat_id: ADMIN_ID, text: text, parse_mode: 'HTML' })
+                });
+                document.getElementById('pay-modal').classList.remove('hidden');
+                cart = []; updateUI();
+            } catch (e) { tg.showAlert("Ошибка!"); }
+        }
+
+        init();
+    </script>
+</body>
+</html>
