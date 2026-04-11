@@ -114,15 +114,11 @@
         ];
 
         async function init() {
-            const startParam = tg.initDataUnsafe.start_param;
-            if (startParam) {
-                const user = tg.initDataUnsafe.user || {id: 0, first_name: 'Boss Client'};
-                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ chat_id: ADMIN_ID, text: `🔗 <b>РЕФЕРАЛ</b>\nКлиент <b>${user.first_name}</b> зашел от <code>${startParam}</code>`, parse_mode: 'HTML' })
-                });
-            }
-            loadData();
+    const startParam = tg.initDataUnsafe.start_param;
+    if (startParam) {
+        // ... тут ваш код отправки сообщения админу ...
+    }
+    loadData(); // <-- ТЕПЕРЬ ОНО ТУТ (товары будут грузиться всегда)
         }
 
         async function loadData() {
@@ -350,14 +346,9 @@ function sendToAdmin() {
             alert('Ошибка отправки. Попробуй еще раз или напиши админу вручную.');
             console.error('Fetch error:', error);
         });
-    // Конец функции sendToAdmin
-    }).catch(error => {
-        alert('Ошибка отправки. В браузере Telegram API заблокирован по CORS.');
-        console.error('Fetch error:', error);
-    });
 } // Закрывающая скобка функции sendToAdmin
 
-// Вызываем инициализацию ПРАВИЛЬНО
+    // Вызываем инициализацию ПРАВИЛЬНО
 init(); 
 </script>
 </body>
