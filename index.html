@@ -78,7 +78,7 @@
                 <p class="text-sm font-black text-white italic tracking-widest">4100 1191 2197 6236</p>
             </div>
 
-            <button onclick="document.getElementById('pay-modal').classList.add('hidden')" class="w-full py-5 bg-yellow-500 text-black rounded-3xl font-black uppercase text-xs btn-click shadow-2xl">Я оплатил(а)</button>
+            <button onclick="showGiftOptions()" class="w-full py-5 bg-yellow-500 text-black rounded-3xl font-black uppercase text-xs btn-click shadow-2xl">Я оплатил(а)</button>
         </div>
     </div>
 
@@ -248,18 +248,31 @@
         }
 
         async function confirmOrder() {
-            const total = cart.reduce((s, p) => s + p.Price, 0);
-            const user = tg.initDataUnsafe.user || {first_name: "BOSS CLIENT", id: "0"};
-            const counts = {};
-            cart.forEach(p => counts[p.Name] = (counts[p.Name] || 0) + 1);
-            const itemsList = Object.entries(counts).map(([name, count]) => `• <b>${name}</b> x${count}`).join('\n');
-            const text = `🚀 <b>НОВЫЙ ЗАКАЗ</b>\n\n👤 Клиент: <b>${user.first_name}</b>\n🆔 ID: <code>${user.id}</code>\n\n🛒 Товары:\n${itemsList}\n\n💰 Итого: <b>${total} ₽</b>`;
-            
-            try {
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ chat_id: ADMIN_ID, text: text, parse_mode: 'HTML' })
-                });
+    const total = cart.reduce((s, p) => s + p.Price, 0);
+    const user = tg.initDataUnsafe.user || { first_name: "BOSS CLIENT", id: "0" };
+    const counts = {};
+    cart.forEach(p => counts[p.Name] = (counts[p.Name] || 0) + 1);
+    
+    const itemsList = Object.entries(counts).map(([name, count]) => `• ${name} x${count}`).join('\n');
+    const text = `🚀 НОВЫЙ ЗАКАЗ\n\n👤 Клиент: ${user.first_name}\n🆔 ID: ${user.id}\n\n🛒 Товары:\n${itemsList}\n\n💰 Итого: ${total} ₽`;
+
+    // Сохраняем названия товаров в глобальную переменную для подарка
+    window.currentOrderItems = Object.entries(counts).map(([name, count]) => name).join(', ');
+
+    try {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: ADMIN_ID, text: text, parse_mode: 'HTML' })
+        });
+        
+        // ПОКАЗЫВАЕМ МОДАЛКУ С РЕКВИЗИТАМИ (не меняя её содержимое!)
+        document.getElementById('pay-modal').classList.remove('hidden');
+        
+    } catch (e) {
+        tg.showAlert("Ошибка при отправке заказа!");
+    }
+}
                 // Сохраняем названия товаров для подарка перед очисткой корзины
 const giftItemNames = Object.entries(counts).map(([name, count]) => name).join(', ');
 
@@ -292,6 +305,34 @@ updateUI();
         }
 
         init();
+        function showGiftOptions() {
+    // Теперь, когда нажали "Я оплатил", мы меняем содержимое модалки на кнопки подарка
+    const modalContent = document.querySelector('#pay-modal .glass');
+    modalContent.innerHTML = `
+        <h2 class="text-2xl font-black mb-4 text-yellow-500 italic uppercase">Заказ принят!</h2>
+        <p class="text-gray-400 text-xs mb-6">Админ проверит оплату. Что сделать с товаром?</p>
+        
+        <button onclick="window.location.href='https://t.me/nmproda'" class="w-full py-4 bg-green-600 text-white rounded-2xl font-black uppercase text-xs mb-3 shadow-lg">
+            1. Забрать товар
+        </button>
+        
+        <button onclick="generateGiftLink(window.currentOrderItems)" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs mb-3 shadow-lg">
+            2. Отправить как "ПОДАРОК"
+        </button>
+        
+        <div id="gift-area" class="hidden mt-4 p-4 border border-dashed border-blue-500 rounded-2xl bg-white/5">
+            <p class="text-[10px] text-blue-300 mb-2">Ссылка для друга готова:</p>
+            <input type="text" id="gift-url" readonly class="w-full bg-black/50 text-white text-[10px] p-2 rounded-lg mb-2 border border-white/10">
+            <button onclick="copyGiftLink()" class="text-[10px] text-yellow-500 font-bold uppercase italic">Копировать ссылку</button>
+        </div>
+
+        <button onclick="location.reload()" class="mt-6 text-gray-500 text-[10px] uppercase underline">Вернуться в магазин</button>
+    `;
+    
+    // Очищаем корзину
+    cart = [];
+    updateUI();
+        }
         function generateGiftLink(items) {
     const baseUrl = window.location.origin + '/gift.html';
     const encodedItems = encodeURIComponent(items);
