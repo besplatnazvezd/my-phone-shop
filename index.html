@@ -317,8 +317,42 @@ function copyGiftLink() {
     copyText.setSelectionRange(0, 99999); 
     document.execCommand("copy");
     tg.showAlert("Ссылка-подарок скопирована! Отправь её другу.");
-}
-        init(); 
+function sendToAdmin() {
+        const nick = document.getElementById('user-nick').value;
+        if (!nick) {
+            alert('Пожалуйста, введи свой @username');
+            return;
+        }
+
+        const orderedItem = window.currentOrderItems || "Неизвестный товар"; 
+        const messageToAdmin = `🎁 Подарок от клиента!\n\nНик: ${nick}\nТовар: ${orderedItem}\n\nКлиент оставил юзернейм, чтобы админ связался с ним для выдачи подарка.`;
+
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: ADMIN_ID, 
+                text: messageToAdmin,
+                parse_mode: 'HTML'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.ok) {
+                alert(`Отлично, ${nick}! Твой ник отправлен админу. Он свяжется с тобой для выдачи ${orderedItem}.`);
+                location.reload(); 
+            } else {
+                alert('Ошибка отправки. Попробуй еще раз или напиши админу вручную.');
+                console.error('Telegram API error:', data.description);
+            }
+        })
+        .catch(error => {
+            alert('Ошибка отправки. Попробуй еще раз или напиши админу вручную.');
+            console.error('Fetch error:', error);
+        });
+    }
+
+    init(); 
 
 </script>
 </body>
