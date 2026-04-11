@@ -12,13 +12,14 @@
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
         .cat-btn { transition: 0.3s; border-radius: 12px; padding: 10px 18px; font-weight: 700; font-size: 10px; white-space: nowrap; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); }
         .cat-btn.active { background: #EAB308; color: #000; border-color: #EAB308; box-shadow: 0 0 20px rgba(234,179,8,0.4); }
-        .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #444; transition: 0.3s; flex: 1; }
+        .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #444; transition: 0.3s; flex: 1; border: none; background: none; }
         .nav-btn.active { color: #EAB308; filter: drop-shadow(0 0 8px rgba(234,179,8,0.6)); }
         input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
         .btn-click:active { transform: scale(0.96); }
         @keyframes dice-roll { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .dice-anim { animation: dice-roll 0.5s ease-out; }
         .vip-card { background: linear-gradient(135deg, #EAB308 0%, #7e5a00 100%); color: #000; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
@@ -33,8 +34,8 @@
     <!-- КОРЗИНА -->
     <div id="checkout-bar" class="fixed bottom-32 left-5 right-5 glass p-5 rounded-[35px] flex justify-between items-center hidden z-[90] border-yellow-500/20">
         <div class="flex flex-col">
-            <p id="total-price" class="text-2xl font-black text-yellow-500 italic">0 ₽</p>
-                        <button onclick="clearCart()" class="text-[9px] text-red-500 font-black uppercase text-left mt-1 italic">✕ Отмена</button>
+                        <p id="total-price" class="text-2xl font-black text-yellow-500 italic">0 ₽</p>
+            <button onclick="clearCart()" class="text-[9px] text-red-500 font-black uppercase text-left mt-1 italic">✕ Отмена</button>
         </div>
         <button onclick="openPayment()" class="bg-yellow-500 text-black px-10 py-4 rounded-2xl font-black uppercase text-[11px] btn-click shadow-lg">Оформить</button>
     </div>
@@ -61,7 +62,7 @@
 
     <!-- МОДАЛКА ПЛАТЕЖЕЙ -->
         <div id="pay-modal" class="fixed inset-0 bg-black/98 flex items-center justify-center hidden z-[200] p-6 backdrop-blur-3xl">
-        <div class="glass w-full max-w-sm p-8 rounded-[50px] text-center border-yellow-500/30">
+        <div class="glass w-full max-sm p-8 rounded-[50px] text-center border-yellow-500/30">
             <h2 class="text-3xl font-black mb-1 italic text-yellow-500 uppercase tracking-tighter">ОПЛАТА</h2>
             <p class="text-gray-500 text-[9px] mb-8 tracking-[4px] uppercase font-black italic">Тапни для копирования</p>
             
@@ -73,7 +74,7 @@
                 <p class="text-[8px] text-gray-500 mb-1 font-black uppercase italic tracking-widest">СБП (Т-Банк)</p>
                 <p class="text-sm font-black text-white italic tracking-widest">+7 950 170 07 87</p>
             </div>
-            <div onclick="copyText('4100119121976236', 'Счет ЮMoney скопирован!')" class="bg-white/5 p-5 rounded-[25px] mb-8 border border-white/5 active:scale-95 transition-all text-left">
+            <div onclick="copyText('4100119121976236', 'Счет ЮMoney скопирован!')" class="bg-white/5 p-5 rounded-[25px]mb-8 border border-white/5 active:scale-95 transition-all text-left">
                 <p class="text-[8px] text-gray-500 mb-1 font-black uppercase italic tracking-widest">ЮMoney Счет</p>
                 <p class="text-sm font-black text-white italic tracking-widest">4100 1191 2197 6236</p>
             </div>
@@ -85,6 +86,7 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        tg.ready();
 
         const BOT_TOKEN = '8730430332:AAGff_PCX2059o3EUwG-d9C19uTqcH4sAZ4';
         const ADMIN_ID = '7727345054';
@@ -108,23 +110,17 @@
             "Всё супер, всё работает. nmproda красавчик.",
             "Взял премку, залетала сразу. Boss Store лучший.",
             "Boss Store умеет радовать. Моментальный приход.",
-            "nmproda знает свое дело. Шоп 10 из 10.",
             "Ни разу не кинули, всё четко по факту. Boss Store — любовь.",
             "Boss Store — это выбор чемпионов. Покупайте смело!"
-            "Ну что могу сказать,случайно наткнулся на канал,купил думал что скам,в итоге товар выдали,я рад."
-            "Спасибо @nmproda за скорость."
-            "Купила 350 звезд пришли за 3-4 минуты, админ ответил быстро."
-            "Заказала услугу по бс, качественно сделал + выпал бонус на кубике."
-            "Думала,что скам так как мало подписчиков на канале, решила просто проверить, все выдали спасибо nmproda!"
         ];
 
         async function init() {
             const startParam = tg.initDataUnsafe.start_param;
+            const user = tg.initDataUnsafe.user || {id: 0, first_name: 'Boss Client'};
             if (startParam) {
-                const user = tg.initDataUnsafe.user || {id: 0, first_name: 'Boss Client'};
                 fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ chat_id: ADMIN_ID, text: `🔗 <b>РЕФЕРАЛ</b>\nКлиент <b>${user.first_name}</b> зашел от <code>${startParam}</code>`, parse_mode: 'HTML' })
+                    body: JSON.stringify({ chat_id: ADMIN_ID, text: `🔗 <b>РЕФЕРАЛ</b>\nКлиент <b>${user.first_name}</b> (ID: ${user.id}) зашел от <code>${startParam}</code>. Обоим скидка!`, parse_mode: 'HTML' })
                 });
             }
             loadData();
@@ -141,7 +137,10 @@
                     return { ID: i, Category: clean(cols[0]), Name: clean(cols[1]), Price: parseFloat(clean(cols[2])) || 0, Description: clean(cols[3]), Image: clean(cols[4]) };
                 }).filter(p => p.Name && p.Price > 0);
                 renderPage();
-            } catch (e) { document.getElementById('main-content').innerHTML = "<div class='text-center mt-20 opacity-30 italic'>Загрузка...</div>"; }
+            } catch (e) { 
+                console.error(e);
+                document.getElementById('main-content').innerHTML = "<div class='text-center mt-20 opacity-30 italic'>Загрузка товаров...</div>"; 
+            }
         }
 
         function renderPage() {
@@ -150,33 +149,32 @@
             if (currentPage === 'shop') {
                 const cats = ['Bce', ...new Set(products.map(p => p.Category))];
                 let html = `<div class="flex gap-3 overflow-x-auto mb-8 pb-2 no-scrollbar px-2">${cats.map(c => `<button onclick="setCat('${c}')" class="cat-btn ${currentCat === c ? 'active' : ''}">${c}</button>`).join('')}</div>`;
-                html += `<div class="grid grid-cols-2 gap-5">`;
+                html += `<div class="grid grid-cols-2 gap-4">`;
                 products.filter(p => currentCat === 'Bce' || p.Category === currentCat).forEach(p => {
                     const pIdx = products.indexOf(p);
                     html += `<div class="glass p-4 rounded-[30px] flex flex-col h-full border-white/5">
                         <img src="${p.Image}" class="w-full aspect-square object-cover rounded-[25px] mb-4 shadow-2xl">
-                        <h3 class="text-[11px] font-black uppercase text-yellow-500 mb-1 px-1 italic">${p.Name}</h3>
-                        <p class="text-[9px] text-gray-500 mb-5 flex-1 px-1 italic leading-tight">${p.Description}</p>
-                        <div class="flex flex-col gap-3 mt-auto">
+                        <h3 class="text-[10px] font-black uppercase text-yellow-500 mb-1 px-1 italic">${p.Name}</h3>
+                        <p class="text-[8px] text-gray-500 mb-4 flex-1 px-1 italic leading-tight">${p.Description}</p>
+                        <div class="flex flex-col gap-2 mt-auto">
                             <span class="text-white font-black text-xs italic text-center bg-white/5 py-1 rounded-lg border border-white/5">${p.Price} ₽</span>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="qty-${pIdx}" value="1" min="1" class="w-full bg-white/5 text-white text-xs text-center outline-none font-black py-3 rounded-xl border border-white/10">
-                                <button onclick="addToCart(${pIdx})" class="bg-yellow-500 text-black w-12 h-12 rounded-xl font-black btn-click flex items-center justify-center shadow-lg">+</button>
+                                <input type="number" id="qty-${pIdx}" value="1" min="1" class="w-full bg-white/5 text-white text-[10px] text-center outline-none font-black py-2 rounded-xl border border-white/10">
+                                <button onclick="addToCart(${pIdx})" class="bg-yellow-500 text-black w-10 h-10 rounded-xl font-black btn-click flex items-center justify-center shadow-lg">+</button>
                             </div>
                         </div>
                     </div>`;
                 });
                 main.innerHTML = html + `</div>`;
             } else if (currentPage === 'reviews') {
-                main.innerHTML = `<div class="space-y-4">${reviewsData.map(t => `<div class="glass p-7 rounded-[35px] border-l-4 border-yellow-500 shadow-xl"><p class="text-white text-[12px] italic leading-relaxed font-medium">"${t}"</p></div>`).join('')}</div>`;
+                main.innerHTML = `<div class="space-y-4">${reviewsData.map(t => `<div class="glass p-6 rounded-[30px] border-l-4 border-yellow-500 shadow-xl"><p class="text-white text-[11px] italic leading-relaxed font-medium">"${t}"</p></div>`).join('')}</div>`;
             } else if (currentPage === 'lucky') {
                 const hasRolled = localStorage.getItem('boss_lucky_rolled');
                 if (!hasRolled) {
                     main.innerHTML = `<div class="text-center mt-10"><div class="glass p-10 rounded-[50px] border-yellow-500/20 shadow-2xl"><div id="dice-val" class="text-8xl mb-10 font-black italic text-yellow-500">?</div><h2 class="text-2xl font-black italic text-yellow-500 uppercase mb-4">Испытай удачу</h2><p class="text-white text-xs italic mb-8 opacity-70">Выпадет 1, 2 или 3 — скидка на любой товар!</p><button onclick="rollDice()" id="roll-btn" class="w-full py-5 bg-yellow-500 text-black rounded-3xl font-black uppercase text-xs btn-click">Крутить</button></div></div>`;
                 } else {
-                    main.innerHTML = `<div class="text-center mt-10 animate-fade"><div class="vip-card p-10 rounded-[50px] shadow-2xl border-4 border-yellow-500/50"><div class="text-6xl mb-6">👑</div><h2 class="text-2xl font-black italic uppercase mb-2">BOSS VIP CLUB</h2><p class="text-sm font-bold italic mb-6">Попытка использована!<br>Но для тебя есть спец-предложение.</p><button onclick="window.location.href='https://t.me/nmproda'" class="w-full py-5 bg-black text-white rounded-3xl font-black uppercase text-xs btn-click shadow-2xl">Забрать бонус у менеджера</button></div></div>`;
-                }
-            } else if (currentPage === 'support') {
+                    main.innerHTML = `<div class="text-center mt-10"><div class="vip-card p-10 rounded-[50px] shadow-2xl border-4 border-yellow-500/50"><div class="text-6xl mb-6">👑</div><h2 class="text-2xl font-black italic uppercase mb-2">BOSS VIP CLUB</h2><p class="text-sm font-bold italic mb-6">Попытка использована!<br>Но для тебя есть спец-предложение.</p><button onclick="window.location.href='https://t.me/nmproda'" class="w-full py-5 bg-black text-white rounded-3xl font-black uppercase text-xs btn-click shadow-2xl">Связаться</button></div></div>`;
+        }} else if (currentPage === 'support') {
                 const user = tg.initDataUnsafe.user || {id: 0};
                 main.innerHTML = `<div class="space-y-4 mt-6">
                     <div class="glass p-8 rounded-[40px] text-center mb-6">
@@ -184,13 +182,13 @@
                         <p class="text-[10px] text-gray-400 italic mb-6 leading-relaxed">Пригласи друга! Если он купит — вы оба получите скидку.</p>
                         <button onclick="copyText('https://t.me/Boss_storesvzbot?start=${user.id}', 'Ссылка скопирована!')" class="w-full py-4 bg-white/5 text-white rounded-2xl border border-white/10 text-[10px] font-black uppercase">Копировать ссылку</button>
                     </div>
-                    <button onclick="window.location.href='https://t.me/nmproda'" class="w-full glass p-8 rounded-[40px] flex items-center gap-6 active:scale-95 transition-all shadow-xl">
+                    <button onclick="window.location.href='https://t.me/nmproda'" class="w-full glass p-8 rounded-[40px] flex items-center gap-6 active:scale-95 transition-all shadow-xl border-none">
                         <div class="bg-yellow-500 p-4 rounded-2xl text-black font-black text-xl">M</div>
                         <div class="text-left"><p class="font-black italic text-lg text-yellow-500 uppercase">Менеджер</p><p class="text-[9px] text-gray-500 uppercase font-black">Личка: @nmproda</p></div>
                     </button>
-                    <button onclick="window.location.href='https://t.me/boss_storemy'" class="w-full glass p-8 rounded-[40px] flex items-center gap-6 active:scale-95 transition-all shadow-xl">
+                    <button onclick="window.location.href='https://t.me/boss_storemy'" class="w-full glass p-8 rounded-[40px] flex items-center gap-6 active:scale-95 transition-all shadow-xl border-none">
                         <div class="bg-white/10 p-4 rounded-2xl text-white font-black text-xl">C</div>
-                        <div class="text-left"><p class="font-black italic text-lg text-white uppercase opacity-80">BOSS КАНАЛ</p><p class="text-[9px] text-gray-500 uppercase font-black">Новости и бонусы</p></div>
+                        <div class="text-left"><p class="font-black italic text-lg text-white uppercase opacity-80">BOSS КАНАЛ</p><p class="text-[9px] text-gray-500 uppercase font-black">Связь через бота</p></div>
                     </button>
                 </div>`;
             }
@@ -200,11 +198,12 @@
         function changePage(p) { currentPage = p; document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('nav-'+p).classList.add('active'); renderPage(); if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); window.scrollTo(0,0); }
 
         function addToCart(idx) {
-            const qty = parseInt(document.getElementById(`qty-${idx}`).value) || 1;
+            const qtyInput = document.getElementById(`qty-${idx}`);
+            const qty = parseInt(qtyInput.value) || 1;
             for(let i = 0; i < qty; i++) cart.push(products[idx]);
             updateUI();
             if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            document.getElementById(`qty-${idx}`).value = 1;
+            qtyInput.value = 1;
         }
 
         function clearCart() { cart = []; updateUI(); if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning'); }
@@ -231,31 +230,27 @@
                 const res = Math.floor(Math.random() * 3) + 4;
                 dice.innerText = res; dice.classList.remove('dice-anim');
                 localStorage.setItem('boss_lucky_rolled', 'true');
-                tg.showAlert("Выпало " + res + "! Boss-удача! Открыт статус VIP.");
+                tg.showAlert("Выпало " + res + "! Почти! Но для тебя открыт статус VIP.");
                 setTimeout(() => renderPage(), 1500);
             }, 600);
         }
 
-        function openPayment() {
-            document.getElementById('pay-modal').classList.remove('hidden');
-        }
+        function openPayment() { document.getElementById('pay-modal').classList.remove('hidden'); }
 
         async function confirmOrder() {
             const total = cart.reduce((s, p) => s + p.Price, 0);
-            const user = tg.initDataUnsafe.user || {first_name: "BOSS CLIENT", id: "7727345054"};
+            const user = tg.initDataUnsafe.user || {first_name: "BOSS CLIENT", id: "0"};
             const counts = {};
             cart.forEach(p => counts[p.Name] = (counts[p.Name] || 0) + 1);
-            const itemsList = Object.entries(counts).map(([name, count]) => `• ${name} x${count}`).join('\n');
+            const itemsList = Object.entries(counts).map(([name, count]) => `• <b>${name}</b> x${count}`).join('\n');
             
             const text = `🚀 <b>НОВЫЙ ЗАКАЗ</b>\n\n👤 Клиент: <b>${user.first_name}</b>\n🆔 ID: <code>${user.id}</code>\n\n🛒 Товары:\n${itemsList}\n\n💰 Итого: <b>${total} ₽</b>`;
             
             const keyboard = {
-                inline_keyboard: [
-                    [
-                        { text: "✅ Одобрено", callback_data: `approve_${user.id}` },
-                        { text: "❌ Не одобрено", callback_data: `decline_${user.id}` }
-                    ]
-                ]
+                inline_keyboard: [[
+                    { text: "✅ Одобрено", callback_data: `approve_${user.id}` },
+                    { text: "❌ Не одобрено", callback_data: `decline_${user.id}` }
+                ]]
             };
 
             try {
@@ -263,10 +258,10 @@
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ chat_id: ADMIN_ID, text: text, parse_mode: 'HTML', reply_markup: keyboard })
                 });
-                tg.showAlert("Заказ отправлен админу! Ожидайте подтверждения.");
+                tg.showAlert("Заказ отправлен! Жди ответа от бота.");
                 document.getElementById('pay-modal').classList.add('hidden');
                 cart = []; updateUI();
-            } catch (e) { tg.showAlert("Ошибка!"); }
+            } catch (e) { tg.showAlert("Ошибка при отправке!"); }
         }
 
         init();
