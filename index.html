@@ -312,8 +312,11 @@ function copyGiftLink() {
     copyText.select();
     copyText.setSelectionRange(0, 99999); 
     document.execCommand("copy");
-    tg.showAlert("Ссылка-подарок скопирована! Отправь её другу.");
-function sendToAdmin() {
+        tg.showAlert("Ссылка-подарок скопирована! Отправь её другу.");
+} // <--- ВОТ ЭТА СКОБКА ОБЯЗАТЕЛЬНА! Она закрывает функцию copyGiftLink
+
+function sendToAdmin() { 
+    
         const nick = document.getElementById('user-nick').value;
         if (!nick) {
             alert('Пожалуйста, введи свой @username');
