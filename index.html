@@ -322,21 +322,6 @@ function generateGiftLink() {
     document.getElementById('gift-area').classList.remove('hidden');
                        }
         
-    
-    const nick = nickInput.value;
-    if (!nick) {
-        alert('Пожалуйста, введите свой @username');
-        return;
-    }
-
-    const orderedItem = window.currentOrderItems || "Неизвестный товар";
-    const message = encodeURIComponent(`🎁 Подарок от клиента!\nНик: ${nick}\nТовар: ${orderedItem}`);
-    
-    // Перекидываем пользователя в чат к админу
-    window.location.href = `https://t.me/nmproda?text=${message}`;
-}
-        
-
     // Вызываем инициализацию ПРАВИЛЬНО
 init(); 
 </script>
