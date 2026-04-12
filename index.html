@@ -253,7 +253,8 @@
     const text = `🚀 НОВЫЙ ЗАКАЗ\n\n👤 Клиент: ${user.first_name}\n🆔 ID: ${user.id}\n\n🛒 Товары:\n${itemsList}\n\n💰 Итого: ${total} ₽`;
 
     // Сохраняем названия товаров в глобальную переменную для подарка
-    window.currentOrderItems = Object.entries(counts).map(([name, count]) => name).join(', ');
+    window.currentOrderItems = 
+Object.entries(counts).map(([name, count]) => `${name} x${count}`).join(', ');
 
     try {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
