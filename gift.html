@@ -15,6 +15,8 @@
         .lid { position: absolute; top: -15px; left: -5px; width: 160px; height: 30px; background: #f12c3b; border-radius: 5px; z-index: 3; transition: 0.5s; }
         .open .lid { transform: translateY(-80px) rotate(20deg); opacity: 0; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.8s forwards; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-6">
@@ -29,43 +31,68 @@
         </div>
 
         <div id="content" class="hidden mt-10">
-            <div class="glass p-8 rounded-[40px] border-yellow-500/30">
+            <div class="glass p-8 rounded-[40px] border-yellow-500/30 shadow-2xl">
                 <h1 class="text-3xl font-black text-yellow-500 italic uppercase mb-2">Сюрприз!</h1>
                 <p class="text-gray-400 text-xs mb-4">Тебе подарили:</p>
-                <div id="item-name" class="text-xl font-bold mb-6 text-white uppercase">...</div>
+                <div id="item-name" class="text-xl font-bold mb-6 text-white uppercase tracking-widest">...</div>
                 
                 <div class="text-[10px] text-gray-400 mb-6 leading-relaxed">
-                    Чтобы забрать товар, напишите админу <br>
-                    <a href="https://t.me/nmproda" class="text-yellow-500 font-bold text-sm">@nmproda</a> <br>
-                                        или оставьте свой юзернейм ниже:
+                                     Чтобы забрать товар, напишите админу <br>
+                    <button onclick="sendToAdmin()" class="text-yellow-500 font-bold text-sm">@nmproda</button> <br>
+                    или оставьте свой юзернейм ниже:
                 </div>
 
-                <input type="text" id="user-nick" placeholder="@твой_ник" class="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-center mb-4 text-white">
-                
-                <button onclick="sendToAdmin()" class="w-full py-4 bg-yellow-500 text-black rounded-2xl font-black uppercase text-xs">Получить товар</button>
+                <input type="text" id="user-nick" placeholder="@твой_ник" class="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-center mb-4 text-white outline-none focus:border-yellow-500 transition-all">
+
+                <button onclick="sendToAdmin()" class="w-full py-4 bg-yellow-500 text-black rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95 transition-all">
+                    Получить товар
+                </button>
             </div>
         </div>
     </div>
 
     <script>
+        // 1. Получаем данные из ссылки
         const urlParams = new URLSearchParams(window.location.search);
         const item = urlParams.get('item') || "Цифровой товар";
+        const sender = urlParams.get('from') || "Анонимный клиент";
+        
         document.getElementById('item-name').innerText = item;
 
         function openGift() {
             document.querySelector('.gift-box').classList.add('open');
             document.getElementById('instruction').classList.add('hidden');
-            
-            // Салют
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#EAB308', '#ffffff', '#457B9D'] });
-            
-            // Ракеты (боковые салюты)
-            var end = Date.now() + (3 * 1000);
-            (function frame() {
-                confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#EAB308'] });
-                confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#ffffff'] });
-                if (Date.now() < end) { requestAnimationFrame(frame); }
-            }());
+
+            // --- МОЩНЫЙ КРАСОЧНЫЙ САЛЮТ ---
+            var duration = 6 * 1000; // 6 секунд праздника
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            function randomInRange(min, max) {
+              return Math.random() * (max - min) + min;
+            }
+
+            var interval = setInterval(function() {
+              var timeLeft = animationEnd - Date.now();
+
+              if (timeLeft <= 0) {
+                return clearInterval(interval);
+              }
+
+              var particleCount = 60 * (timeLeft / duration);
+              
+              // Фейерверки в случайных местах
+              confetti(Object.assign({}, defaults, { 
+                  particleCount, 
+                  origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+                  colors: ['#EAB308', '#ffffff', '#457B9D', '#E63946']
+              }));
+              confetti(Object.assign({}, defaults, { 
+                  particleCount, 
+                  origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+                  colors: ['#EAB308', '#E63946', '#ffffff']
+              }));
+            }, 250);
 
             setTimeout(() => {
                 document.getElementById('content').classList.remove('hidden');
@@ -74,11 +101,21 @@
         }
 
         function sendToAdmin() {
-            const nick = document.getElementById('user-nick').value;
-            if(!nick) return alert("Введите ваш @username");
-            alert("Данные отправлены! Админ @nmproda свяжется с вами.");
-            window.location.href = "https://t.me/nmproda";
+            const recipientNick = document.getElementById('user-nick').value;
+            if(!recipientNick) {
+                alert("Пожалуйста, введите ваш @username для связи!");
+                return;
+            }
+
+            // --- АВТОМАТИЧЕСКИЙ ТЕКСТ ДЛЯ ТЕБЯ (АДМИНА) ---
+            const message = `Привет! Получил подарок "${item}" от клиента ${sender}. Мой ник: ${recipientNick}. Выдай заказ! Спасибо!`;
+            
+            // Перекидываем сразу в чат к тебе с этим текстом
+            const telegramUrl = `https://t.me/nmproda?text=${encodeURIComponent(message)}`;
+            
+            alert("Сейчас откроется чат с админом. Просто нажми 'Отправить' в Telegram!");
+            window.location.href = telegramUrl;
         }
     </script>
 </body>
-</html>
+</html>   
