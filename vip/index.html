@@ -3,154 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BOSS STORE — КУПИТЬ VIP PASS</title>
+    <title>BOSS VIP PASS</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;900&display=swap" rel="stylesheet">
     <style>
-        body { background: #000; color: #fff; font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
-        
-        /* Эффект голограммы для карты */
-        .card-perspective { perspective: 1000px; }
+        body { background: #000; color: #fff; font-family: 'Montserrat', sans-serif; overflow: hidden; }
         .boss-card-gold {
             width: 320px; height: 190px;
             background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
             border-radius: 18px; padding: 25px; position: relative;
-            box-shadow: 0 0 30px rgba(184, 134, 11, 0.4);
-            color: #000; transition: 0.1s; transform-style: preserve-3d;
+            box-shadow: 0 0 30px rgba(184, 134, 11, 0.4); color: #000; transform-style: preserve-3d;
         }
-
-        /* Блик, который бегает по карте */
-        .glare {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(110deg, transparent, rgba(255,255,255,0.6), transparent);
-            pointer-events: none; opacity: 0.5;
-        }
-
-        .chip { width: 40px; height: 30px; background: #333; border-radius: 4px; margin-bottom: 20px; }
+        .hidden { display: none; }
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        
-        @keyframes pulse-gold { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        .buy-btn { animation: pulse-gold 2s infinite; }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-6">
 
-    <!-- ЭТАП 1: ПРЕЗЕНТАЦИЯ -->
-    <div id="offer-screen" class="w-full max-w-md text-center">
+    <!-- ЭКРАН 1: КУПИТЬ -->
+    <div id="buy-screen" class="w-full max-w-md text-center hidden">
         <h1 class="text-4xl font-black text-yellow-500 italic uppercase mb-2">BOSS VIP PASS</h1>
-        <p class="text-gray-400 text-xs uppercase tracking-widest mb-8">Стань элитой BOSS STORE</p>
-        
+        <p class="text-gray-400 text-[10px] uppercase tracking-[4px] mb-8">Стань частью элиты</p>
         <div class="glass p-6 rounded-[30px] mb-8 text-left">
-            <h3 class="text-yellow-500 font-bold mb-4 uppercase">Твои преимущества:</h3>
-            <ul class="space-y-3 text-sm">
-                              <li class="flex items-center">✅ <span class="ml-3"><b>Приоритет:</b> Твои заказы выдаются первыми</span></li>
-                <li class="flex items-center">✅ <span class="ml-3"><b>Дизайн:</b> Уникальная 3D-карта участника</span></li>
-                <li class="flex items-center">✅ <span class="ml-3"><b>Саппорт:</b> Постоянная скидка на любой товар</span></li>
-                <li class="flex items-center">✅ <span class="ml-3"><b>Статус:</b> Доступ к закрытым ивентам</span></li>
-            </ul>
+            <p class="text-sm mb-2">✅ Приоритетная выдача заказов</p>
+            <p class="text-sm mb-2">✅ Уникальный статус и 3D карта</p>
+            <p class="text-sm">✅ Вечная скидка на товар</p>
         </div>
-
         <div class="text-3xl font-black mb-6">199 ₽</div>
-
-        <button onclick="openPayment()" class="buy-btn w-full py-5 bg-yellow-500 text-black rounded-2xl font-black uppercase text-sm tracking-widest shadow-[0_0_30px_rgba(234,179,8,0.3)]">
-            Купить VIP Доступ
-        </button>
+        <button onclick="showPayment()" class="w-full py-5 bg-yellow-500 text-black rounded-2xl font-black uppercase text-sm">Купить VIP Доступ</button>
     </div>
 
-    <!-- ЭТАП 2: ОПЛАТА (ПОХОЖЕ НА ТВОЙ INDEX) -->
-    <div id="payment-screen" class="hidden w-full max-w-md text-center">
-        <h2 class="text-2xl font-black mb-6 uppercase italic">Оплата заказа</h2>
-        <div class="glass p-8 rounded-[40px] mb-6">
-            <p class="text-gray-400 text-xs mb-4 uppercase">Переведите 199₽ на карту:</p>
-            <div class="text-xl font-bold mb-2">2202 2011 2011 2011</div>
-            <p class="text-[10px] text-yellow-500 mb-6">Получатель: BOSS STORE ADMIN</p>
+    <!-- ЭКРАН 2: ОПЛАТА -->
+    <div id="payment-screen" class="w-full max-w-md text-center hidden">
+        <div class="glass p-8 rounded-[40px]">
+            <p class="text-gray-400 text-xs mb-4 uppercase tracking-widest">Переведите 199₽ на карту:</p>
+            <div class="text-xl font-bold mb-2">2200 7019 5529 9232</div>
+                        <p class="text-[10px] text-yellow-500 mb-6 font-bold uppercase">После оплаты жми кнопку ниже <br> и получи свой личный код</p>
             
-            <button onclick="confirmPayment()" class="w-full py-4 bg-green-600 text-white rounded-xl font-black uppercase text-xs mb-3">
-                Я оплатил (199₽)
-            </button>
-            <button onclick="location.reload()" class="text-gray-500 text-[10px] underline">Отмена</button>
+            <button onclick="sendProof()" class="w-full py-4 bg-green-600 text-white rounded-xl font-black uppercase text-xs mb-6">Отправить скриншот оплаты</button>
+
+            <input type="text" id="activation-code" placeholder="Вставь код от админа" class="w-full bg-white/10 p-4 rounded-xl text-center text-white mb-3 outline-none border border-yellow-500/50">
+            <button onclick="checkCode()" class="w-full py-3 bg-yellow-500 text-black rounded-xl font-black uppercase text-[10px]">Активировать мою карту</button>
         </div>
     </div>
 
-    <!-- ЭТАП 3: ГЕНЕРАЦИЯ КАРТЫ -->
-    <div id="card-screen" class="hidden w-full max-w-md text-center">
-        <h2 class="text-2xl font-black text-yellow-500 mb-8 italic uppercase">Твоя карта готова!</h2>
-        
-        <div class="card-perspective flex justify-center mb-10">
-            <div id="vip-card" class="boss-card-gold" onmousemove="handleMove(event)" onmouseleave="resetCard()">
-                <div class="glare" id="glare"></div>
-                <div class="chip"></div>
-                                <div class="text-right absolute top-6 right-6 font-black italic">
-                    BOSS<br><span class="text-[10px] opacity-60">STORE VIP</span>
+    <!-- ЭКРАН 3: КАРТА -->
+    <div id="card-screen" class="w-full max-w-md text-center hidden">
+        <div class="boss-card-gold mx-auto mb-10">
+            <div class="text-right absolute top-6 right-6 font-black italic">BOSS<br><span class="text-[10px] opacity-60">STORE VIP</span></div>
+            <div class="mt-12 text-xl font-bold tracking-[4px]" id="card-num">**** **** **** ****</div>
+            <div class="flex justify-between items-end mt-10">
+                <div class="text-left">
+                    <div class="text-[8px] uppercase font-bold opacity-70">Card Holder</div>
+                    <div id="holder-name" class="text-sm font-black uppercase">User</div>
                 </div>
-                <div class="mt-8 text-xl font-bold tracking-[4px]" id="card-num">0000 0000 0000 0000</div>
-                <div class="flex justify-between items-end mt-6">
-                    <div>
-                        <div class="text-[8px] uppercase font-bold opacity-70">Card Holder</div>
-                        <div id="holder-name" class="text-sm font-black uppercase">YOUR NICK</div>
-                    </div>
-                    <div class="text-[10px] font-black italic border-b-2 border-black">MEMBER</div>
-                </div>
+                <div class="text-[10px] font-black italic border-b-2 border-black">MEMBER</div>
             </div>
         </div>
-
-        <button onclick="claimVIP()" class="w-full py-5 bg-white text-black rounded-2xl font-black uppercase text-xs shadow-xl active:scale-95 transition-all mb-4">
-            Подтвердить статус у Админа
-        </button>
-        <p class="text-[9px] text-gray-500 uppercase tracking-widest">Сделайте скриншот этой карты!</p>
+        <button onclick="window.location.href='../index.html'" class="text-yellow-500 font-bold uppercase text-xs underline">Вернуться в магазин</button>
     </div>
 
     <script>
-        // Логика перехода между экранами
-        function openPayment() {
-            document.getElementById('offer-screen').style.display = 'none';
-            document.getElementById('payment-screen').style.display = 'block';
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        // Твой секретный "хвост"
+        const SECRET_SUFFIX = "BOSS"; 
+
+        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "LOCAL";
+
+        window.onload = function() {
+            if (localStorage.getItem('vip_active_id') == userId) {
+                showCard();
+            } else {
+                document.getElementById('buy-screen').classList.remove('hidden');
+            }
+        };
+
+        function showPayment() {
+            document.getElementById('buy-screen').classList.add('hidden');
+            document.getElementById('payment-screen').classList.remove('hidden');
         }
 
-        function confirmPayment() {
-            const nick = prompt("Введите ваш @username для выпуска карты:");
-            if (!nick) return;
-
-            document.getElementById('payment-screen').style.display = 'none';
-            document.getElementById('card-screen').style.display = 'block';
-            
-            document.getElementById('holder-name').innerText = nick;
-            document.getElementById('card-num').innerText = Math.floor(1000 + Math.random() * 9000) + " " + Math.floor(1000 + Math.random() * 9000) + " " + Math.floor(1000 + Math.random() * 9000) + " " + Math.floor(1000 + Math.random() * 9000);
-
-            // Грандиозный салют
-            confetti({ particleCount: 200, spread: 70, origin: { y: 0.6 }, colors: ['#bf953f', '#000000'] });
+        function sendProof() {
+            const msg = encodeURIComponent(👑 Я оплатил VIP!nМой ID: ${userId}nЖду код активации.);
+            window.location.href = https://t.me/nmproda?text=${msg};
         }
 
-        function claimVIP() {
-            const nick = document.getElementById('holder-name').innerText;
-            const num = document.getElementById('card-num').innerText;
-            const msg = encodeURIComponent(`👑 Я КУПИЛ BOSS VIP PASS!\nНик: ${nick}\nНомер карты: ${num}\nВыдай мне статус Priority!`);
-            window.location.href = `https://t.me/nmproda?text=${msg}`;
+        function checkCode() {
+            const input = document.getElementById('activation-code').value.trim();
+            // ПРОВЕРКА: введенный код должен быть равен ID пользователя + твой хвост
+            if (input === userId + SECRET_SUFFIX) {
+                localStorage.setItem('vip_active_id', userId);
+                localStorage.setItem('vip_name', tg.initDataUnsafe.user?.first_name || "BOSS CLIENT");
+                confetti({ particleCount: 200, spread: 70 });
+                showCard();
+            } else {
+                alert("Этот код не подходит для твоего аккаунта!");
+            }
         }
 
-        // Анимация 3D наклона карты
-        const card = document.getElementById('vip-card');
-        const glare = document.getElementById('glare');
-
-        function handleMove(e) {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            const mouseX = (x / rect.width) * 100;
-            const mouseY = (y / rect.height) * 100;
-            
-            const rotX = ( (y - rect.height/2) / rect.height ) * -20;
-            const rotY = ( (x - rect.width/2) / rect.width ) * 20;
-            
-            card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) scale(1.05)`;
-            glare.style.background = `radial-gradient(circle at ${mouseX}% ${mouseY}%, rgba(255,255,255,0.8) 0%, transparent 60%)`;
+        function showCard() {
+            document.getElementById('buy-screen').classList.add('hidden');
+            document.getElementById('payment-screen').classList.add('hidden');
+            document.getElementById('card-screen').classList.remove('hidden');
+            document.getElementById('holder-name').innerText = localStorage.getItem('vip_name');
+            document.getElementById('card-num').innerText = "5692 " + Math.floor(Math.random()*8999+1000) + " 2116 7224";
         }
-
-        function resetCard() {
-            card.style.transform = `rotateX(0deg) rotateY(0deg) scale(1)`;
-            glare.style.background = `none`;
+    </script>
+</body>
+</html>
+Math.floor(Math.random()*8999+1000) + " 2116 7224";
         }
     </script>
 </body>
