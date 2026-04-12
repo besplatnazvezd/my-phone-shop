@@ -133,9 +133,11 @@
         async function init() {
     const startParam = tg.initDataUnsafe.start_param;
     if (startParam && !localStorage.getItem('i_was_referred')) {
-    let stats = loadStats();
-    stats.referralCount += 1; // Добавляем +1.25% к скидке
-    saveStats(stats);
+            let stats = typeof loadStats === 'function' ? loadStats() : {};
+        if (stats.referralCount !== undefined) {
+            stats.referralCount += 1;
+            saveStats(stats);
+        }
     localStorage.setItem('i_was_referred', 'true');
     tg.showAlert("🔥 Скидка увеличена! Вы зашли по приглашению.");
     }
@@ -163,28 +165,38 @@
             if (currentPage === 'shop') {const cats = ['Bce', ...new Set(products.map(p => p.Category))];
                 let html = `<div class="flex gap-3 overflow-x-auto mb-8 pb-2 no-scrollbar px-2">${cats.map(c => `<button onclick="setCat('${c}')" class="cat-btn ${currentCat === c ? 'active' : ''}">${c}</button>`).join('')}</div>`;
                 html += `<div class="grid grid-cols-2 gap-5">`;
-                products.filter(p => currentCat === 'Bce' || p.Category === currentCat).forEach(p => {
-                    const pIdx = products.indexOf(p);
-                    const { finalPrice, isHot } = calculateFinalPrice(p.Price);
-const btnClass = isHot ? "hot-button shadow-lg" : "bg-yellow-500 shadow-md";
-                    html += `<div class="glass p-4 rounded-[30px] flex flex-col h-full border-white/5">
-                        <img src="${p.Image}" class="w-full aspect-square object-cover rounded-[25px] mb-4 shadow-2xl">
-                        <h3 class="text-[11px] font-black uppercase text-yellow-500 mb-1 px-1 italic">${p.Name}</h3>
-                        <p class="text-[9px] text-gray-500 mb-5 flex-1 px-1 italic leading-tight">${p.Description}</p>
-                        <div class="flex flex-col gap-3 mt-auto">
-                        <div class="flex flex-col gap-1">
-    ${isHot ? `<span class="text-[8px] line-through text-gray-500">${p.Price} ₽</span>` : ''}
-    <span class="text-white font-black text-xl">${finalPrice} ₽</span>
-</div>
+                        products.filter(p => currentCat === 'Bce' || p.Category === currentCat).forEach(p => {
+            const pIdx = products.indexOf(p);
+            
+            // Считаем цену через твой файл logic.js
+            const priceData = calculateFinalPrice(p.Price);
+            const finalPrice = priceData.finalPrice;
+            const isHot = priceData.isHot;
+            
+            // Кнопка будет гореть, если есть скидка
+            const btnClass = isHot ? "hot-button" : "bg-yellow-500";
 
-                            <div class="flex items-center gap-2">
-                                <input type="number" id="qty-${pIdx}" value="1" min="1" class="w-full bg-white/5 text-white text-xs text-center outline-none font-black py-3 rounded-xl border border-white/10">
-                                <button onclick="addToCart(${pIdx})" class="${btnClass} w-full py-2 rounded-xl text-black font-bold uppercase text-[10px] active:scale-95 transition-all">
-                                
-                            </div>
-                        </div>
-                    </div>`;
-                });
+            html += `
+            <div class="glass p-4 rounded-[30px] flex flex-col h-full border-white/5 relative overflow-hidden">
+                <img src="${p.Image}" class="w-full aspect-square object-cover rounded-[25px] mb-4 shadow-2xl">
+                <h3 class="text-[11px] font-black uppercase text-yellow-500 mb-1 italic">${p.Name}</h3>
+                <p class="text-[9px] text-gray-500 mb-5 flex-1 px-1 italic leading-tight">${p.Description}</p>
+                
+                <div class="flex flex-col gap-1 mb-4">
+                    ${isHot ? `<span class="text-[10px] line-through text-gray-500 font-bold">${p.Price} ₽</span>` : ''}
+                    <span class="text-white font-black text-2xl">${finalPrice} ₽</span>
+                </div>
+
+                <div class="flex items-center gap-2 mt-auto">
+                    <input type="number" id="qty-${pIdx}" value="1" min="1" 
+                        class="w-14 bg-white/5 text-white text-xs text-center outline-none font-black py-3 rounded-xl border border-white/10">
+                    <button onclick="addToCart(${pIdx})" 
+                        class="${btnClass} flex-grow py-3 rounded-xl text-black font-extrabold uppercase text-[11px] active:scale-95 transition-all shadow-lg">
+                        КУПИТЬ
+                    </button>
+                </div>
+            </div>`;
+        });
                 main.innerHTML = html + `</div>`;
             } else if (currentPage === 'reviews') {
                 main.innerHTML = `<div class="space-y-4">${reviewsData.map(t => `<div class="glass p-7 rounded-[35px] border-l-4 border-yellow-500 shadow-xl"><p class="text-white text-[12px] italic leading-relaxed font-medium">"${t}"</p></div>`).join('')}</div>`;
