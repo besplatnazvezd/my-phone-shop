@@ -302,7 +302,7 @@ function sendToAdmin() {
     if (!nick) { alert('Пожалуйста, введите свой @username'); return; }
 
     const items = window.currentOrderItems || "Товары";
-    const message = encodeURIComponent(`Привет! Я оплатил заказ: ${items}. Мой ник: ${nick}. Хочу забрать товар!`);
+    const message = encodeURIComponent(`Привет! Я оплатил(а) заказ: ${items}. Мой ник: ${nick}. Хочу забрать товар!`);
     
     // Ссылка ведет к тебе в личку
     window.location.href = `https://t.me/nmproda?text=${message}`;
@@ -310,17 +310,31 @@ function sendToAdmin() {
 
 function generateGiftLink() {
     const nick = document.getElementById('user-nick').value;
-    if (!nick) { alert('Сначала введите ваш ник в поле выше!'); return; }
+    if (!nick) { 
+        alert('Сначала введите ваш ник в поле выше!'); 
+        return; 
+    }
 
     const items = window.currentOrderItems || "Товар";
     const baseUrl = window.location.origin + '/gift.html';
-    const encodedItems = encodeURIComponent(items);
-    // Добавляем ник отправителя в ссылку
-    const finalUrl = `${baseUrl}?item=${encodedItems}&from=${encodeURIComponent(nick)}`;
+    
+    // Тот самый автоматический текст для админа
+    const autoMessage = `Привет! Получил(а) подарок от клиента ${nick}. Выдай заказ! Спасибо!`;
 
-    document.getElementById('gift-url').value = finalUrl;
-    document.getElementById('gift-area').classList.remove('hidden');
-                       }
+    // Формируем итоговую ссылку (добавляем текст сообщения в параметры)
+    const finalUrl = `${baseUrl}?item=${encodeURIComponent(items)}&from=${encodeURIComponent(nick)}&text=${encodeURIComponent(autoMessage)}`;
+
+    // АВТОМАТИЧЕСКОЕ КОПИРОВАНИЕ
+    // Используем твою готовую функцию copyText (из строки 225)
+    copyText(finalUrl, "Ссылка-подарок скопирована! Отправь её другу.");
+
+    // Показываем блок со ссылкой (на всякий случай)
+    const giftArea = document.getElementById('gift-area');
+    if (giftArea) {
+        document.getElementById('gift-url').value = finalUrl;
+        giftArea.classList.remove('hidden');
+    }
+    }
         
     // Вызываем инициализацию ПРАВИЛЬНО
 init(); 
