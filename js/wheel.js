@@ -17,15 +17,25 @@ function spinWheel() {
     const now = Date.now();
 
     // Проверка на 24 часа
-    if (stats.lastSpin && (now - stats.lastSpin < 24 * 60 * 60 * 1000)) {
-        // Исключение: если выпало "крутани через час"
-        if (stats.canSpinInHour && (now - stats.lastSpin > 1 * 60 * 60 * 1000)) {
-             // Разрешаем крутить
+    const ONE_HOUR_MS = 60 * 60 * 1000; // 1 час в миллисекундах
+    const TWENTY_FOUR_HOURS_MS = 24 * ONE_HOUR_MS; // 24 часа в миллисекундах
+    const timeSinceLastSpin = now - stats.lastSpin; // Время, прошедшее с последнего спина
+
+    // Если с момента последнего спина прошло меньше 24 часов
+    if (timeSinceLastSpin < TWENTY_FOUR_HOURS_MS) {
+        // Проверяем, было ли разрешение на спин через час (canSpinInHour)
+        // И прошло ли уже как минимум 1 час с момента последнего спина
+        if (stats.canSpinInHour && timeSinceLastSpin >= ONE_HOUR_MS) {
+            // Если да, то разрешаем крутить (код продолжается после этого блока)
         } else {
+            // Иначе, спинить еще рано
             tg.showAlert("Еще не время! Жди.");
-            return;
+            return; // Прерываем выполнение функции spinWheel
         }
     }
+    // Если прошло 24 часа или были выполнены условия для спина через час,
+    // то выполнение функции продолжается, и спин будет разрешен.
+    
 
     const result = getWheelResult();
     stats.lastSpin = now;
