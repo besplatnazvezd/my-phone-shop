@@ -10,3 +10,9 @@
   color: black !important;
   font-weight: bold;
 }
+    body {
+      background-color: #000 !important; /* Делает фон чисто черным и принудительно переопределяет другие стили */
+      color: #fff; /* Дефолтный цвет текста для всего body - белый */
+      overflow: hidden;
+      font-family: 'Montserrat', sans-serif; /* Переносим сюда из index.html */
+    }
