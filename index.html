@@ -136,9 +136,58 @@
                 `).join('');
             }
 
-            if (p === 'reviews') {
-                app.innerHTML = `<div class="col-span-2 space-y-3">` + Array.from({length: 30}, (_, i) => `<div class="bg-[#111] p-5 rounded-[25px] border-l-4 border-yellow-500"><p class="text-xs font-bold italic">Босс Store — это уровень! Всё пришло за 5 минут. (#${i+1})</p></div>`).join('') + `</div>`;
-            }
+            javascript
+if (p === 'profile') {
+    const user = tg.initDataUnsafe.user || {id: 0, first_name: 'Клиент', username: 'unknown'};
+    const purchases = window.db.history || [];
+    const totalSpent = purchases.reduce((sum, p) => sum + p.price, 0);
+    const purchaseCount = purchases.length;
+    
+    // Уровень
+    let level = 'NEWBIE';
+    let levelColor = '#666';
+    if (purchaseCount >= 20) { level = 'LEGEND'; levelColor = '#EAB308'; }
+    else if (purchaseCount >= 10) { level = 'VIP'; levelColor = '#A855F7'; }
+    else if (purchaseCount >= 5) { level = 'PREMIUM'; levelColor = '#22c55e'; }
+    else if (purchaseCount >= 1) { level = 'REGULAR'; levelColor = '#3b82f6'; }
+    
+    const discount = window.db.vip ? window.db.discount : (window.db.scratchDiscount || 0);
+    
+    app.innerHTML = `
+    <div class="col-span-2 space-y-4">
+        <div class="bg-[#111] p-6 rounded-[30px] border border-white/10 text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-yellow-500 to-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl font-black">${user.first_name[0]}</div>
+            <h2 class="text-xl font-black italic">${user.first_name}</h2>
+            <p class="text-xs opacity-40">@${user.username}</p>
+            <div class="mt-4 inline-block px-6 py-2 rounded-full font-black text-xs" style="background:${levelColor}20;border:1px solid ${levelColor};color:${levelColor}">${level}</div>
+        </div>
+        
+        <div class="bg-[#111] p-6 rounded-[30px] border border-white/10">
+            <h3 class="text-xs font-black uppercase opacity-40 mb-4">СТАТИСТИКА</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="text-center p-4 bg-white/5 rounded-2xl">
+                    <p class="text-2xl font-black" style="color:var(--main)">${purchaseCount}</p>
+                    <p class="text-[10px] opacity-40 uppercase">Покупок</p>
+                </div>
+                <div class="text-center p-4 bg-white/5 rounded-2xl">
+                    <p class="text-2xl font-black" style="color:var(--main)">${totalSpent} ₽</p>
+                    <p class="text-[10px] opacity-40 uppercase">Потрачено</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-[#111] p-6 rounded-[30px] border border-white/10">
+            <h3 class="text-xs font-black uppercase opacity-40 mb-4">ВАША СКИДКА</h3>
+            <div class="text-center p-6 bg-gradient-to-br from-yellow-500/20 to-purple-500/20 rounded-2xl border border-yellow-500/30">
+                <p class="text-5xl font-black italic" style="color:var(--main)">-${discount}%</p>
+                <p class="text-xs opacity-40 mt-2">${window.db.vip ? 'VIP карта навсегда' : window.db.scratchDiscount ? 'Одноразовая' : 'Нет скидки'}</p>
+            </div>
+        </div>
+        
+        <div class="bg-[#111] p-6 rounded-[30px] border border-white/10">
+            <h3 class="text-xs font-black uppercase opacity-40 mb-4">ИСТОРИЯ ПОКУПОК</h3>
+            ${purchases.leng…
+                
             if (p === 'lucky') {
                 const can = (Date.now() - window.db.lastSpin) > 86400000;
                 app.innerHTML = `
