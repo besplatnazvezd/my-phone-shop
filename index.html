@@ -49,7 +49,7 @@
     <div id="page-content"></div>
 
     <!-- КОРЗИНА -->
-    <div id="cart-bar" class="fixed bottom-28 left-4 right-4 glass p-4 rounded-[30px] flex justify-between items-center hidden z-[500]">
+    <div id="cart-bar" class="fixed top-24 left-4 right-4 glass p-4 rounded-[30px] flex justify-between items-center hidden z-[500] shadow-2xl">
         <div>
             <p id="total-price" class="text-2xl font-black italic" style="color: var(--main)">0 ₽</p>
             <p class="text-[8px] text-green-500 font-bold uppercase">Скидка применена</p>
@@ -84,7 +84,8 @@
                 </div>
             </div>
             <button onclick="window.finishPay()" class="w-full py-6 btn-primary hot-btn text-sm">Я ОПЛАТИЛ(А)</button>
-            <button onclick="window.closePay()" class="mt-6 text-xs opacity-30 uppercase font-bold text-white">Ве</button>
+           <button onclick="window.closePay()" class="mt-6 py-3 px-8 border border-white/20 rounded-xl text-xs opacity-50 uppercase font-bold text-white active:scale-95 transition-all">ОТМЕНА</button>
+            
         </div>
     </div>
 
@@ -121,7 +122,8 @@
                         <img src="${p.img || 'placeholder.png'}" alt="Product Image" class="w-full aspect-square object-cover rounded-[22px] mb-3">
                         <h3 class="text-[9px] font-black uppercase truncate opacity-40 px-1">${p.name || 'Без названия'}</h3>
                         <div class="mt-auto px-1">
-                            <div class="text-xl font-black italic mb-3" style="color: var(--main)">${p.price !== undefined ? p.price.toLocaleString('ru-RU') : 'Цена не указана'} ₽</div>
+                         style="color: var(--main)">${(p.price && !isNaN(p.price)) ? Number(p.price).toLocaleString('ru-RU') : '0'} ₽</div>
+                         
                             <div class="flex gap-2">
                                 <input type="number" value="1" min="1" id="qty-${i}" class="w-10 bg-white/5 rounded-lg text-center text-[10px] font-black border border-white/5">
                                 <button onclick="window.addItemToCart('${p.name || `product_${i}`}', ${i})" class="flex-1 py-3 btn-primary text-[9px]">В КОРЗИНУ</button>
