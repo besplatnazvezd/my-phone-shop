@@ -115,20 +115,22 @@
 
             if (page === 'shop') {
                 const uniqueCats = ['Все', ...new Set(window.products.map(p => p.cat))];
-                document.getElementById('cats-nav').innerHTML = uniqueCats.map(c => `<button onclick="window.setCategory('${c}')" class="cat-chip ${window.currentCat === c ? 'active' : ''}">${c}</button>`).join('');
-                const filteredProducts = window.currentCat === 'Все' ? window.products : window.products.filter(p => p.cat === window.currentCat);
-                document.getElementById('page-content').innerHTML = `<div class="grid grid-cols-2 gap-4">` + filteredProducts.map((p, i) => `
+                                document.getElementById('page-content').innerHTML = `<div class="grid grid-cols-2 gap-4">` + filteredProducts.map((p, i) => `
                     <div class="glass p-3 rounded-[30px] flex flex-col">
                         <img src="${p.img || 'placeholder.png'}" alt="Product Image" class="w-full aspect-square object-cover rounded-[22px] mb-3">
                         <h3 class="text-[9px] font-black uppercase truncate opacity-40 px-1">${p.name || 'Без названия'}</h3>
                         <div class="mt-auto px-1">
-                         style="color: var(--main)">${(p.price && !isNaN(p.price)) ? Number(p.price).toLocaleString('ru-RU') : '0'} ₽</div>
-                         
+                            <div class="text-xl font-black italic mb-3" style="color: var(--main)">
+                                ${(Number(p.price) || 0).toLocaleString('ru-RU')} ₽
+                            </div>
                             <div class="flex gap-2">
                                 <input type="number" value="1" min="1" id="qty-${i}" class="w-10 bg-white/5 rounded-lg text-center text-[10px] font-black border border-white/5">
-                                <button onclick="window.addItemToCart('${p.name || `product_${i}`}', ${i})" class="flex-1 py-3 btn-primary text-[9px]">В КОРЗИНУ</button>
+                                <button onclick="window.addItemToCart('${(p.name || 'product').replace(/'/g, "\\'")}', ${i})" class="flex-1 py-3 btn-primary text-[9px]">В КОРЗИНУ</button>
                             </div>
                         </div>
+                    </div>
+                `).join('') + `</div>`;
+                
                     </div>
                 `).join('') + `</div>`;
             } else if (page === 'status') {
