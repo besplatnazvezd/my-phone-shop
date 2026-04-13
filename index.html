@@ -99,7 +99,7 @@
         window.db = JSON.parse(localStorage.getItem('boss_final_scratch_v1')) || {
             cart: [], history: [], lastScratch: 0, totalSpent: 0, ordersCount: 0, discount: 0, vipLevel: 0
         };
-        window.products = [];
+        window.products = rows.slice(1).map(...)
         window.currentCat = 'Все';
         window.isScratchCardActive = false;
 
@@ -115,7 +115,11 @@
             if (page === 'shop') {
                 const uniqueCats = ['Все', ...new Set(window.products.map(p => p.cat))];
                 document.getElementById('cats-nav').innerHTML = uniqueCats.map(c => `<button onclick="window.setCategory('${c}')" class="cat-chip ${window.currentCat === c ? 'active' : ''}">${c}</button>`).join('');
-                const filteredProducts = window.currentCat === 'Все' ? window.products : window.products.filter(p => p.cat === window.currentCat);
+                const filteredProducts = (window.currentCat === 'Все' 
+    ? window.products 
+    : window.products.filter(p => p.cat === window.currentCat)
+).filter(p => !isNaN(parseFloat(p.price))); // Эта добавка уберет всё, где цена - не число
+                
                 document.getElementById('page-content').innerHTML = `<div class="grid grid-cols-2 gap-4">` + filteredProducts.map((p, i) => `
                     <div class="glass p-3 rounded-[30px] flex flex-col">
                         <img src="${p.img || 'placeholder.png'}" alt="Product Image" class="w-full aspect-square object-cover rounded-[22px] mb-3">
