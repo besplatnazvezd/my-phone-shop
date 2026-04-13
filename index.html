@@ -54,8 +54,10 @@
             <p id="total-price" class="text-2xl font-black italic" style="color: var(--main)">0 ₽</p>
             <p class="text-[8px] text-green-500 font-bold uppercase">Скидка применена</p>
         </div>
-        <button onclick="window.openPay()" id="checkout-btn" class="btn-primary px-10 py-4 text-xs">ОФОРМИТЬ</button>
-    </div>
+<div class="flex gap-2">
+    <button onclick="window.clearCart()" class="bg-white/10 px-4 py-4 rounded-[15px] text-[10px] font-bold uppercase tracking-widest text-white/50">ОТМЕНА</button>
+    <button onclick="window.openPay()" id="checkout-btn" class="btn-primary flex-1 py-4 text-xs">ОФОРМИТЬ</button>
+</div>
 
     <!-- МЕНЮ -->
     <nav class="nav-bar">
@@ -104,6 +106,16 @@
         window.isScratchCardActive = false;
 
         window.save = () => localStorage.setItem('boss_final_scratch_v1', JSON.stringify(window.db));
+        window.clearCart = () => {
+    if(confirm('Очистить корзину?')) {
+        window.db.cart = [];
+        window.save();
+        window.updateCartBar();
+        // Если нужно, чтобы корзина спряталась:
+        document.getElementById('cart-bar').classList.add('hidden');
+    }
+};
+        
 
         window.nav = (page) => {
             document.getElementById('page-content').innerHTML = ''; // Очищаем предыдущее содержимое
@@ -234,11 +246,10 @@
             quantityInput.value = 1; // Сброс количества после добавления
         };
 
-        window.updateCartBar = () => {
-            const cartBar = document.getElementById('cart-bar');
-            if (window.db.cart.length === 0) {
-                cartBar.classList.add('hidden');
-                return;
+        const total = window.db.cart.reduce((sum, item) => {
+    const price = parseFloat(item.price) || 0; // Если цена не число, берем 0
+    return sum + (price * item.quantity);
+}, 0);
             }
             cartBar.classList.remove('hidden');
             let totalPrice = 0;
