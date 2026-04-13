@@ -164,18 +164,10 @@
                 main.innerHTML = html + `</div>`;
             } else if (currentPage === 'reviews') {
                 main.innerHTML = `<div class="space-y-4">${reviewsData.map(t => `<div class="glass p-7 rounded-[35px] border-l-4 border-yellow-500 shadow-xl"><p class="text-white text-[12px] italic leading-relaxed font-medium">"${t}"</p></div>`).join('')}</div>`;
-            } else if (currentPage === 'lucky') {
-                const hasRolled = localStorage.getItem('boss_lucky_rolled');
-                if (!hasRolled) {
-                    main.innerHTML = `<div class="text-center mt-10">
-                        <div class="glass p-10 rounded-[50px] border-yellow-500/20 shadow-2xl">
-                            <div id="dice-val" class="text-8xl mb-10 font-black italic text-yellow-500">?</div>
-                            <h2 class="text-2xl font-black italic text-yellow-500 uppercase mb-4">Испытай удачу</h2>
-                            <p class="text-white text-xs italic mb-8 opacity-70">Выпадет 1, 2 или 3 — скидка на любой товар!</p>
-                            <button onclick="rollDice()" id="roll-btn" class="w-full py-5 bg-yellow-500 text-black rounded-3xl font-black uppercase text-xs btn-click">Крутить</button>
-                        </div>
-                    </div>`;
-                } else {
+            } javascript
+else if (currentPage === 'lucky') {
+    renderLuckyPage();
+} else {
                     main.innerHTML = `<div class="text-center mt-10 animate-fade">
                         <div class="vip-card p-10 rounded-[50px] shadow-2xl border-4 border-yellow-500/50">
                             <div class="text-6xl mb-6">👑</div>
@@ -212,12 +204,16 @@
         function setCat(c) { currentCat = c; renderPage(); if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); }
         function changePage(p) { currentPage = p; document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('nav-'+p).classList.add('active'); renderPage(); if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); window.scrollTo(0,0); }
 
-        function addToCart(idx) {
-            const qty = parseInt(document.getElementById(`qty-${idx}`).value) || 1;
-            for(let i = 0; i < qty; i++) cart.push(products[idx]);
-            updateUI();
-            if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            document.getElementById(`qty-${idx}`).value = 1;
+        javascript
+function addToCart(idx) {
+    const product = products[idx];
+    const { discount, price } = getDiscountForProduct(product.Price);
+    const qty = parseInt(document.getElementById(`qty-${idx}`).value) || 1;
+    for(let i = 0; i < qty; i++) {
+        cart.push({ ...product, finalPrice: price, discount: discount });
+    }
+    updateUI();
+    tg.HapticFeedback.impactOccurred('medium');
         }
 
         function clearCart() { cart = []; updateUI(); if(tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning'); }
@@ -262,6 +258,48 @@ function spinWheel() {
         alert(`До следующей попытки: ${remaining} ч.`);
         return;
     }
+    javascript
+function sendAdminNotification(discountType, discountValue) {
+    const userId = tg?.initDataUnsafe?.user?.id || 'unknown';
+    const username = tg?.initDataUnsafe?.user?.username || 'нет username';
+    let text = '';
+    if (discountType === 'vip_card') text = `🎴 Привет! Мне выпала VIP карта! Предупредил(а). User: @${username} (${userId})`;
+    else if (discountType === 'one_time') text = `🎁 Привет! Мне выпала одноразовая скидка ${discountValue}%! Предупредил(а). User: @${username} (${userId})`;
+    else if (discountType === 'vip_day') text = `⭐ Привет! Мне выпал VIP на день ${discountValue}%! Предупредил(а). User: @${username} (${userId})`;
+    if (text && BOT_TOKEN) {
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`).catch(e => {});
+    }
+}
+
+function renderDiscountButton(discountType, discountValue) {
+    const container = document.getElementById('discount-button-container');
+    if (!container) return;
+    let btnText = discountType === 'vip_card' ? `VIP карта: -${discountValue}% навсегда` :
+                  discountType === 'one_time' ? `Скидка ${discountValue}% на 1 товар` :
+                  `VIP день: -${discountValue}%`;
+    container.innerHTML = `<button class="urgent-btn" onclick="applyDiscount()">⏰ ТОЛЬКО СЕЙЧАС: ${btnText}</button>`;
+}
+
+function applyDiscount() {
+    const userData = getUserData();
+    const now = Date.now();
+    if (userData.discountExpires > 0 && now > userData.discountExpires) {
+        alert('Скидка истекла!');
+        userData.discountType = null;
+        saveUserData(userData);
+        renderLuckyPage();
+        return;
+    }
+    if (userData.discountType === 'one_time') { userData.used = true; saveUserData(userData); }
+    changePage('shop');
+    alert('Скидка применена! Покупайте со скидкой.');
+}
+
+function getDiscountForProduct(basePrice) {
+    const userData = getUserData();
+    const now = Date.now();
+    if (!userData.discountType) return { discount: 0, price: basePrice };
+    if (userData.disc…
     
     const btn = document.getElementById('spin-btn');
     btn.disabled = true;
