@@ -54,10 +54,8 @@
             <p id="total-price" class="text-2xl font-black italic" style="color: var(--main)">0 ₽</p>
             <p class="text-[8px] text-green-500 font-bold uppercase">Скидка применена</p>
         </div>
-<div class="flex gap-2">
-    <button onclick="window.clearCart()" class="bg-white/10 px-4 py-4 rounded-[15px] text-[10px] font-bold uppercase tracking-widest text-white/50">ОТМЕНА</button>
-    <button onclick="window.openPay()" id="checkout-btn" class="btn-primary flex-1 py-4 text-xs">ОФОРМИТЬ</button>
-</div>
+        <button onclick="window.openPay()" id="checkout-btn" class="btn-primary px-10 py-4 text-xs">ОФОРМИТЬ</button>
+    </div>
 
     <!-- МЕНЮ -->
     <nav class="nav-bar">
@@ -101,21 +99,11 @@
         window.db = JSON.parse(localStorage.getItem('boss_final_scratch_v1')) || {
             cart: [], history: [], lastScratch: 0, totalSpent: 0, ordersCount: 0, discount: 0, vipLevel: 0
         };
-        window.products = rows.slice(1).map(...)
+        window.products = [];
         window.currentCat = 'Все';
         window.isScratchCardActive = false;
 
         window.save = () => localStorage.setItem('boss_final_scratch_v1', JSON.stringify(window.db));
-        window.clearCart = () => {
-    if(confirm('Очистить корзину?')) {
-        window.db.cart = [];
-        window.save();
-        window.updateCartBar();
-        // Если нужно, чтобы корзина спряталась:
-        document.getElementById('cart-bar').classList.add('hidden');
-    }
-};
-        
 
         window.nav = (page) => {
             document.getElementById('page-content').innerHTML = ''; // Очищаем предыдущее содержимое
@@ -127,11 +115,7 @@
             if (page === 'shop') {
                 const uniqueCats = ['Все', ...new Set(window.products.map(p => p.cat))];
                 document.getElementById('cats-nav').innerHTML = uniqueCats.map(c => `<button onclick="window.setCategory('${c}')" class="cat-chip ${window.currentCat === c ? 'active' : ''}">${c}</button>`).join('');
-                const filteredProducts = (window.currentCat === 'Все' 
-    ? window.products 
-    : window.products.filter(p => p.cat === window.currentCat)
-).filter(p => !isNaN(parseFloat(p.price))); // Эта добавка уберет всё, где цена - не число
-                
+                const filteredProducts = window.currentCat === 'Все' ? window.products : window.products.filter(p => p.cat === window.currentCat);
                 document.getElementById('page-content').innerHTML = `<div class="grid grid-cols-2 gap-4">` + filteredProducts.map((p, i) => `
                     <div class="glass p-3 rounded-[30px] flex flex-col">
                         <img src="${p.img || 'placeholder.png'}" alt="Product Image" class="w-full aspect-square object-cover rounded-[22px] mb-3">
@@ -246,10 +230,11 @@
             quantityInput.value = 1; // Сброс количества после добавления
         };
 
-        const total = window.db.cart.reduce((sum, item) => {
-    const price = parseFloat(item.price) || 0; // Если цена не число, берем 0
-    return sum + (price * item.quantity);
-}, 0);
+        window.updateCartBar = () => {
+            const cartBar = document.getElementById('cart-bar');
+            if (window.db.cart.length === 0) {
+                cartBar.classList.add('hidden');
+                return;
             }
             cartBar.classList.remove('hidden');
             let totalPrice = 0;
