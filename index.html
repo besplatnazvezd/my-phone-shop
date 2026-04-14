@@ -26,7 +26,6 @@
         .cat-chip { white-space: nowrap; padding: 10px 22px; border-radius: 99px; font-size: 10px; font-weight: 900; background: #111; border: 1px solid #222; text-transform: uppercase; }
         .cat-chip.active { background: var(--main); color: #000; border-color: var(--main); }
 
-        /* СКРЕТЧ */
         .scratch-container { width: 280px; height: 160px; margin: 0 auto; position: relative; }
         .scratch-canvas { position: absolute; top: 0; left: 0; z-index: 2; border-radius: 20px; touch-action: none; }
                 .scratch-prize { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #111; border-radius: 20px; border: 2px solid var(--main); z-index: 1; }
@@ -41,19 +40,20 @@
         <p class="text-[7px] opacity-30 uppercase tracking-[5px] font-bold">The Luxury Choice</p>
     </header>
 
-    <!-- КАТЕГОРИИ -->
     <div id="cats-nav" class="flex overflow-x-auto gap-2 px-5 mb-6 no-scrollbar"></div>
 
-    <!-- КОНТЕНТ -->
     <div id="app-content" class="px-5"></div>
 
-    <!-- КОРЗИНА (Итоговая цена поверх данных) -->
+    <!-- КОРЗИНА -->
     <div id="cart-bar" class="fixed bottom-28 left-4 right-4 glass p-4 rounded-[30px] flex justify-between items-center hidden z-[500] shadow-2xl border border-yellow-500/20">
         <div>
             <p id="total-price" class="text-2xl font-black italic text-yellow-500">0 ₽</p>
-            <p class="text-[8px] text-green-500 font-bold uppercase tracking-wider">Скидка применена</p>
+            <p id="discount-label" class="text-[8px] text-green-500 font-bold uppercase tracking-wider">Скидка применена</p>
         </div>
-        <button onclick="window.openPay()" class="btn-primary px-10 py-4 text-xs hot-btn">ОФОРМИТЬ</button>
+        <div class="flex gap-2">
+            <button onclick="window.clearCart()" class="px-4 py-2 text-[8px] font-black border border-white/10 rounded-xl opacity-40 uppercase">Отмена</button>
+            <button onclick="window.openPay()" class="btn-primary px-8 py-4 text-[10px] hot-btn">Оформить</button>
+        </div>
     </div>
 
     <!-- МЕНЮ -->
@@ -64,10 +64,10 @@
         </button>
         <button onclick="window.nav('status')" id="n-status" class="nav-btn">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2"/></svg>
-            <span class="text-[9px] font-black uppercase">Фулл стату</span>
+            <span class="text-[9px] font-black uppercase">Фулл стата</span>
         </button>
-        <button onclick="window.nav('scratch')" id="n-scratch" class="nav-btn">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/></svg>
+                <button onclick="window.nav('scratch')" id="n-scratch" class="nav-btn">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/></svg>
             <span class="text-[9px] font-black uppercase">Скретч</span>
         </button>
         <button onclick="window.nav('support')" id="n-support" class="nav-btn">
@@ -84,7 +84,7 @@
                 <div onclick="window.copy('4100119121976236')" class="bg-white/5 p-4 rounded-2xl text-left border border-white/5">
                     <p class="text-[9px] opacity-30 uppercase font-black">ЮMoney</p>
                     <p class="text-sm font-black italic tracking-tighter">4100 1191 2197 6236</p>
-                </div>
+                    </div>
                 <div onclick="window.copy('2200701955299232')" class="bg-white/5 p-4 rounded-2xl text-left border border-white/5">
                     <p class="text-[9px] opacity-30 uppercase font-black">Карта Т-Банк</p>
                     <p class="text-sm font-black italic tracking-tighter">2200 7019 5529 9232</p>
@@ -95,7 +95,7 @@
                 </div>
             </div>
             <button onclick="window.finishPay()" class="w-full py-5 btn-primary hot-btn text-sm mb-4">Я ОПЛАТИЛ(А)</button>
-            <button onclick="window.closePay()" class="text-[10px] font-black opacity-30 uppercase tracking-widest hover:opacity-100 transition-all">Вернуться назад</button>
+            <button onclick="window.closePay()" class="text-[10px] font-black opacity-30 uppercase tracking-widest">Вернуться назад</button>
         </div>
     </div>
 
@@ -107,13 +107,13 @@
         const ADMIN = '7727345054';
         const CSV = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv';
 
-        window.db = JSON.parse(localStorage.getItem('boss_v3_data')) || {
+        window.db = JSON.parse(localStorage.getItem('boss_v4_data')) || {
             cart: [], discount: 0, lastScratch: 0, totalSpent: 0, history: []
         };
         window.products = [];
         window.currentCat = 'Все';
 
-        window.save = () => localStorage.setItem('boss_v3_data', JSON.stringify(window.db));
+        window.save = () => localStorage.setItem('boss_v4_data', JSON.stringify(window.db));
 
         window.nav = (p) => {
             const app = document.getElementById('app-content');
@@ -145,14 +145,12 @@
             }
 
             if (p === 'status') {
-                const level = window.db.totalSpent >= 30000 ? 3 : window.db.totalSpent >= 15000 ? 2 : window.db.totalSpent >= 5000 ? 1 : 0;
                 app.innerHTML = `
                 <div class="space-y-4">
                     <div class="glass p-8 rounded-[40px] text-center border-yellow-500/20 shadow-2xl">
                         <p class="text-[9px] font-black opacity-30 uppercase tracking-[4px] mb-2">Общие траты</p>
                         <h2 class="text-4xl font-black italic text-white mb-6">${window.db.totalSpent} ₽</h2>
                         <div class="flex justify-around">
-                            <div><p class="text-[8px] opacity-40 uppercase">Уровень</p><p class="text-lg font-black">${level}</p></div>
                             <div><p class="text-[8px] opacity-40 uppercase">Скидка</p><p class="text-lg font-black text-yellow-500">${window.db.discount}%</p></div>
                         </div>
                     </div>
@@ -200,8 +198,8 @@
                 </div>`;
             }
         };
-
         window.setCat = (c) => { window.currentCat = c; window.nav('shop'); };
+        window.clearCart = () => { window.db.cart = []; window.save(); window.updateCart(); tg.HapticFeedback.notificationOccurred('success'); };
 
         window.add = (realIdx, inputIdx) => {
             const qty = parseInt(document.getElementById('q-'+inputIdx).value) || 1;
@@ -212,29 +210,31 @@
 
         window.updateCart = () => {
             const bar = document.getElementById('cart-bar');
+            
+            // ПРОВЕРКА СРОКА СКИДКИ (24 ЧАСА)
+            if(window.db.discount > 0 && (Date.now() - window.db.lastScratch > 86400000)) {
+                window.db.discount = 0; window.save();
+            }
+
             if(window.db.cart.length === 0 || document.getElementById('n-shop').classList.contains('active') === false) {
                 bar.classList.add('hidden');
-                if(window.db.cart.length > 0 && document.getElementById('n-shop').classList.contains('active')) bar.classList.remove('hidden');
                 return;
             }
             bar.classList.remove('hidden');
             let t = 0; window.db.cart.forEach(p => t += p.price);
             document.getElementById('total-price').innerText = Math.floor(t * (1 - window.db.discount/100)) + " ₽";
+            document.getElementById('discount-label').style.display = window.db.discount > 0 ? 'block' : 'none';
         };
 
         window.initScratch = () => {
             const canvas = document.getElementById('scratch-canvas');
             const ctx = canvas.getContext('2d');
-            const prizeVal = Math.floor(Math.random() * 3) + 1; // 1, 2, 3%
+            const prizeVal = Math.floor(Math.random() * 3) + 1;
             document.getElementById('prize-text').innerText = `СКИДКА ${prizeVal}%`;
 
             canvas.width = 280; canvas.height = 160;
-            ctx.fillStyle = '#333';
-            ctx.fillRect(0,0,280,160);
-            ctx.fillStyle = '#444';
-            ctx.font = '900 20px Montserrat';
-            ctx.textAlign = 'center';
-            ctx.fillText('BOSS STORE', 140, 90);
+            ctx.fillStyle = '#333'; ctx.fillRect(0,0,280,160);
+            ctx.fillStyle = '#444'; ctx.font = '900 20px Montserrat'; ctx.textAlign = 'center'; ctx.fillText('BOSS STORE', 140, 90);
 
             let isDone = false;
             const scrub = (e) => {
@@ -250,13 +250,12 @@
                 for(let i=3; i<pix.length; i+=4) if(pix[i] === 0) trans++;
                 if(trans > (pix.length/4) * 0.6) {
                     isDone = true; canvas.style.display = 'none';
-                    window.db.discount = Math.max(window.db.discount, prizeVal);
+                    window.db.discount = prizeVal;
                     window.db.lastScratch = Date.now(); window.save();
-                    confetti();
+                    confetti(); window.updateCart();
                 }
             };
-            canvas.addEventListener('mousemove', scrub);
-            canvas.addEventListener('touchstart', scrub);
+            canvas.addEventListener('mousemove', scrub); canvas.addEventListener('touchstart', scrub);
         };
 
         window.openPay = () => document.getElementById('pay-modal').classList.remove('hidden');
@@ -268,6 +267,7 @@
             let t = 0; const items = window.db.cart.map(x => { t += x.price; return x.name; }).join(', ');
             const finalSum = Math.floor(t * (1 - window.db.discount/100));
             const text = `🚀 НОВЫЙ ЗАКАЗ\n👤 @${user.username}\n🛒 ${items}\n💰 Итого: ${finalSum} ₽`;
+            
             await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ chat_id: ADMIN, text: text })
@@ -278,15 +278,24 @@
             window.db.cart = []; window.save();
             
             window.closePay();
-            tg.showAlert("Заказ отправлен! Пришлите скриншот оплаты менеджеру.");
-            window.nav('status');
+            
+            // ЭКРАН УСПЕХА ДЛЯ КЛИЕНТА
+            document.getElementById('app-content').innerHTML = `
+                <div class="text-center py-10">
+                    <div class="text-6xl mb-6">✅</div>
+                    <h2 class="text-2xl font-black mb-4 uppercase text-yellow-500">Заказ принят!</h2>
+                    <p class="text-sm opacity-70 mb-8 px-6 leading-relaxed">Ваша заявка отправлена в систему. Чтобы получить товар быстрее, напишите менеджеру и отправьте <b>скриншот оплаты</b>.</p>
+                    <button onclick="window.open('https://t.me/nmproda')" class="w-full py-6 btn-primary hot-btn text-sm">НАПИСАТЬ МЕНЕДЖЕРУ</button>
+                    <button onclick="window.nav('shop')" class="mt-6 text-[10px] opacity-30 uppercase font-bold">Вернуться в магазин</button>
+                </div>`;
+            confetti({ particleCount: 150, spread: 70 });
+            window.updateCart();
         };
 
         async function init() {
             try {
                 const res = await fetch(CSV);
                 const text = await res.text();
-                // slice(1) убирает заголовки, чтобы не было "не число"
                 window.products = text.split('\n').slice(1).map(r => {
                     const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                     if(!c[1] || isNaN(parseFloat(c[2]))) return null;
