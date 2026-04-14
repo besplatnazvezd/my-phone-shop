@@ -2,33 +2,36 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BOSS PREMIUM STORE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --main: #EAB308; --bg: #000; --dark: #0a0a0a; --glass: rgba(255,255,255,0.03); }
-        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; padding-bottom: 130px; overflow-x: hidden; }
-        .glass { background: var(--glass); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(15px); position: relative; z-index: 10; }
-        .btn-primary { background: var(--main); color: #000; font-weight: 900; text-transform: uppercase; border-radius: 20px; transition: 0.2s; position: relative; z-index: 20; }
+        :root { --main: #EAB308; --bg: #000; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; padding-bottom: 140px; overflow-x: hidden; }
+        
+        .glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(15px); }
+        .btn-primary { background: var(--main); color: #000; font-weight: 900; text-transform: uppercase; border-radius: 20px; transition: 0.2s; }
         .btn-primary:active { transform: scale(0.95); }
+        
+        @keyframes pulse-buy { 0% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(234, 179, 8, 0); } 100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); } }
         .hot-btn { animation: pulse-buy 2s infinite; }
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,10,10,0.9); border-top: 1px solid rgba(255,255,255,0.05); padding: 15px 10px 30px 10px; display: flex; justify-content: space-around; z-index: 1000; border-radius: 40px 40px 0 0; }
-        .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #555; font-size: 8px; font-weight: 900; text-transform: uppercase; border: none; background: none; flex: 1; position: relative; z-index: 20; }
+
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,10,10,0.95); border-top: 1px solid rgba(255,255,255,0.05); padding: 12px 10px 25px 10px; display: flex; justify-content: space-around; z-index: 1000; border-radius: 35px 35px 0 0; }
+        .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #444; transition: 0.3s; }
         .nav-btn.active { color: var(--main); }
-        .cat-chip { white-space: nowrap; padding: 10px 20px; border-radius: 99px; font-size: 10px; font-weight: 900; background: #111; border: 1px solid #222; position: relative; z-index: 15; }
+
+        .cat-chip { white-space: nowrap; padding: 10px 22px; border-radius: 99px; font-size: 10px; font-weight: 900; background: #111; border: 1px solid #222; text-transform: uppercase; }
         .cat-chip.active { background: var(--main); color: #000; border-color: var(--main); }
-        .scratch-wrapper { width: 280px; height: 160px; margin: 0 auto; position: relative; cursor: grab; z-index: 15; }
-        .scratch-card { position: absolute; inset: 0; background: #1a1a1a; border-radius: 25px; border: 3px solid var(--main); overflow: hidden; z-index: 10; }
-        .scratch-canvas { position: absolute; top: 0; left: 0; z-index: 2; touch-action: pan-y; }
-                .scratch-prize { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 28px; color: var(--main); z-index: 1; text-align: center; background: #111; opacity: 0; transition: 0.5s; }
-        .scratch-card.scratched .scratch-prize { opacity: 1; }
-        @keyframes pulse-buy { 0% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); } 70% { box-shadow: 0 0 0 20px rgba(234, 179, 8, 0); } 100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); } }
+
+        /* СКРЕТЧ */
+        .scratch-container { width: 280px; height: 160px; margin: 0 auto; position: relative; }
+        .scratch-canvas { position: absolute; top: 0; left: 0; z-index: 2; border-radius: 20px; touch-action: none; }
+                .scratch-prize { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #111; border-radius: 20px; border: 2px solid var(--main); z-index: 1; }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        input[type="number"] { -moz-appearance: textfield; outline: none; }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body>
@@ -38,60 +41,61 @@
         <p class="text-[7px] opacity-30 uppercase tracking-[5px] font-bold">The Luxury Choice</p>
     </header>
 
-    <div id="cats-nav" class="flex overflow-x-auto gap-2 px-5 mb-6 no-scrollbar" style="position: relative; z-index: 15;"></div>
+    <!-- КАТЕГОРИИ -->
+    <div id="cats-nav" class="flex overflow-x-auto gap-2 px-5 mb-6 no-scrollbar"></div>
 
-    <!-- КОРЗИНА (ТЕПЕРЬ НАВЕРХУ) -->
-    <div id="cart-bar" class="fixed top-24 left-4 right-4 glass p-4 rounded-[30px] flex justify-between items-center hidden z-[500] shadow-2xl border border-white/5">
+    <!-- КОНТЕНТ -->
+    <div id="app-content" class="px-5"></div>
+
+    <!-- КОРЗИНА (Итоговая цена поверх данных) -->
+    <div id="cart-bar" class="fixed bottom-28 left-4 right-4 glass p-4 rounded-[30px] flex justify-between items-center hidden z-[500] shadow-2xl border border-yellow-500/20">
         <div>
-            <p id="total-price" class="text-2xl font-black italic" style="color: var(--main)">0 ₽</p>
-            <p class="text-[8px] text-green-500 font-bold uppercase">Скидка применена</p>
+            <p id="total-price" class="text-2xl font-black italic text-yellow-500">0 ₽</p>
+            <p class="text-[8px] text-green-500 font-bold uppercase tracking-wider">Скидка применена</p>
         </div>
-        <button onclick="window.openPay()" id="checkout-btn" class="btn-primary px-10 py-4 text-xs">ОФОРМИТЬ</button>
+        <button onclick="window.openPay()" class="btn-primary px-10 py-4 text-xs hot-btn">ОФОРМИТЬ</button>
     </div>
-
-    <div id="page-content" class="px-4"></div>
 
     <!-- МЕНЮ -->
     <nav class="nav-bar">
         <button onclick="window.nav('shop')" id="n-shop" class="nav-btn active">
-            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2"/></svg>
-            <span>Шоп</span>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2"/></svg>
+            <span class="text-[9px] font-black uppercase">Шоп</span>
         </button>
         <button onclick="window.nav('status')" id="n-status" class="nav-btn">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2"/></svg>
-            <span>Фулл стату</span>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2"/></svg>
+            <span class="text-[9px] font-black uppercase">Фулл стату</span>
         </button>
         <button onclick="window.nav('scratch')" id="n-scratch" class="nav-btn">
-            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/></svg>
-            <span>Скретч</span>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/></svg>
+            <span class="text-[9px] font-black uppercase">Скретч</span>
         </button>
         <button onclick="window.nav('support')" id="n-support" class="nav-btn">
-            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke-width="2"/></svg>
-            <span>Связь</span>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke-width="2"/></svg>
+            <span class="text-[9px] font-black uppercase">Связь</span>
         </button>
     </nav>
 
-    <!-- ОКНО ОПЛАТЫ -->
-    <div id="pay-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center hidden z-[1000] p-6">
+    <!-- МОДАЛКА ОПЛАТЫ -->
+    <div id="pay-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center hidden z-[2000] p-6">
         <div class="bg-[#111] w-full max-w-sm p-8 rounded-[40px] text-center border border-white/10 shadow-2xl">
-            <h2 class="text-2xl font-black mb-6 uppercase" style="color: var(--main)">Оплата</h2>
-            <div class="space-y-4 mb-8">
-                <div onclick="window.copy('4100119121976236')" class="bg-white/5 p-4 rounded-2xl text-left active:bg-white/10">
-                    <p class="text-[10px] opacity-40 uppercase font-black mb-1">ЮMoney</p>
-                    <p class="text-base font-black tracking-tighter">4100 1191 2197 6236</p>
+            <h2 class="text-2xl font-black mb-6 uppercase text-yellow-500 italic">Оплата</h2>
+            <div class="space-y-3 mb-8">
+                <div onclick="window.copy('4100119121976236')" class="bg-white/5 p-4 rounded-2xl text-left border border-white/5">
+                    <p class="text-[9px] opacity-30 uppercase font-black">ЮMoney</p>
+                    <p class="text-sm font-black italic tracking-tighter">4100 1191 2197 6236</p>
                 </div>
-                <div onclick="window.copy('2200701955299232')" class="bg-white/5 p-4 rounded-2xl text-left active:bg-white/10">
-                    <p class="text-[10px] opacity-40 uppercase font-black mb-1">Карта Т-Банк</p>
-                    <p class="text-base font-black tracking-tighter">2200 7019 5529 9232</p>
+                <div onclick="window.copy('2200701955299232')" class="bg-white/5 p-4 rounded-2xl text-left border border-white/5">
+                    <p class="text-[9px] opacity-30 uppercase font-black">Карта Т-Банк</p>
+                    <p class="text-sm font-black italic tracking-tighter">2200 7019 5529 9232</p>
                 </div>
-                <div onclick="window.copy('+79501700787')" class="bg-white/5 p-4 rounded-2xl text-left active:bg-white/10">
-                    <p class="text-[10px] opacity-40 uppercase font-black mb-1">СБП (Т-Банк / Сбер)</p>
-                    <p class="text-base font-black tracking-tighter">+7 950 170 07 87</p>
+                <div onclick="window.copy('+79501700787')" class="bg-white/5 p-4 rounded-2xl text-left border border-white/5">
+                    <p class="text-[9px] opacity-30 uppercase font-black">СБП</p>
+                    <p class="text-sm font-black italic tracking-tighter">+7 950 170 07 87</p>
                 </div>
             </div>
-            <button onclick="window.finishPay()" class="w-full py-6 btn-primary hot-btn text-sm">Я ОПЛАТИЛ(А)</button>
-            <!-- ТУТ БЫЛО BE, ТЕПЕРЬ ОТМЕНА -->
-            <button onclick="window.closePay()" class="mt-4 w-full py-3 border border-white/5 rounded-2xl text-xs opacity-40 uppercase font-bold text-white">ОТМЕНА</button>
+            <button onclick="window.finishPay()" class="w-full py-5 btn-primary hot-btn text-sm mb-4">Я ОПЛАТИЛ(А)</button>
+            <button onclick="window.closePay()" class="text-[10px] font-black opacity-30 uppercase tracking-widest hover:opacity-100 transition-all">Вернуться назад</button>
         </div>
     </div>
 
@@ -99,191 +103,200 @@
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
-        const BOT_TOKEN = '8730430332:AAGFf_PCX2059o3EUWg-d9C19uTqch4sAZ4';
-        const ADMIN_ID = '7727345054';
-        const CSV_URL = 'https://docs.google.com/spreadsheets/d/1q9vPlWm9t934ACzIwbZU4_EDtvpJdf009-jodyIi9Ew/export?format=csv';
+        const TOKEN = '8730430332:AAGff_PCX2059o3EUwG-d9C19uTqcH4sAZ4';
+        const ADMIN = '7727345054';
+        const CSV = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv';
 
-        window.db = JSON.parse(localStorage.getItem('boss_final_scratch_v1')) || { cart: [], history: [], lastScratch: 0, totalSpent: 0, ordersCount: 0, discount: 0, vipLevel: 0 };
+        window.db = JSON.parse(localStorage.getItem('boss_v3_data')) || {
+            cart: [], discount: 0, lastScratch: 0, totalSpent: 0, history: []
+        };
         window.products = [];
         window.currentCat = 'Все';
 
-        window.save = () => localStorage.setItem('boss_final_scratch_v1', JSON.stringify(window.db));
+        window.save = () => localStorage.setItem('boss_v3_data', JSON.stringify(window.db));
 
-        window.nav = (page) => {
-            document.getElementById('page-content').innerHTML = '';
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            const targetBtn = document.getElementById(`n-${page}`);
-            if(targetBtn) targetBtn.classList.add('active');
+        window.nav = (p) => {
+            const app = document.getElementById('app-content');
+            const cats = document.getElementById('cats-nav');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('n-'+p).classList.add('active');
             
-            document.getElementById('cats-nav').classList.toggle('hidden', page !== 'shop');
-            window.updateCartBar();
+            cats.classList.toggle('hidden', p !== 'shop');
+            window.updateCart();
 
-            if (page === 'shop') {
-                const uniqueCats = ['Все', ...new Set(window.products.map(p => p.cat))];
-                document.getElementById('cats-nav').innerHTML = uniqueCats.map(c => `
-                    <button onclick="window.setCategory('${c}')" class="cat-chip ${window.currentCat === c ? 'active' : ''}">${c}</button>
-                `).join('');
-
-                const filtered = window.currentCat === 'Все' ? window.products : window.products.filter(p => p.cat === window.currentCat);
+            if (p === 'shop') {
+                const unique = ['Все', ...new Set(window.products.map(x => x.cat))];
+                cats.innerHTML = unique.map(c => `<button onclick="window.setCat('${c}')" class="cat-chip ${window.currentCat === c ? 'active' : ''}">${c}</button>`).join('');
                 
-                document.getElementById('page-content').innerHTML = `<div class="grid grid-cols-2 gap-4 ${window.db.cart.length > 0 ? 'pt-32' : ''}">` + filtered.map((p, i) => {
-                    // ИСПРАВЛЕНИЕ "НЕ ЧИСЛО"
-                    const displayPrice = (Number(p.price) || 0).toLocaleString('ru-RU');
-                    return `
-                    <div class="glass p-3 rounded-[30px] flex flex-col">
-                        <img src="${p.img || 'placeholder.png'}" alt="Product" class="w-full aspect-square object-cover rounded-[22px] mb-3">
-                        <h3 class="text-[9px] font-black uppercase truncate opacity-40 px-1">${p.name || 'Без названия'}</h3>
+                const filtered = window.currentCat === 'Все' ? window.products : window.products.filter(x => x.cat === window.currentCat);
+                app.innerHTML = `<div class="grid grid-cols-2 gap-4">` + filtered.map((prod, i) => `
+                    <div class="glass p-3 rounded-[30px] flex flex-col relative border border-white/5">
+                        <img src="${prod.img}" class="w-full aspect-square object-cover rounded-[22px] mb-3">
+                        <h3 class="text-[9px] font-black uppercase truncate opacity-40 px-1">${prod.name}</h3>
                         <div class="mt-auto px-1">
-                            <div class="text-xl font-black italic mb-3" style="color: var(--main)">${displayPrice} ₽</div>
-                            <div class="flex gap-2">
-                                <input type="number" value="1" min="1" id="qty-${i}" class="w-10 bg-white/5 rounded-lg text-center text-[10px] font-black border border-white/5">
-                                <button onclick="window.addItemToCart('${p.name}', ${i})" class="flex-1 py-3 btn-primary text-[9px]">В КОРЗИНУ</button>
+                            <div class="text-xl font-black italic mb-3 text-yellow-500">${prod.price} ₽</div>
+                            <div class="flex gap-1">
+                                <input type="number" id="q-${i}" value="1" min="1" class="w-10 bg-white/5 rounded-xl text-center text-[10px] font-black text-white border border-white/10">
+                                <button onclick="window.add(${window.products.indexOf(prod)}, ${i})" class="flex-1 py-3 btn-primary text-[9px]">В КОРЗИНУ</button>
                             </div>
                         </div>
-                    </div>`;
-                }).join('') + `</div>`;
-            } else if (page === 'status') {
-                const spent = window.db.totalSpent;
-                const progress = Math.min(100, (spent / 30000) * 100);
-                document.getElementById('page-content').innerHTML = `
-                    <div class="space-y-6">
-                        <div class="glass p-8 rounded-[40px] text-center border border-yellow-500/20 shadow-2xl">
-                            <p class="text-[9px] opacity-30 uppercase mb-2">Твоя статистика</p>
-                            <h2 class="text-4xl font-black italic">${spent.toLocaleString('ru-RU')} ₽</h2>
-                            <div class="grid grid-cols-2 gap-4 mt-6">
-                                <div class="bg-white/5 p-4 rounded-2xl"><p class="text-[8px] opacity-40">Заказы</p><p class="text-lg font-black">${window.db.ordersCount}</p></div>
-                                <div class="bg-white/5 p-4 rounded-2xl"><p class="text-[8px] opacity-40">Скидка</p><p class="text-lg font-black text-yellow-500">${window.db.discount}%</p></div>
+                    </div>
+                `).join('') + `</div>`;
+            }
+
+            if (p === 'status') {
+                const level = window.db.totalSpent >= 30000 ? 3 : window.db.totalSpent >= 15000 ? 2 : window.db.totalSpent >= 5000 ? 1 : 0;
+                app.innerHTML = `
+                <div class="space-y-4">
+                    <div class="glass p-8 rounded-[40px] text-center border-yellow-500/20 shadow-2xl">
+                        <p class="text-[9px] font-black opacity-30 uppercase tracking-[4px] mb-2">Общие траты</p>
+                        <h2 class="text-4xl font-black italic text-white mb-6">${window.db.totalSpent} ₽</h2>
+                        <div class="flex justify-around">
+                            <div><p class="text-[8px] opacity-40 uppercase">Уровень</p><p class="text-lg font-black">${level}</p></div>
+                            <div><p class="text-[8px] opacity-40 uppercase">Скидка</p><p class="text-lg font-black text-yellow-500">${window.db.discount}%</p></div>
+                        </div>
+                    </div>
+                    <div class="glass p-6 rounded-[30px]">
+                        <p class="text-[10px] font-black text-yellow-500 uppercase mb-4 text-center">История заказов</p>
+                        ${window.db.history.length ? window.db.history.slice(-5).reverse().map(h => `
+                            <div class="flex justify-between text-[9px] border-b border-white/5 py-2">
+                                <span class="opacity-60">${h.date}</span>
+                                <span class="font-black">${h.sum} ₽</span>
                             </div>
+                        `).join('') : '<p class="text-center opacity-20 text-xs">Заказов пока нет</p>'}
+                    </div>
+                </div>`;
+            }
+
+            if (p === 'scratch') {
+                const can = (Date.now() - window.db.lastScratch) > 86400000;
+                app.innerHTML = `
+                <div class="text-center py-6">
+                    <h2 class="text-2xl font-black mb-2 uppercase italic text-yellow-500">Скретч-Карта</h2>
+                    <p class="text-[10px] opacity-40 mb-10 uppercase font-black tracking-widest">Сотри защитный слой</p>
+                    <div class="scratch-container" id="scratch-box">
+                        <div class="scratch-prize" id="prize-bg">
+                            <span class="text-4xl mb-2">🎁</span>
+                            <span id="prize-text" class="text-xl font-black italic">???</span>
                         </div>
-                        <div class="glass p-6 rounded-[30px]">
-                            <div class="w-full h-3 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-yellow-500" style="width: ${progress}%"></div></div>
-                        </div>
-                    </div>`;
-            } else if (page === 'scratch') {
-                const canPlay = (Date.now() - window.db.lastScratch) > 86400000;
-                document.getElementById('page-content').innerHTML = `
-                    <div class="text-center py-10">
-                        <h2 class="text-2xl font-black mb-2 italic text-yellow-500">Скретч-Карта</h2>
-                        <p class="text-[10px] opacity-40 mb-10 font-black uppercase">Сотри защитный слой пальцем</p>
-                        <div class="scratch-wrapper ${canPlay ? '' : 'opacity-50 pointer-events-none'}" id="scratch-card-wrapper">
-                            <div class="scratch-card" id="scratch-card">
-                                <canvas id="scratch-canvas" class="scratch-canvas"></canvas>
-                                <div class="scratch-prize" id="scratch-prize-text">?</div>
-                            </div>
-                        </div>
-                        ${!canPlay ? '<p class="mt-10 text-xs opacity-20 uppercase font-black">Приходи завтра</p>' : ''}
-                    </div>`;
-                if(canPlay) setTimeout(window.initScratchCard, 100);
-            } else if (page === 'support') {
-                document.getElementById('page-content').innerHTML = `
-                    <div class="space-y-4">
-                        <div onclick="window.openLink('https://t.me/nmproda')" class="glass p-8 rounded-[40px] flex items-center gap-6 border-l-4 border-yellow-500 active:scale-95 transition-all">
-                            <div class="w-16 h-16 bg-yellow-500 rounded-2xl flex items-center justify-center text-black font-black text-3xl">M</div>
-                            <div><p class="text-xlfont-black uppercase italic">Менеджер</p><p class="text-xs opacity-40">@nmproda — Жми для связи</p></div>
-                        </div>
-                        <div onclick="window.openLink('https://t.me/boss_storemy')" class="glass p-8 rounded-[40px] flex items-center gap-6 border-l-4 border-white/20 active:scale-95 transition-all">
-                            <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center font-black text-3xl">C</div>
-                            <div><p class="text-xl font-black uppercase italic">Канал</p><p class="text-xs opacity-40">@boss_storemy — Новости</p></div>
-                        </div>
-                    </div>`;
+                        <canvas id="scratch-canvas" class="scratch-canvas"></canvas>
+                    </div>
+                    ${!can ? `<p class="mt-10 text-[10px] font-black opacity-20 uppercase tracking-widest">Приходи завтра</p>` : ''}
+                </div>`;
+                if(can) window.initScratch();
+            }
+
+            if (p === 'support') {
+                app.innerHTML = `
+                <div class="space-y-4">
+                    <div onclick="window.open('https://t.me/nmproda')" class="glass p-8 rounded-[40px] flex items-center gap-6 border-l-4 border-yellow-500 active:scale-95 transition-all">
+                        <div class="w-14 h-14 bg-yellow-500 rounded-2xl flex items-center justify-center text-black font-black text-2xl">M</div>
+                        <div><p class="text-lg font-black uppercase italic">Менеджер</p><p class="text-xs opacity-40">@nmproda</p></div>
+                    </div>
+                    <div onclick="window.open('https://t.me/boss_storemy')" class="glass p-8 rounded-[40px] flex items-center gap-6 border-l-4 border-white/20 active:scale-95 transition-all">
+                        <div class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-white font-black text-2xl">C</div>
+                        <div><p class="text-lg font-black uppercase italic">Наш Канал</p><p class="text-xs opacity-40">@boss_storemy</p></div>
+                    </div>
+                </div>`;
             }
         };
 
-        window.setCategory = (cat) => { window.currentCat = cat; window.nav('shop'); };
+        window.setCat = (c) => { window.currentCat = c; window.nav('shop'); };
 
-        window.addItemToCart = (name, index) => {
-            const product = window.products.find(p => p.name === name);
-            const qty = parseInt(document.getElementById(`qty-${index}`).value) || 1;
-            for(let i=0; i<qty; i++) window.db.cart.push(product);
-            tg.HapticFeedback.impactOccurred('light');
-            window.updateCartBar();
-            if(window.currentCat) window.nav('shop');
+        window.add = (realIdx, inputIdx) => {
+            const qty = parseInt(document.getElementById('q-'+inputIdx).value) || 1;
+            for(let k=0; k<qty; k++) window.db.cart.push(window.products[realIdx]);
+            tg.HapticFeedback.impactOccurred('medium');
+            window.updateCart();
         };
 
-        window.updateCartBar = () => {
+        window.updateCart = () => {
             const bar = document.getElementById('cart-bar');
-            if(!window.db.cart.length) { bar.classList.add('hidden'); return; }
+            if(window.db.cart.length === 0 || document.getElementById('n-shop').classList.contains('active') === false) {
+                bar.classList.add('hidden');
+                if(window.db.cart.length > 0 && document.getElementById('n-shop').classList.contains('active')) bar.classList.remove('hidden');
+                return;
+            }
             bar.classList.remove('hidden');
-            let total = window.db.cart.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
-            let final = Math.floor(total * (1 - window.db.discount / 100));
-            document.getElementById('total-price').innerText = final.toLocaleString('ru-RU') + " ₽";
+            let t = 0; window.db.cart.forEach(p => t += p.price);
+            document.getElementById('total-price').innerText = Math.floor(t * (1 - window.db.discount/100)) + " ₽";
         };
 
-        window.openPay = () => document.getElementById('pay-modal').classList.remove('hidden');
-        window.closePay = () => document.getElementById('pay-modal').classList.add('hidden');
-        
-        window.finishPay = () => {
-            const items = window.db.cart.map(i => i.name).join(', ');
-            const sum = document.getElementById('total-price').innerText;
-            const msg = `📦 НОВЫЙ ЗАКАЗ\nПользователь: @${tg.initDataUnsafe?.user?.username || 'unknown'}\nТовары: ${items}\nСумма: ${sum}`;
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(msg)}`);
-            window.db.history.push({ items, sum, date: Date.now() });
-            window.db.totalSpent += parseInt(sum.replace(/\s/g, ''));
-            window.db.ordersCount++;
-            window.db.cart = [];
-            window.save();
-            window.closePay();
-            window.nav('status');
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#EAB308', '#ffffff'] });
-        };
-
-        window.copy = (t) => { navigator.clipboard.writeText(t); tg.showAlert("Скопировано!"); };
-        window.openLink = (u) => window.open(u, '_blank');
-
-        async function loadProducts() {
-            try {
-                const res = await fetch(CSV_URL);
-                const data = await res.text();
-                window.products = data.split('\n').slice(1).map(line => {
-                    const [name, price, cat, img] = line.split(',');
-                    return { name: name?.trim(), price: price?.trim(), cat: cat?.trim(), img: img?.trim() };
-                }).filter(p => p.name);
-                window.nav('shop');
-            } catch (e) { console.error("Ошибка загрузки", e); }
-        }
-
-        window.initScratchCard = () => {
-            const canvas = document.getElementById('scratch-canvas'\ 
-);
+        window.initScratch = () => {
+            const canvas = document.getElementById('scratch-canvas');
             const ctx = canvas.getContext('2d');
-            const wrapper = document.getElementById('scratch-card-wrapper');
-            canvas.width = 280; canvas.height = 160;
-            ctx.fillStyle = '#444'; ctx.fillRect(0,0,280,160);
-            ctx.fillStyle = '#666'; ctx.font = '900 20px Montserrat'; ctx.textAlign = 'center';
-            ctx.fillText('BOSS STORE', 140, 70); ctx.font = '700 12px Montserrat'; ctx.fillText('СОТРИ МЕНЯ', 140, 100);
+            const prizeVal = Math.floor(Math.random() * 3) + 1; // 1, 2, 3%
+            document.getElementById('prize-text').innerText = `СКИДКА ${prizeVal}%`;
 
-            let isDown = false;
+            canvas.width = 280; canvas.height = 160;
+            ctx.fillStyle = '#333';
+            ctx.fillRect(0,0,280,160);
+            ctx.fillStyle = '#444';
+            ctx.font = '900 20px Montserrat';
+            ctx.textAlign = 'center';
+            ctx.fillText('BOSS STORE', 140, 90);
+
+            let isDone = false;
             const scrub = (e) => {
-                if(!isDown) return;
+                if(isDone) return;
                 const rect = canvas.getBoundingClientRect();
                 const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
                 const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
                 ctx.globalCompositeOperation = 'destination-out';
                 ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI*2); ctx.fill();
-                check();
-            };
-            const check = () => {
+
                 const pix = ctx.getImageData(0,0,280,160).data;
-                let clear = 0;
-                for(let i=3; i<pix.length; i+=4) if(pix[i] === 0) clear++;
-                if(clear > (280*160*0.5)) {
-                    document.getElementById('scratch-card').classList.add('scratched');
-                    if(!window.db.lastScratch || (Date.now() - window.db.lastScratch > 86400000)) {
-                        const win = Math.floor(Math.random() * 5) + 1;
-                        window.db.discount = Math.max(window.db.discount, win);
-                        window.db.lastScratch = Date.now();
-                        document.getElementById('scratch-prize-text').innerHTML = `СКИДКА ${win}% 🔥`;
-                        window.save();
-                        confetti({ particleCount: 100, spread: 60, colors: ['#EAB308'] });
-                    }
+                let trans = 0;
+                for(let i=3; i<pix.length; i+=4) if(pix[i] === 0) trans++;
+                if(trans > (pix.length/4) * 0.6) {
+                    isDone = true; canvas.style.display = 'none';
+                    window.db.discount = Math.max(window.db.discount, prizeVal);
+                    window.db.lastScratch = Date.now(); window.save();
+                    confetti();
                 }
             };
-            canvas.onmousedown = canvas.ontouchstart = () => isDown = true;
-            window.onmouseup = window.ontouchend = () => isDown = false;
-            canvas.onmousemove = canvas.ontouchmove = scrub;
+            canvas.addEventListener('mousemove', scrub);
+            canvas.addEventListener('touchstart', scrub);
         };
 
-        loadProducts();
+        window.openPay = () => document.getElementById('pay-modal').classList.remove('hidden');
+        window.closePay = () => document.getElementById('pay-modal').classList.add('hidden');
+        window.copy = (t) => { navigator.clipboard.writeText(t); tg.showAlert("Скопировано!"); };
+
+        window.finishPay = async () => {
+            const user = tg.initDataUnsafe.user || {id: 0, username: 'guest'};
+            let t = 0; const items = window.db.cart.map(x => { t += x.price; return x.name; }).join(', ');
+            const finalSum = Math.floor(t * (1 - window.db.discount/100));
+            const text = `🚀 НОВЫЙ ЗАКАЗ\n👤 @${user.username}\n🛒 ${items}\n💰 Итого: ${finalSum} ₽`;
+            await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ chat_id: ADMIN, text: text })
+            });
+
+            window.db.history.push({date: new Date().toLocaleDateString(), sum: finalSum});
+            window.db.totalSpent += finalSum;
+            window.db.cart = []; window.save();
+            
+            window.closePay();
+            tg.showAlert("Заказ отправлен! Пришлите скриншот оплаты менеджеру.");
+            window.nav('status');
+        };
+
+        async function init() {
+            try {
+                const res = await fetch(CSV);
+                const text = await res.text();
+                // slice(1) убирает заголовки, чтобы не было "не число"
+                window.products = text.split('\n').slice(1).map(r => {
+                    const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    if(!c[1] || isNaN(parseFloat(c[2]))) return null;
+                    return { cat: c[0].replace(/"/g,''), name: c[1].replace(/"/g,''), price: parseFloat(c[2]), img: c[4].replace(/"/g,'') };
+                }).filter(p => p);
+                window.nav('shop');
+            } catch (e) { document.getElementById('app-content').innerHTML = "Ошибка загрузки таблицы."; }
+        }
+
+        init();
     </script>
 </body>
 </html>
