@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BOSS PREMIUM STORE</title>
+    <title>BOSS STORE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
@@ -26,10 +26,6 @@
         .cat-chip { white-space: nowrap; padding: 10px 22px; border-radius: 99px; font-size: 10px; font-weight: 900; background: #111; border: 1px solid #222; text-transform: uppercase; }
         .cat-chip.active { background: var(--main); color: #000; border-color: var(--main); }
 
-        .scratch-container { width: 280px; height: 160px; margin: 0 auto; position: relative; }
-        .scratch-canvas { position: absolute; top: 0; left: 0; z-index: 2; border-radius: 20px; touch-action: none; }
-                .scratch-prize { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #111; border-radius: 20px; border: 2px solid var(--main); z-index: 1; }
-
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -37,10 +33,9 @@
 
     <header class="p-8 text-center">
         <h1 class="text-3xl font-black italic uppercase tracking-tighter text-yellow-500">Boss Store</h1>
-        <p class="text-[7px] opacity-30 uppercase tracking-[5px] font-bold">The Luxury Choice</p>
+        <p class="text-[7px] opacity-30 uppercase tracking-[5px] font-bold">Premium Services</p>
     </header>
-
-    <div id="cats-nav" class="flex overflow-x-auto gap-2 px-5 mb-6 no-scrollbar"></div>
+        <div id="cats-nav" class="flex overflow-x-auto gap-2 px-5 mb-6 no-scrollbar"></div>
 
     <div id="app-content" class="px-5"></div>
 
@@ -51,7 +46,8 @@
             <p id="discount-label" class="text-[8px] text-green-500 font-bold uppercase tracking-wider">Скидка применена</p>
         </div>
         <div class="flex gap-2">
-            <button onclick="window.clearCart()" class="px-4 py-2 text-[8px] font-black border border-white/10 rounded-xl opacity-40 uppercase">Отмена</button>
+            <!-- Сделал кнопку Отмена ярче -->
+            <button onclick="window.clearCart()" class="px-4 py-2 text-[8px] font-black border border-red-500/50 text-red-500 rounded-xl uppercase">Отмена</button>
             <button onclick="window.openPay()" class="btn-primary px-8 py-4 text-[10px] hot-btn">Оформить</button>
         </div>
     </div>
@@ -64,11 +60,7 @@
         </button>
         <button onclick="window.nav('status')" id="n-status" class="nav-btn">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2"/></svg>
-            <span class="text-[9px] font-black uppercase">Фулл стата</span>
-        </button>
-                <button onclick="window.nav('scratch')" id="n-scratch" class="nav-btn">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/></svg>
-            <span class="text-[9px] font-black uppercase">Скретч</span>
+            <span class="text-[9px] font-black uppercase">Статус</span>
         </button>
         <button onclick="window.nav('support')" id="n-support" class="nav-btn">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke-width="2"/></svg>
@@ -77,14 +69,14 @@
     </nav>
 
     <!-- МОДАЛКА ОПЛАТЫ -->
-    <div id="pay-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center hidden z-[2000] p-6">
-        <div class="bg-[#111] w-full max-w-sm p-8 rounded-[40px] text-center border border-white/10 shadow-2xl">
+        <div id="pay-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center hidden z-[2000] p-6">
+        <div class="bg-[#111] w-full max-sm p-8 rounded-[40px] text-center border border-white/10 shadow-2xl">
             <h2 class="text-2xl font-black mb-6 uppercase text-yellow-500 italic">Оплата</h2>
             <div class="space-y-3 mb-8">
                 <div onclick="window.copy('4100119121976236')" class="bg-white/5 p-4 rounded-2xl text-left border border-white/5">
                     <p class="text-[9px] opacity-30 uppercase font-black">ЮMoney</p>
                     <p class="text-sm font-black italic tracking-tighter">4100 1191 2197 6236</p>
-                    </div>
+                </div>
                 <div onclick="window.copy('2200701955299232')" class="bg-white/5 p-4 rounded-2xl text-left border border-white/5">
                     <p class="text-[9px] opacity-30 uppercase font-black">Карта Т-Банк</p>
                     <p class="text-sm font-black italic tracking-tighter">2200 7019 5529 9232</p>
@@ -95,7 +87,18 @@
                 </div>
             </div>
             <button onclick="window.finishPay()" class="w-full py-5 btn-primary hot-btn text-sm mb-4">Я ОПЛАТИЛ(А)</button>
-            <button onclick="window.closePay()" class="text-[10px] font-black opacity-30 uppercase tracking-widest">Вернуться назад</button>
+            <buttononclick="window.closePay()" class="text-[10px] font-black opacity-30 uppercase tracking-widest">Назад</button>
+        </div>
+    </div>
+
+    <!-- ФИНАЛ -->
+    <div id="success-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center hidden z-[3000] p-6">
+        <div class="bg-[#111] w-full max-w-sm p-10 rounded-[40px] text-center border border-yellow-500/30 shadow-xl">
+            <div class="text-6xl mb-6 text-yellow-500">✅</div>
+            <h2 class="text-2xl font-black mb-4 uppercase">Заказ принят!</h2>
+            <p class="text-sm opacity-70 mb-8 leading-relaxed">Отправь скриншот оплаты менеджеру, чтобы моментально получить товар.</p>
+            <button onclick="window.open('https://t.me/nmproda')" class="w-full py-6 btn-primary hot-btn text-sm">МЕНЕДЖЕР</button>
+            <button onclick="window.nav('shop')" class="mt-6 text-[10px] font-black opacity-30 uppercase tracking-widest hover:opacity-100 transition-all">В магазин</button>
         </div>
     </div>
 
@@ -103,23 +106,24 @@
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
-        const TOKEN = '8730430332:AAGff_PCX2059o3EUwG-d9C19uTqcH4sAZ4';
-        const ADMIN = '7727345054';
-        const CSV = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv';
+        const BOT_TOKEN = '8637015814:AAH_4-QvH1DQB3XrYO-4MzbEz0nIwpNXN0w';
+        const ADMIN_ID = '8553862867';
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv';
 
-        window.db = JSON.parse(localStorage.getItem('boss_v4_data')) || {
-            cart: [], discount: 0, lastScratch: 0, totalSpent: 0, history: []
+        window.db = JSON.parse(localStorage.getItem('boss_v6_data')) || {
+            cart: [], discount: 0, totalSpent: 0, history: []
         };
         window.products = [];
         window.currentCat = 'Все';
 
-        window.save = () => localStorage.setItem('boss_v4_data', JSON.stringify(window.db));
+        window.save = () => localStorage.setItem('boss_v6_data', JSON.stringify(window.db));
 
         window.nav = (p) => {
             const app = document.getElementById('app-content');
             const cats = document.getElementById('cats-nav');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('n-'+p).classList.add('active');
+            document.getElementById('success-modal').classList.add('hidden');
             
             cats.classList.toggle('hidden', p !== 'shop');
             window.updateCart();
@@ -127,18 +131,16 @@
             if (p === 'shop') {
                 const unique = ['Все', ...new Set(window.products.map(x => x.cat))];
                 cats.innerHTML = unique.map(c => `<button onclick="window.setCat('${c}')" class="cat-chip ${window.currentCat === c ? 'active' : ''}">${c}</button>`).join('');
-                
                 const filtered = window.currentCat === 'Все' ? window.products : window.products.filter(x => x.cat === window.currentCat);
                 app.innerHTML = `<div class="grid grid-cols-2 gap-4">` + filtered.map((prod, i) => `
                     <div class="glass p-3 rounded-[30px] flex flex-col relative border border-white/5">
                         <img src="${prod.img}" class="w-full aspect-square object-cover rounded-[22px] mb-3">
                         <h3 class="text-[9px] font-black uppercase truncate opacity-40 px-1">${prod.name}</h3>
+                        <!-- Добавил описание в карточку -->
+                        <p class="text-[7px] opacity-60 px-1 mt-1 leading-tight h-6 overflow-hidden">${prod.desc || ''}</p>
                         <div class="mt-auto px-1">
-                            <div class="text-xl font-black italic mb-3 text-yellow-500">${prod.price} ₽</div>
-                            <div class="flex gap-1">
-                                <input type="number" id="q-${i}" value="1" min="1" class="w-10 bg-white/5 rounded-xl text-center text-[10px] font-black text-white border border-white/10">
-                                <button onclick="window.add(${window.products.indexOf(prod)}, ${i})" class="flex-1 py-3 btn-primary text-[9px]">В КОРЗИНУ</button>
-                            </div>
+                            <div class="text-xl font-black italic my-2 text-yellow-500">${prod.price} ₽</div>
+                            <button onclick="window.add(${window.products.indexOf(prod)})" class="w-full py-3 btn-primary text-[9px]">КУПИТЬ</button>
                         </div>
                     </div>
                 `).join('') + `</div>`;
@@ -148,11 +150,8 @@
                 app.innerHTML = `
                 <div class="space-y-4">
                     <div class="glass p-8 rounded-[40px] text-center border-yellow-500/20 shadow-2xl">
-                        <p class="text-[9px] font-black opacity-30 uppercase tracking-[4px] mb-2">Общие траты</p>
-                        <h2 class="text-4xl font-black italic text-white mb-6">${window.db.totalSpent} ₽</h2>
-                        <div class="flex justify-around">
-                            <div><p class="text-[8px] opacity-40 uppercase">Скидка</p><p class="text-lg font-black text-yellow-500">${window.db.discount}%</p></div>
-                        </div>
+                        <p class="text-[9px] font-black opacity-30 uppercase tracking-[4px] mb-2">Всего потрачено</p>
+                        <h2 class="text-4xl font-black italic text-white mb-2">${window.db.totalSpent} ₽</h2>
                     </div>
                     <div class="glass p-6 rounded-[30px]">
                         <p class="text-[10px] font-black text-yellow-500 uppercase mb-4 text-center">История заказов</p>
@@ -161,101 +160,39 @@
                                 <span class="opacity-60">${h.date}</span>
                                 <span class="font-black">${h.sum} ₽</span>
                             </div>
-                        `).join('') : '<p class="text-center opacity-20 text-xs">Заказов пока нет</p>'}
+                        `).join('') : '<p class="text-center opacity-20 text-xs py-4">История пуста</p>'}
                     </div>
                 </div>`;
-            }
-
-            if (p === 'scratch') {
-                const can = (Date.now() - window.db.lastScratch) > 86400000;
-                app.innerHTML = `
-                <div class="text-center py-6">
-                    <h2 class="text-2xl font-black mb-2 uppercase italic text-yellow-500">Скретч-Карта</h2>
-                    <p class="text-[10px] opacity-40 mb-10 uppercase font-black tracking-widest">Сотри защитный слой</p>
-                    <div class="scratch-container" id="scratch-box">
-                        <div class="scratch-prize" id="prize-bg">
-                            <span class="text-4xl mb-2">🎁</span>
-                            <span id="prize-text" class="text-xl font-black italic">???</span>
-                        </div>
-                        <canvas id="scratch-canvas" class="scratch-canvas"></canvas>
-                    </div>
-                    ${!can ? `<p class="mt-10 text-[10px] font-black opacity-20 uppercase tracking-widest">Приходи завтра</p>` : ''}
-                </div>`;
-                if(can) window.initScratch();
             }
 
             if (p === 'support') {
                 app.innerHTML = `
                 <div class="space-y-4">
-                    <div onclick="window.open('https://t.me/nmproda')" class="glass p-8 rounded-[40px] flex items-center gap-6 border-l-4 border-yellow-500 active:scale-95 transition-all">
+                    <div onclick="window.open('https://t.me/nmproda')" class="glass p-8 rounded-[40px] flex items-center gap-6 border-l-4 border-yellow-500">
                         <div class="w-14 h-14 bg-yellow-500 rounded-2xl flex items-center justify-center text-black font-black text-2xl">M</div>
                         <div><p class="text-lg font-black uppercase italic">Менеджер</p><p class="text-xs opacity-40">@nmproda</p></div>
-                    </div>
-                    <div onclick="window.open('https://t.me/boss_storemy')" class="glass p-8 rounded-[40px] flex items-center gap-6 border-l-4 border-white/20 active:scale-95 transition-all">
-                        <div class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-white font-black text-2xl">C</div>
-                        <div><p class="text-lg font-black uppercase italic">Наш Канал</p><p class="text-xs opacity-40">@boss_storemy</p></div>
                     </div>
                 </div>`;
             }
         };
-        window.setCat = (c) => { window.currentCat = c; window.nav('shop'); };
-        window.clearCart = () => { window.db.cart = []; window.save(); window.updateCart(); tg.HapticFeedback.notificationOccurred('success'); };
 
-        window.add = (realIdx, inputIdx) => {
-            const qty = parseInt(document.getElementById('q-'+inputIdx).value) || 1;
-            for(let k=0; k<qty; k++) window.db.cart.push(window.products[realIdx]);
+        window.setCat = (c) => { window.currentCat = c; window.nav('shop'); };
+        window.clearCart = () => { window.db.cart = []; window.save(); window.updateCart(); };
+
+        window.add = (idx) => {
+            window.db.cart.push(window.products[idx]);
             tg.HapticFeedback.impactOccurred('medium');
             window.updateCart();
         };
 
         window.updateCart = () => {
             const bar = document.getElementById('cart-bar');
-            
-            // ПРОВЕРКА СРОКА СКИДКИ (24 ЧАСА)
-            if(window.db.discount > 0 && (Date.now() - window.db.lastScratch > 86400000)) {
-                window.db.discount = 0; window.save();
-            }
-
-            if(window.db.cart.length === 0 || document.getElementById('n-shop').classList.contains('active') === false) {
-                bar.classList.add('hidden');
-                return;
+            if(window.db.cart.length === 0 || !document.getElementById('n-shop').classList.contains('active')) {
+                bar.classList.add('hidden'); return;
             }
             bar.classList.remove('hidden');
             let t = 0; window.db.cart.forEach(p => t += p.price);
             document.getElementById('total-price').innerText = Math.floor(t * (1 - window.db.discount/100)) + " ₽";
-            document.getElementById('discount-label').style.display = window.db.discount > 0 ? 'block' : 'none';
-        };
-
-        window.initScratch = () => {
-            const canvas = document.getElementById('scratch-canvas');
-            const ctx = canvas.getContext('2d');
-            const prizeVal = Math.floor(Math.random() * 3) + 1;
-            document.getElementById('prize-text').innerText = `СКИДКА ${prizeVal}%`;
-
-            canvas.width = 280; canvas.height = 160;
-            ctx.fillStyle = '#333'; ctx.fillRect(0,0,280,160);
-            ctx.fillStyle = '#444'; ctx.font = '900 20px Montserrat'; ctx.textAlign = 'center'; ctx.fillText('BOSS STORE', 140, 90);
-
-            let isDone = false;
-            const scrub = (e) => {
-                if(isDone) return;
-                const rect = canvas.getBoundingClientRect();
-                const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-                const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI*2); ctx.fill();
-
-                const pix = ctx.getImageData(0,0,280,160).data;
-                let trans = 0;
-                for(let i=3; i<pix.length; i+=4) if(pix[i] === 0) trans++;
-                if(trans > (pix.length/4) * 0.6) {
-                    isDone = true; canvas.style.display = 'none';
-                    window.db.discount = prizeVal;
-                    window.db.lastScratch = Date.now(); window.save();
-                    confetti(); window.updateCart();
-                }
-            };
-            canvas.addEventListener('mousemove', scrub); canvas.addEventListener('touchstart', scrub);
         };
 
         window.openPay = () => document.getElementById('pay-modal').classList.remove('hidden');
@@ -264,47 +201,52 @@
 
         window.finishPay = async () => {
             const user = tg.initDataUnsafe.user || {id: 0, username: 'guest'};
-            let t = 0; const items = window.db.cart.map(x => { t += x.price; return x.name; }).join(', ');
-            const finalSum = Math.floor(t * (1 - window.db.discount/100));
-            const text = `🚀 НОВЫЙ ЗАКАЗ\n👤 @${user.username}\n🛒 ${items}\n💰 Итого: ${finalSum} ₽`;
             
-            await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ chat_id: ADMIN, text: text })
-            });
-
-            window.db.history.push({date: new Date().toLocaleDateString(), sum: finalSum});
-            window.db.totalSpent += finalSum;
-            window.db.cart = []; window.save();
+            // Группировка товаров для отображения количества (например, 2x)
+            const counts = {};
+            window.db.cart.forEach(x => counts[x.name] = (counts[x.name] || 0) + 1);
             
-            window.closePay();
+            let t = 0;
+            const itemsString = Object.keys(counts).map(name => {
+                const prod = window.db.cart.find(p => p.name === name);
+                t += (prod.price * counts[name]);
+                return `${name} ${counts[name]}x`; // Тот самый формат 500x или 2x
+            }).join('\n🛒 ');
+    const finalSum = Math.floor(t * (1 - window.db.discount/100));
+            const msg = `🚀 НОВЫЙ ЗАКАЗ\n👤 @${user.username}\n🛒 ${itemsString}\n💰 Итого: ${finalSum} ₽`;
             
-            // ЭКРАН УСПЕХА ДЛЯ КЛИЕНТА
-            document.getElementById('app-content').innerHTML = `
-                <div class="text-center py-10">
-                    <div class="text-6xl mb-6">✅</div>
-                    <h2 class="text-2xl font-black mb-4 uppercase text-yellow-500">Заказ принят!</h2>
-                    <p class="text-sm opacity-70 mb-8 px-6 leading-relaxed">Ваша заявка отправлена в систему. Чтобы получить товар быстрее, напишите менеджеру и отправьте <b>скриншот оплаты</b>.</p>
-                    <button onclick="window.open('https://t.me/nmproda')" class="w-full py-6 btn-primary hot-btn text-sm">НАПИСАТЬ МЕНЕДЖЕРУ</button>
-                    <button onclick="window.nav('shop')" class="mt-6 text-[10px] opacity-30 uppercase font-bold">Вернуться в магазин</button>
-                </div>`;
-            confetti({ particleCount: 150, spread: 70 });
-            window.updateCart();
+            try {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ chat_id: ADMIN_ID, text: msg })
+                });
+                window.db.history.push({date: new Date().toLocaleDateString(), sum: finalSum});
+                window.db.totalSpent += finalSum;
+                window.db.cart = []; window.save();
+                window.closePay();
+                document.getElementById('success-modal').classList.remove('hidden');
+                confetti();
+            } catch (e) { tg.showAlert("Ошибка связи!"); }
         };
 
         async function init() {
             try {
-                const res = await fetch(CSV);
+                const res = await fetch(CSV_URL);
                 const text = await res.text();
                 window.products = text.split('\n').slice(1).map(r => {
                     const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if(!c[1] || isNaN(parseFloat(c[2]))) return null;
-                    return { cat: c[0].replace(/"/g,''), name: c[1].replace(/"/g,''), price: parseFloat(c[2]), img: c[4].replace(/"/g,'') };
+                    if(!c[1]) return null;
+                    return { 
+                        cat: c[0].replace(/"/g,''), 
+                        name: c[1].replace(/"/g,''), 
+                        price: parseFloat(c[2]), 
+                        desc: c[3] ? c[3].replace(/"/g,'') : '', // Подтягиваем описание из 4 колонки
+                        img: c[4] ? c[4].replace(/"/g,'') : '' 
+                    };
                 }).filter(p => p);
                 window.nav('shop');
-            } catch (e) { document.getElementById('app-content').innerHTML = "Ошибка загрузки таблицы."; }
+            } catch (e) { console.error(e); }
         }
-
         init();
     </script>
 </body>
