@@ -10,19 +10,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --main: #FFD700; --bg: #000; }
-        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; padding-bottom: 140px; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; padding-bottom: 140px; overflow-x: hidden; }
         .boss-card { background: rgba(255, 215, 0, 0.03); border: 1px solid rgba(255, 215, 0, 0.1); backdrop-filter: blur(10px); border-radius: 30px; }
         .btn-gold { background: linear-gradient(45deg, #FFD700, #BA8B02); color: #000; font-weight: 900; text-transform: uppercase; border-radius: 15px; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3); }
         .qty-input { background: #111; border: 1px solid #333; color: #FFD700; text-align: center; font-weight: 900; border-radius: 12px; width: 100%; padding: 8px 0; outline: none; }
         .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(5,5,5,0.95); border-top: 1px solid #FFD70033; padding: 15px 10px 30px 10px; display: flex; justify-content: space-around; z-index: 1000; border-radius: 30px 30px 0 0; }
         .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #555; }
         .nav-btn.active { color: #FFD700; }
-        .cat-chip { white-space: nowrap; padding: 12px 25px; border-radius: 99px; font-size: 11px; font-weight: 900; background: #111; border: 1px solid #333; text-transform: uppercase; }
-        .cat-chip.active { background: #FFD700; color: #000; }
+        .progress-bg { background: rgba(255,255,255,0.1); height: 8px; border-radius: 10px; width: 100%; overflow: hidden; }
+        .progress-fill { background: var(--main); height: 100%; transition: 0.5s; box-shadow: 0 0 10px var(--main); }
         .scratch-container { width: 280px; height: 160px; margin: 0 auto; position: relative; border-radius: 20px; overflow: hidden; border: 2px solid #FFD700; }
         .scratch-canvas { position: absolute; top: 0; left: 0; z-index: 2; touch-action: none; }
         .scratch-prize { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 1; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
@@ -37,12 +36,9 @@
 
     <!-- КОРЗИНА -->
     <div id="cart-bar" class="fixed bottom-32 left-4 right-4 boss-card p-5 flex justify-between items-center hidden z-[500] border-yellow-500/50">
-        <div>
-            <p id="total-price" class="text-2xl font-black text-yellow-500">0 ₽</p>
-            <p class="text-[8px] uppercase opacity-50">К оплате</p>
-        </div>
+        <div><p id="total-price" class="text-2xl font-black text-yellow-500">0 ₽</p></div>
         <div class="flex gap-3">
-            <button onclick="clearCart()" class="px-5 py-3 text-[10px] font-black bg-red-600 rounded-xl uppercase">Отмена</button>
+            <button onclick="clearCart()" class="px-5 py-3 text-[10px] font-black bg-red-600 rounded-xl">Отмена</button>
             <button onclick="openPay()" class="btn-gold px-8 py-4 text-[11px]">Оформить</button>
         </div>
     </div>
@@ -52,10 +48,10 @@
         <button onclick="nav('shop')" id="n-shop" class="nav-btn active"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2"/></svg><span class="text-[10px] font-black uppercase">Шоп</span></button>
         <button onclick="nav('scratch')" id="n-scratch" class="nav-btn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/></svg><span class="text-[10px] font-black uppercase">Удача</span></button>
         <button onclick="nav('status')" id="n-status" class="nav-btn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-width="2"/></svg><span class="text-[10px] font-black uppercase">Статус</span></button>
-                <button onclick="nav('support')" id="n-support" class="nav-btn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" stroke-width="2"/></svg><span class="text-[10px] font-black uppercase">Связь</span></button>
+                <button onclick="nav('support')" id="n-support" class="nav-btn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke-width="2"/></svg><span class="text-[10px] font-black uppercase">Связь</span></button>
     </nav>
 
-    <!-- МОДАЛКА ОПЛАТЫ -->
+    <!-- ОПЛАТА -->
     <div id="pay-modal" class="fixed inset-0 bg-black/98 flex items-center justify-center hidden z-[2000] p-6">
         <div class="bg-[#050505] w-full max-w-sm p-8 rounded-[40px] border border-yellow-500/30">
             <h2 class="text-2xl font-black mb-8 uppercase text-yellow-500 italic text-center">Оплата</h2>
@@ -65,16 +61,16 @@
                 <div onclick="copyText('+79501700787')" class="bg-white/5 p-4 rounded-2xl border border-yellow-500/50"><p class="text-[10px] text-yellow-500 font-black">СБП</p><p class="font-black">+7 950 170 07 87</p></div>
             </div>
             <button onclick="finishPay()" class="w-full py-5 btn-gold text-sm mb-4">Я ОПЛАТИЛ(А)</button>
-            <button onclick="closePay()" class="w-full text-[10px] font-black opacity-30 uppercase text-center">Назад</button>
+            <button onclick="closePay()" class="w-full text-[10px] font-black opacity-30 text-center uppercase">Назад</button>
         </div>
     </div>
 
-    <!-- УСПЕХ БОСС ДОВОЛЕН -->
+    <!-- ФИНАЛ -->
     <div id="success-modal" class="fixed inset-0 bg-black flex items-center justify-center hidden z-[3000] p-6 text-center">
         <div>
             <div class="text-8xl mb-6">👑</div>
             <h2 class="text-3xl font-black mb-2 uppercase text-yellow-500">БОСС ДОВОЛЕН!</h2>
-            <p class="opacity-40 mb-10 text-[10px] uppercase">Заказ отправлен менеджеру</p>
+            <p class="opacity-40 mb-10 text-[10px] uppercase">ЗАКАЗ ОТПРАВЛЕН МЕНЕДЖЕРУ</p>
             <button id="manager-btn" class="btn-gold px-12 py-5">Написать менеджеру</button>
         </div>
     </div>
@@ -83,18 +79,18 @@
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
-        const BOT_TOKEN = '8637015814:AAH_4-QvH1DQB3XrYO-4MzbEz0nIwpNXN0w';
+        const BOT_TOKEN = '8730430332:AAGff_PCX2059o3EUwG-d9C19uTqcH4sAZ4';
         const ADMIN_ID = '8553862867';
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv';
 
-        let state = JSON.parse(localStorage.getItem('boss_final_v3')) || {
+        let state = JSON.parse(localStorage.getItem('boss_final_v4')) || {
             cart: [], discount: 0, lastScratch: 0, totalSpent: 0, history: [],
-            regDate: new Date().toLocaleDateString()
+            regDate: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5)
         };
         let products = [];
         let currentCat = 'Все';
 
-        const save = () => localStorage.setItem('boss_final_v3', JSON.stringify(state));
+        const save = () => localStorage.setItem('boss_final_v4', JSON.stringify(state));
 
         async function loadData() {
             try {
@@ -123,13 +119,12 @@
                 const filtered = currentCat === 'Все' ? products : products.filter(p => p.cat === currentCat);
                 app.innerHTML = `<div class="grid grid-cols-2 gap-4">` + filtered.map((p, i) => {
                     const rIdx = products.indexOf(p);
-                    return `
-                    <div class="boss-card p-4 flex flex-col border border-white/5">
+                    return `<div class="boss-card p-4 flex flex-col border border-white/5">
                         <img src="${p.img}" class="w-full aspect-square object-cover rounded-2xl mb-3 shadow-lg">
-                        <h3 class="text-[10px] font-black uppercase mb-1 text-yellow-500 truncate">${p.name}</h3>
+                        <h3 class="text-[10px] font-black uppercase text-yellow-500 truncate">${p.name}</h3>
                         <p class="text-[8px] opacity-40 mb-3 h-6 overflow-hidden">${p.desc}</p>
                         <div class="mt-auto">
-                            <input type="number" id="qty-${rIdx}" value="1" min="1" class="qty-input mb-2 text-xs">
+                            <input type="number" id="qty-${rIdx}" value="1" min="1" class="qty-input mb-2 text-xs" placeholder="Кол-во">
                             <div class="text-lg font-black italic mb-3 text-center">${p.price} ₽</div>
                             <button onclick="addToCart(${rIdx})" class="w-full py-3 btn-gold text-[9px]">Добавить</button>
                         </div>
@@ -139,42 +134,42 @@
 
             if (page === 'scratch') {
                 const canPlay = (Date.now() - state.lastScratch) > 86400000;
-                app.innerHTML = `
-                <div class="text-center py-10">
+                app.innerHTML = `<div class="text-center py-10">
                     <div class="scratch-container"><div class="scratch-prize"><span id="prize-text" class="text-2xl font-black text-yellow-500">???</span></div><canvas id="scratch-canvas" class="scratch-canvas"></canvas></div>
-                    ${!canPlay ? `<p class="mt-10 text-[10px] font-black opacity-20 uppercase">Завтра заходи</p>` : `<p class="mt-10 text-[10px] font-black text-yellow-500 uppercase">Стри удачу (1-3%)</p>`}
+                    <p class="mt-10 text-[10px] font-black uppercase">${canPlay ? 'Стри удачу (1-3%)' : 'Доступно завтра'}</p>
                 </div>`;
                 if(canPlay) initScratch();
             }
 
             if (page === 'status') {
                 const user = tg.initDataUnsafe.user || {id: '000000', username: 'guest'};
-                app.innerHTML = `
-                <div class="space-y-4">
-                    <div class="boss-card p-6 border-yellow-500/30">
-                        <p class="text-[10px] font-black text-yellow-500 uppercase mb-4">Карточка Босса</p>
+                const nextLvl = state.totalSpent < 5000 ? 5000 : 15000;
+                const progress = Math.min(100, (state.totalSpent / nextLvl) * 100);
+                app.innerHTML = `<div class="space-y-4">
+                    <div class="boss-card p-6">
+                        <p class="text-[10px] font-black text-yellow-500 uppercase mb-4">Твой Статус Босса</p>
+                        <div class="flex justify-between text-[10px] mb-2 font-black"><span>ПРОГРЕСС VIP</span><span>${state.totalSpent} / ${nextLvl} ₽</span></div>
+                        <div class="progress-bg mb-6"><div class="progress-fill" style="width: ${progress}%"></div></div>
                         <div class="space-y-2 text-xs font-black">
-                            <div class="flex justify-between"><span class="opacity-40 uppercase">ID:</span><span>${user.id}</span></div>
-                            <div class="flex justify-between"><span class="opacity-40 uppercase">Юзер:</span><span>@${user.username}</span></div>
-                            <div class="flex justify-between"><span class="opacity-40 uppercase">В боте с:</span><span>${state.regDate}</span></div>
-                            <div class="flex justify-between"><span class="opacity-40 uppercase">Скидка:</span><span class="text-yellow-500">${state.discount}%</span></div>
-                            <div class="flex justify-between mt-4 border-t border-white/10 pt-4"><span class="opacity-40 uppercase">Всего куплено:</span><span class="text-lg text-yellow-500">${state.totalSpent} ₽</span></div>
+                            <div class="flex justify-between"><span class="opacity-40">ID:</span><span>${user.id}</span></div>
+                            <div class="flex justify-between"><span class="opacity-40">USER:</span><span>@${user.username}</span></div>
+                            <div class="flex justify-between"><span class="opacity-40">РЕГИСТРАЦИЯ:</span><span>${state.regDate}</span></div>
+                            <div class="flex justify-between"><span class="opacity-40">СКИДКА СЕЙЧАС:</span><span class="text-yellow-500">${state.discount}%</span></div>
                         </div>
                     </div>
-                    <div class="boss-card p-6"><p class="text-[10px] font-black uppercase mb-4 opacity-40">История заказов</p>
-                        <div class="space-y-2">${state.history.length ? state.history.slice(-5).reverse().map(h => `<div class="flex justify-between text-[9px] border-b border-white/5 pb-1"><span>${h.date} - ${h.name}</span><span>${h.sum} ₽</span></div>`).join('') : '<p class="text-[10px] opacity-20">Пусто</p>'}</div>
+                    <div class="boss-card p-6"><p class="text-[10px] font-black uppercase mb-4 opacity-40">История покупок</p>
+                        <div class="space-y-2">${state.history.length ? state.history.slice(-5).reverse().map(h => `<div class="flex justify-between text-[9px] border-b border-white/5 pb-1"><span>${h.date} - ${h.name}</span><span>${h.sum} ₽</span></div>`).join('') : '<p class="text-[10px] opacity-20 text-center">Заказов еще нет</p>'}</div>
                     </div>
                 </div>`;
             }
 
             if (page === 'support') {
                 app.innerHTML = `<div class="space-y-4">
-                    <div onclick="window.open('https://t.me/boss_storemy')" class="boss-card p-8 flex items-center gap-6 border-yellow-500"><div class="text-4xl">📢</div><div><p class="text-xl font-black uppercase text-yellow-500">Наш Канал</p><p class="text-[10px] opacity-40 font-black">Скидки и новости</p></div></div>
-                    <div onclick="window.open('https://t.me/nmproda')" class="boss-card p-8 flex items-center gap-6 border-white/10"><div class="text-4xl">👨‍💻</div><div><p class="text-xl font-black uppercase">Менеджер</p><p class="text-[10px] opacity-40 font-black">@nmproda</p></div></div>
+                    <div onclick="window.open('https://t.me/boss_storemy')" class="boss-card p-8 flex items-center gap-6 border-yellow-500"><div class="text-4xl">📢</div><div><p class="text-xl font-black uppercase text-yellow-500">КАНАЛ</p><p class="text-[10px] opacity-40 font-black">АКЦИИ ТУТ</p></div></div>
+                    <div onclick="window.open('https://t.me/nmproda')" class="boss-card p-8 flex items-center gap-6 border-white/10"><div class="text-4xl">👨‍💻</div><div><p class="text-xl font-black uppercase">МЕНЕДЖЕР</p><p class="text-[10px] opacity-40 font-black">@NMPRODA</p></div></div>
                 </div>`;
             }
         }
-
         function setCat(c) { currentCat = c; nav('shop'); }
         function addToCart(idx) {
             const qty = parseInt(document.getElementById(`qty-${idx}`).value) || 1;
@@ -199,43 +194,39 @@
         function initScratch() {
             const canvas = document.getElementById('scratch-canvas');
             const ctx = canvas.getContext('2d');
-            const prize = Math.floor(Math.random() * 3) + 1; // 1-3%
+            const prize = Math.floor(Math.random() * 3) + 1;
             document.getElementById('prize-text').innerText = `СКИДКА ${prize}%`;
             canvas.width = 280; canvas.height = 160;
-            ctx.fillStyle = '#222'; ctx.fillRect(0,0,280,160);
+            ctx.fillStyle = '#333'; ctx.fillRect(0,0,280,160);
             ctx.fillStyle = '#FFD700'; ctx.font = '900 24px Montserrat'; ctx.textAlign = 'center'; ctx.fillText('BOSS LUCK', 140, 90);
-            let isDrawing = false;
-            const scratch = (e) => {
-                if(!isDrawing) return;
+            let active = false;
+            const draw = (e) => {
+                if(!active) return;
                 const r = canvas.getBoundingClientRect();
                 const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
                 const y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
                 ctx.globalCompositeOperation = 'destination-out';
-                ctx.beginPath(); ctx.arc(x, y, 25, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI*2); ctx.fill();
                 const d = ctx.getImageData(0,0,280,160).data;
                 let t = 0; for(let i=3; i<d.length; i+=4) if(d[i] === 0) t++;
                 if(t > (d.length/4) * 0.5) {
-                    canvas.style.display = 'none';
+                    canvas.style.display = 'none'; active = false;
                     state.discount = prize; state.lastScratch = Date.now(); save();
                     confetti(); updateCartUI();
                 }
             };
-            canvas.onmousedown = canvas.ontouchstart = () => isDrawing = true;
-            window.onmouseup = window.ontouchend = () => isDrawing = false;
-            canvas.onmousemove = canvas.ontouchmove = scratch;
+            canvas.onmousedown = canvas.ontouchstart = () => active = true;
+            window.onmouseup = window.ontouchend = () => active = false;
+            canvas.onmousemove = canvas.ontouchmove = draw;
         }
 
         async function finishPay() {
             const user = tg.initDataUnsafe.user || {id: '000000', username: 'guest'};
             let total = 0;
-            const orderList = state.cart.map(i => {
-                total += (i.price * i.q);
-                return `${i.name} — ${i.q} шт.`;
-            }).join('\n🛒 ');
+            const orderList = state.cart.map(i => { total += (i.price * i.q); return `${i.name} — ${i.q} шт.`; }).join('\n🛒 ');
             const final = Math.floor(total * (1 - state.discount/100));
             const msg = `🚀 НОВЫЙ ЗАКАЗ\n👤 @${user.username} (ID: ${user.id})\n🛒 ${orderList}\n💰 Итого: ${final} ₽`;
 
-            // Текст для менеджера
             const itemsShort = state.cart.map(i => `${i.name} ${i.q}шт.`).join(', ');
             const managerText = `Привет! Оплатил(а) [${itemsShort}], выдай пожалуйста заказ! Мой айди: ${user.id}`;
             document.getElementById('manager-btn').onclick = () => window.open(`https://t.me/nmproda?text=${encodeURIComponent(managerText)}`);
@@ -246,14 +237,13 @@
                     body: JSON.stringify({ chat_id: ADMIN_ID, text: msg })
                 });
                 state.totalSpent += final;
-                state.cart.forEach(i => state.history.push({date: new Date().toLocaleDateString(), name: i.name, sum: i.price * i.q}));
+                state.cart.forEach(i => state.history.push({date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString().slice(0,5), name: i.name, sum: i.price * i.q}));
                 state.cart = []; save();
                 closePay();
                 document.getElementById('success-modal').classList.remove('hidden');
                 confetti();
             } catch (e) { alert("Ошибка!"); }
         }
-
         window.onload = loadData;
     </script>
 </body>
