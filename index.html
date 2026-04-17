@@ -9,50 +9,68 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --gold: #FFD700; --bg: #000; }
-        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; margin: 0; padding-bottom: 120px; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; margin: 0; padding-bottom: 140px; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
         
-        .boss-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 20px; position: relative; z-index: 10; }
-        .btn-gold { background: linear-gradient(180deg, #FFD700 0%, #BA8B02 100%); color: #000; font-weight: 900; text-transform: uppercase; border-radius: 12px; cursor: pointer; border: none; }
-        .btn-gold:active { transform: scale(0.96); opacity: 0.8; }
+        .boss-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 20px; }
+        .btn-gold { background: linear-gradient(180deg, #FFD700 0%, #BA8B02 100%); color: #000; font-weight: 900; text-transform: uppercase; border-radius: 12px; }
         
-        .q-input { background: #050505; border: 1px solid #1a1a1a; color: #fff; font-weight: 900; text-align: center; border-radius: 8px; width: 100%; outline: none; padding: 5px 0; font-size: 12px; }
+        .q-input { background: #050505; border: 1px solid #1a1a1a; color: #fff; font-weight: 900; text-align: center; border-radius: 8px; width: 100%; outline: none; padding: 6px 0; font-size: 14px; }
 
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #050505; border-top: 1px solid #1a1a1a; padding: 10px 0 25px; display: flex; justify-content: space-around; z-index: 9999; }
+        /* Та самая нижняя панель со скрина */
+        .checkout-bar { 
+            position: fixed; bottom: 85px; left: 15px; right: 15px; 
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); 
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+            border-radius: 20px; padding: 15px; display: flex; 
+            justify-content: space-between; align-items: center; 
+            z-index: 5000; transition: 0.3s; transform: translateY(150%);
+        }
+        .checkout-bar.active { transform: translateY(0); }
+
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #050505; border-top: 1px solid #1a1a1a; padding: 10px 0 25px; display: flex; justify-content: space-around; z-index: 6000; }
         .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #333; cursor: pointer; flex: 1; }
         .nav-btn.active { color: var(--gold); }
 
-        .cat-container { display: flex; gap: 20px; overflow-x: auto; padding: 10px 20px; scrollbar-width: none; }
-        .cat-item { opacity: 0.4; font-size: 11px; font-weight: 900; white-space: nowrap; cursor: pointer; text-transform: uppercase; }
+        .cat-container { display: flex; gap: 20px; overflow-x: auto; padding: 15px 20px; scrollbar-width: none; }
+        .cat-item { opacity: 0.3; font-size: 11px; font-weight: 900; white-space: nowrap; text-transform: uppercase; }
         .cat-item.active { opacity: 1; color: var(--gold); border-bottom: 2px solid var(--gold); }
-
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+                .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .modal.hidden { display: none; }
-        
-        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
 
-    <header class="pt-8 pb-4 text-center">
-                <h1 class="text-xl font-black italic uppercase text-yellow-500" id="greet-title">ДОБРЫЙ ДЕНЬ, BOSS</h1>
-        <p class="text-[8px] opacity-20 uppercase tracking-[3px]" id="user-nick">WELCOME, BOSS SYSTEM</p>
+    <header class="pt-8 pb-2 text-center">
+        <h1 class="text-xl font-black italic uppercase text-yellow-500" id="greet-title">ДОБРЫЙ ДЕНЬ, BOSS</h1>
+        <p class="text-[8px] opacity-20 uppercase tracking-[3px]">WELCOME, BOSS SYSTEM</p>
     </header>
 
     <div id="cats-nav" class="cat-container no-scrollbar"></div>
-    
-    <main id="app-content" class="px-4 mt-2"></main>
+    <main id="app-content" class="px-4"></main>
 
-    <!-- МОДАЛКА ОПЛАТЫ -->
+    <!-- ПАНЕЛЬ ОФОРМЛЕНИЯ (КАК НА СКРИНЕ) -->
+    <div id="checkout-bar" class="checkout-bar">
+        <div>
+            <p id="total-price" class="text-xl font-black text-yellow-500">0 ₽</p>
+            <p class="text-[7px] opacity-50 uppercase font-bold">К оплате со скидкой</p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="hideCheckout()" class="bg-red-600 text-white font-black text-[10px] px-5 py-3 rounded-xl uppercase">Отмена</button>
+            <button onclick="showRequisites()" class="btn-gold px-7 py-3 text-[10px]">Оплатить</button>
+        </div>
+    </div>
+
+    <!-- РЕКВИЗИТЫ -->
     <div id="pay-modal" class="modal hidden">
-        <div class="boss-card w-full p-6 text-center shadow-2xl border-yellow-500/20">
-            <h2 class="text-yellow-500 font-black uppercase mb-6 italic italic">Реквизиты</h2>
+        <div class="boss-card w-full p-6 text-center">
+            <h2 class="text-yellow-500 font-black uppercase mb-6 italic">Реквизиты</h2>
             <div class="space-y-3">
                 <div class="text-left bg-white/5 p-3 rounded-xl"><p class="text-[7px] opacity-40 uppercase">ЮMoney</p><p class="text-xs font-bold">4100 1191 2197 6236</p></div>
                 <div class="text-left bg-white/5 p-3 rounded-xl"><p class="text-[7px] opacity-40 uppercase">Карта</p><p class="text-xs font-bold">2200 7019 5529 9232</p></div>
                 <div class="text-left bg-white/5 p-3 rounded-xl"><p class="text-[7px] opacity-40 uppercase">СБП</p><p class="text-xs font-bold">+7 950 170 07 87</p></div>
             </div>
             <button onclick="confirmPayment()" class="btn-gold w-full py-4 mt-6 text-xs">Я оплатил(а)</button>
-            <button onclick="closeModal()" class="text-[9px] opacity-30 uppercase mt-5 block w-full font-bold">Назад</button>
+                        <button onclick="closeModal()" class="text-[9px] opacity-30 uppercase mt-5 block w-full font-bold">Назад</button>
         </div>
     </div>
 
@@ -61,14 +79,12 @@
         <div class="flex flex-col items-center text-center">
             <span class="text-6xl mb-6">👑</span>
             <h2 class="text-2xl font-black text-yellow-500 italic uppercase">Босс доволен!</h2>
-            <p class="text-[9px] opacity-40 uppercase mt-2 mb-10 px-10">Заказ отправлен менеджеру</p>
-            <button onclick="contactManager()" class="btn-gold px-10 py-4 text-xs">Написать менеджеру</button>
+            <button onclick="contactManager()" class="btn-gold px-10 py-4 mt-8 text-xs">Написать менеджеру</button>
         </div>
     </div>
 
-    <!-- МЕНЮ -->
     <nav class="nav-bar">
-                <div onclick="nav('shop')" id="n-shop" class="nav-btn active"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2"/></svg><span class="text-[9px] font-bold uppercase">Шоп</span></div>
+        <div onclick="nav('shop')" id="n-shop" class="nav-btn active"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2"/></svg><span class="text-[9px] font-bold uppercase">Шоп</span></div>
         <div onclick="nav('scratch')" id="n-scratch" class="nav-btn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/></svg><span class="text-[9px] font-bold uppercase">Удача</span></div>
         <div onclick="nav('status')" id="n-status" class="nav-btn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-width="2"/></svg><span class="text-[9px] font-bold uppercase">Статус</span></div>
         <div onclick="nav('support')" id="n-support" class="nav-btn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke-width="2"/></svg><span class="text-[9px] font-bold uppercase">Связь</span></div>
@@ -79,52 +95,30 @@
         tg.ready(); tg.expand();
 
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv';
-        
-        let state = JSON.parse(localStorage.getItem('vFINAL_BOSS')) || { 
-            totalSpent: 0, orders: [], discount: 3, regDate: '17.04.2026' 
-        };
-        
+        let state = JSON.parse(localStorage.getItem('vBOSS_ULTRA')) || { totalSpent: 0, orders: [], discount: 3, regDate: '17.04.2026' };
         let products = [];
         let currentCat = 'Все';
-        let currentOrderMsg = '';
+        let selectedProduct = null;
 
-        function save() { localStorage.setItem('vFINAL_BOSS', JSON.stringify(state)); }
+        function save() { localStorage.setItem('vBOSS_ULTRA', JSON.stringify(state)); }
 
         async function loadData() {
             try {
-                const h = new Date().getHours();
-                const greet = h < 6 ? "ДОБРОЙ НОЧИ" : h < 12 ? "ДОБРОЕ УТРО" : h < 18 ? "ДОБРЫЙ ДЕНЬ" : "ДОБРЫЙ ВЕЧЕР";
-                document.getElementById('greet-title').innerText = `${greet}, BOSS`;
-                
-                const user = tg.initDataUnsafe.user;
-                if(user) document.getElementById('user-nick').innerText = `WELCOME, ${user.first_name.toUpperCase()}`;
-
                 const res = await fetch(CSV_URL);
                 const text = await res.text();
                 const rows = text.split('\n').slice(1);
-                
                 products = rows.map(r => {
                     const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if (!c[1]) return null;
-                    return { 
-                        cat: c[0].replace(/"/g,'').trim(), 
-                        name: c[1].replace(/"/g,'').trim(), 
-                        price: parseFloat(c[2]) || 0, 
-                        desc: c[3] ? c[3].replace(/"/g,'').trim() : '', 
-                        img: c[4] ? c[4].replace(/"/g,'').trim() : '' 
-                    };
-                }).filter(p => p);
-                
+                    return { cat: c[0].replace(/"/g,'').trim(), name: c[1].replace(/"/g,'').trim(), price: parseFloat(c[2]) || 0, desc: c[3]?.replace(/"/g,'').trim() || '', img: c[4]?.replace(/"/g,'').trim() || '' };
+                }).filter(p => p.name);
                 nav('shop');
-            } catch (e) {
-                document.getElementById('app-content').innerHTML = `<p class="text-center opacity-30 mt-20">Ошибка загрузки. Обновите страницу.</p>`;
-            }
+            } catch (e) { console.error(e); }
         }
 
         function nav(page) {
             const app = document.getElementById('app-content');
             const cats = document.getElementById('cats-nav');
-            
+            hideCheckout();
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('n-'+page).classList.add('active');
             cats.style.display = (page === 'shop') ? 'flex' : 'none';
@@ -132,103 +126,85 @@
             if(page === 'shop') {
                 const unique = ['Все', ...new Set(products.map(p => p.cat))];
                 cats.innerHTML = unique.map(c => `<div onclick="setCat('${c}')" class="cat-item ${currentCat === c ? 'active' : ''}">${c}</div>`).join('');
-                
                 const filtered = currentCat === 'Все' ? products : products.filter(p => p.cat === currentCat);
-                
-                app.innerHTML = `<div class="grid grid-cols-2 gap-4">` + filtered.map((p, i) => {
-                    const rIdx = products.indexOf(p);
-                    return `
+                app.innerHTML = `<div class="grid grid-cols-2 gap-4 pb-10">` + filtered.map((p, i) => `
                     <div class="boss-card p-4">
                         <img src="${p.img}" class="w-full aspect-square object-contain bg-[#111] rounded-2xl mb-3 p-1">
-                        <h3 class="text-[10px] font-black text-yellow-500 uppercase italic mb-1 leading-tight h-6 overflow-hidden">${p.name}</h3>
-                        <p class="text-[9px] text-white opacity-80 uppercase font-medium leading-tight mb-3 min-h-[24px]">
-                            ${p.desc}
-                        </p>
-                        <input type="number" id="q-${rIdx}" value="1" min="1" class="q-input mb-3">
+                        <h3 class="text-[10px] font-black text-yellow-500 uppercase italic mb-1 h-6 overflow-hidden">${p.name}</h3>
+                        <p class="text-[9px] text-white opacity-80 uppercase mb-3 min-h-[24px] leading-tight">${p.desc}</p>
+                        <input type="number" id="q-${i}" value="1" min="1" oninput="updatePriceLive(${i})" class="q-input mb-3">
                         <p class="text-base font-black italic mb-3 text-center">${p.price} ₽</p>
-                        <button onclick="startPay(${rIdx})" class="btn-gold w-full py-3 text-[10px]">Добавить</button>
-                    </div>`;}).join('') + `</div>`;
+                        <button onclick="prepareOrder(${i})" class="btn-gold w-full py-3 text-[10px]">Добавить</button>
+                    </div>`).join('') + `</div>`;
             }
 
             if(page === 'status') {
                 const progress = Math.min((state.totalSpent / 5000) * 100, 100);
                 app.innerHTML = `
-                    <div class="boss-card p-6 mb-6">
-                        <p class="text-[8px] font-black text-yellow-500 uppercase mb-4 tracking-widest italic">Карточка босса</p>
-                        <div class="mb-6">
-                            <div class="flex justify-between text-[9px] font-black uppercase mb-2"><span>Прогресс VIP</span><span>${state.totalSpent} / 5000 ₽</span></div>
-                            <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-yellow-500" style="width:${progress}%"></div></div>
+                    <div class="boss-card p-6 mb-4">
+                    <p class="text-[7px] font-black text-yellow-500 uppercase mb-3 italic">Карточка босса</p>
+                        <div class="mb-5">
+                            <div class="flex justify-between text-[9px] font-black mb-1"><span>ПРОГРЕСС VIP</span><span>${state.totalSpent} / 5000 ₽</span></div>
+                            <div class="w-full h-1.5 bg-white/5 rounded-full"><div class="h-full bg-yellow-500 rounded-full" style="width:${progress}%"></div></div>
                         </div>
-                        <div class="grid grid-cols-2 gap-y-4 text-[9px] font-bold opacity-70">
+                        <div class="grid grid-cols-2 gap-3 text-[9px] font-bold opacity-60">
                             <div>ID: ${tg.initDataUnsafe.user?.id || '7727345054'}</div>
                             <div>ЮЗЕР: @${tg.initDataUnsafe.user?.username || 'NMPRODA'}</div>
                             <div>СКИДКА: ${state.discount}%</div>
                             <div>РЕГ: ${state.regDate}</div>
                         </div>
                     </div>
-                    <div class="boss-card p-6">
-                        <p class="text-[8px] font-black opacity-30 uppercase mb-4 italic">Последние покупки</p>
-                        <div class="space-y-3">
-                            ${state.orders.length ? state.orders.map(o => `
-                                <div class="flex justify-between text-[10px] border-b border-white/5 pb-2"><span>${o.name}</span><span class="font-black text-yellow-500">${o.price} ₽</span></div>
-                            `).join('') : '<p class="text-[9px] opacity-10">История пуста</p>'}
-                        </div>
-                    </div>`;
+                    <div class="boss-card p-6"><p class="text-[8px] font-black opacity-30 uppercase mb-4 italic">Последние покупки</p>
+                    <div class="space-y-3">${state.orders.length ? state.orders.map(o => `<div class="flex justify-between text-[10px] border-b border-white/5 pb-2"><span>${o.name}</span><span class="text-yellow-500">${o.price} ₽</span></div>`).join('') : '<p class="text-[9px] opacity-10">Пусто</p>'}</div></div>`;
             }
 
             if(page === 'support') {
                 app.innerHTML = `
-                    <div onclick="window.open('https://t.me/+P3p-W1BvO8syMzVi')" class="boss-card p-7 flex items-center gap-4 mb-4 border-yellow-500/10">
-                        <span class="text-3xl">📢</span>
-                        <div><h2 class="font-black uppercase italic text-sm">Канал</h2><p class="text-[8px] opacity-40 uppercase">Все новости и отзывы</p></div>
-                    </div>
-                    <div onclick="window.open('https://t.me/nmproda')" class="boss-card p-7 flex items-center gap-4 border-yellow-500/10">
-                        <span class="text-3xl">🧑‍💻</span>
-                        <div><h2 class="font-black uppercase italic text-sm">Менеджер</h2><p class="text-[8px] opacity-40 uppercase">Поддержка @nmproda</p></div>
-                    </div>`;
-            }
-
-            if(page === 'scratch') {
-                app.innerHTML = `<div class="py-20 flex flex-col items-center">
-                    <div class="boss-card w-64 h-40 flex items-center justify-center border-yellow-500/20 mb-5 text-3xl font-black text-yellow-500 italic">???</div>
-                    <p class="text-[9px] opacity-20 uppercase font-black tracking-widest">Будет доступно завтра</p>
-                </div>`;
+                <div onclick="window.open('https://t.me/+P3p-W1BvO8syMzVi')" class="boss-card p-6 flex items-center gap-4 mb-4"><span class="text-3xl">📢</span><div><h2 class="font-black uppercase italic text-sm">Канал</h2><p class="text-[8px] opacity-40 uppercase">Новости</p></div></div>
+                <div onclick="window.open('https://t.me/nmproda')" class="boss-card p-6 flex items-center gap-4"><span class="text-3xl">🧑‍💻</span><div><h2 class="font-black uppercase italic text-sm">Менеджер</h2><p class="text-[8px] opacity-40 uppercase">@nmproda</p></div></div>`;
             }
         }
 
-        function setCat(c) { 
-            currentCat = c; 
-            nav('shop'); 
+        function updatePriceLive(i) {
+            if (selectedProduct && selectedProduct.index === i) prepareOrder(i);
+        }
+
+        function prepareOrder(i) {
+            const p = products[i];
+            const q = document.getElementById('q-'+i).value || 1;
+            const final = Math.floor((p.price * q) * (1 - state.discount/100));
+            selectedProduct = { ...p, q, final, index: i };
+            document.getElementById('total-price').innerText = final + " ₽";
+            document.getElementById('checkout-bar').classList.add('active');
             tg.HapticFeedback.impactOccurred('light');
         }
 
-        function startPay(idx) {
-            const p = products[idx];
-            const q = document.getElementById('q-'+idx).value || 1;
-            const finalPrice = Math.floor((p.price * q) * (1 - state.discount/100));
-            currentOrderMsg = `Привет! Оплатил(а) [${p.name} ${q}шт.], выдай пожалуйста заказ! Мой айди: ${tg.initDataUnsafe.user?.id || '7727345054'}`;
-            window.lastOrder = { name: p.name, price: finalPrice };
+        function hideCheckout() { 
+            document.getElementById('checkout-bar').classList.remove('active'); 
+            selectedProduct = null;
+        }
+
+        function showRequisites() {
             document.getElementById('pay-modal').classList.remove('hidden');
-            tg.HapticFeedback.impactOccurred('medium');
         }
 
         function confirmPayment() {
             document.getElementById('pay-modal').classList.add('hidden');
+            document.getElementById('checkout-bar').classList.remove('active');
             document.getElementById('success-screen').classList.remove('hidden');
-            if(window.lastOrder) {
-                state.totalSpent += window.lastOrder.price;
-                state.orders.unshift(window.lastOrder);
-                if(state.orders.length > 5) state.orders.pop();
-                save();
-            }
+            state.totalSpent += selectedProduct.final;
+            state.orders.unshift({ name: selectedProduct.name, price: selectedProduct.final });
+            if(state.orders.length > 5) state.orders.pop();
+            save();
         }
 
         function contactManager() {
-            window.open(`https://t.me/nmproda?text=${encodeURIComponent(currentOrderMsg)}`);
-            document.getElementById('success-screen').classList.add('hidden');
-            nav('shop');
+            const msg = `Привет! Оплатил(а) ${selectedProduct.name} (${selectedProduct.q}шт) за ${selectedProduct.final}₽. ID: ${tg.initDataUnsafe.user?.id || '000'}`;
+            window.open(`https://t.me/nmproda?text=${encodeURIComponent(msg)}`);
+            location.reload();
         }
 
+        function setCat(c) { currentCat = c; nav('shop'); }
         function closeModal() { document.getElementById('pay-modal').classList.add('hidden'); }
 
         window.onload = loadData;
