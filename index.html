@@ -11,7 +11,7 @@
         :root { --gold: #FFD700; --bg: #000; }
         body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; padding-bottom: 100px; margin: 0; overflow-x: hidden; }
         
-        .boss-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 24px; }
+        .boss-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 24px; display: flex; flex-direction: column; }
         .btn-gold { background: linear-gradient(180deg, #FFD700 0%, #BA8B02 100%); color: #000; font-weight: 900; text-transform: uppercase; border-radius: 14px; }
         
         .q-input { background: #050505; border: 1px solid #1a1a1a; color: #fff; font-weight: 900; text-align: center; border-radius: 10px; width: 100%; outline: none; padding: 6px 0; font-size: 12px; }
@@ -23,16 +23,15 @@
         .cat-item { opacity: 0.4; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; }
         .cat-item.active { opacity: 1; color: var(--gold); border-bottom: 2px solid var(--gold); }
 
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; items-center: center; justify-content: center; padding: 20px; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .pay-field { background: #111; border: 1px solid #222; border-radius: 15px; padding: 12px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- ШАПКА -->
     <header class="pt-8 pb-4 text-center">
-        <h1 class="text-2xl font-black italic uppercase text-yellow-500 italic" id="greet-title">ДОБРЫЙ ДЕНЬ, BOSS</h1>
-        <p class="text-[8px] opacity-20 uppercase tracking-[3px]">WELCOME, ВРЕМЕННЫЙ НИК</p>
+        <h1 class="text-2xl font-black italic uppercase text-yellow-500" id="greet-title">ДОБРЫЙ ДЕНЬ, BOSS</h1>
+        <p class="text-[8px] opacity-20 uppercase tracking-[3px]">WELCOME, BOSS SYSTEM</p>
     </header>
 
     <div id="cats-nav" class="flex gap-6 overflow-x-auto px-6 mb-6 no-scrollbar"></div>
@@ -60,31 +59,18 @@
     </div>
 
     <!-- ЭКРАН УСПЕХА -->
-    <div id="success-screen" class="modal hidden flex-col">
+    <div id="success-screen" class="modal hidden flex flex-col items-center">
         <span class="text-6xl mb-4">👑</span>
         <h2 class="text-2xl font-black text-yellow-500 italic uppercase">Босс доволен!</h2>
         <p class="text-[8px] opacity-40 uppercase mt-2 mb-8 text-center px-10">Заказ отправлен менеджеру</p>
         <button onclick="contactManager()" class="btn-gold px-12 py-4">Написать менеджеру</button>
     </div>
 
-    <!-- НИЖНЕЕ МЕНЮ -->
     <nav class="nav-bar">
-        <div onclick="nav('shop')" id="n-shop" class="nav-btn active">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2"/></svg>
-            <span class="text-[9px] font-bold uppercase">Шоп</span>
-        </div>
-        <div onclick="nav('scratch')" id="n-scratch" class="nav-btn">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/></svg>
-            <span class="text-[9px] font-bold uppercase">Удача</span>
-                                                                                           </div>
-                                                                                                   <div onclick="nav('status')" id="n-status" class="nav-btn">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-width="2"/></svg>
-            <span class="text-[9px] font-bold uppercase">Статус</span>
-        </div>
-        <div onclick="nav('support')" id="n-support" class="nav-btn">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke-width="2"/></svg>
-            <span class="text-[9px] font-bold uppercase">Связь</span>
-        </div>
+        <div onclick="nav('shop')" id="n-shop" class="nav-btn active"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2"/></svg><span class="text-[9px] font-bold uppercase">Шоп</span></div>
+        <div onclick="nav('scratch')" id="n-scratch" class="nav-btn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/></svg><span class="text-[9px] font-bold uppercase">Удача</span></div>
+                <div onclick="nav('status')" id="n-status" class="nav-btn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-width="2"/></svg><span class="text-[9px] font-bold uppercase">Статус</span></div>
+        <div onclick="nav('support')" id="n-support" class="nav-btn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke-width="2"/></svg><span class="text-[9px] font-bold uppercase">Связь</span></div>
     </nav>
 
     <script>
@@ -92,20 +78,17 @@
         tg.ready(); tg.expand();
 
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv';
-        let state = JSON.parse(localStorage.getItem('boss_final')) || { 
-            totalSpent: 0, orders: [], discount: 3, regDate: '15.04.2026' 
-        };
+        let state = JSON.parse(localStorage.getItem('boss_final_v2')) || { totalSpent: 0, orders: [], discount: 3, regDate: '15.04.2026' };
         let products = [];
         let currentCat = 'Все';
         let currentOrderMsg = '';
 
-        function save() { localStorage.setItem('boss_final', JSON.stringify(state)); }
+        function save() { localStorage.setItem('boss_final_v2', JSON.stringify(state)); }
 
         async function loadData() {
             const h = new Date().getHours();
             const greet = h < 6 ? "ДОБРОЙ НОЧИ" : h < 12 ? "ДОБРОЕ УТРО" : h < 18 ? "ДОБРЫЙ ДЕНЬ" : "ДОБРЫЙ ВЕЧЕР";
             document.getElementById('greet-title').innerText = `${greet}, BOSS`;
-
             try {
                 const res = await fetch(CSV_URL);
                 const text = await res.text();
@@ -131,30 +114,36 @@
                 cats.innerHTML = unique.map(c => `<div onclick="setCat('${c}')" class="cat-item ${currentCat === c ? 'active' : ''}">${c}</div>`).join('');
                 const filtered = currentCat === 'Все' ? products : products.filter(p => p.cat === currentCat);
                 
-                app.innerHTML = `<div class="grid grid-cols-2 gap-4 pb-10">` + filtered.map((p, i) => `
-                    <div class="boss-card p-4 flex flex-col items-center">
+                app.innerHTML = `<div class="grid grid-cols-2 gap-4 pb-24">` + filtered.map((p, i) => {
+                    const rIdx = products.indexOf(p);
+                    return `
+                    <div class="boss-card p-4">
                         <img src="${p.img}" class="w-full aspect-square object-contain bg-[#111] rounded-2xl mb-3 p-2">
-                        <h3 class="text-[9px] font-black text-yellow-500 uppercase italic w-full text-left mb-1 h-6 overflow-hidden">${p.name}</h3>
-                        <p class="text-[7px] opacity-30 uppercase font-bold w-full text-left mb-3 h-4 overflow-hidden">${p.desc}</p>
-                        <input type="number" id="q-${i}" value="1" class="q-input mb-3">
-                        <p class="text-lg font-black italic mb-3">${p.price} ₽</p>
-                        <button onclick="startPay(${i})" class="btn-gold w-full py-3 text-[10px]">Добавить</button>
-                    </div>
-                `).join('') + `</div>`;
+                        <h3 class="text-[10px] font-black text-yellow-500 uppercase italic mb-1 leading-tight">${p.name}</h3>
+                        <!-- ОПИСАНИЕ СТАЛО ЯРЧЕ И БОЛЬШЕ -->
+                        <p class="text-[9px] text-white opacity-70 uppercase font-medium leading-tight mb-3 min-h-[24px]">
+                            ${p.desc}
+                        </p>
+                        <input type="number" id="q-${rIdx}" value="1" class="q-input mb-3">
+                        <p class="text-lg font-black italic mb-3 text-center">${p.price} ₽</p>
+                        <button onclick="startPay(${rIdx})" class="btn-gold w-full py-3 text-[10px]">Добавить</button>
+                    </div>`;
+                }).join('') + `</div>`;
             }
 
             if(page === 'status') {
                 const progress = Math.min((state.totalSpent / 5000) * 100, 100);
                 app.innerHTML = `
                     <div class="boss-card p-6 mb-6">
-                        <p class="text-[8px] font-black text-yellow-500 uppercase mb-4 tracking-widest">Карточка босса</p>
+                        <p class="text-[8px] font-black text-yellow-500 uppercase mb-4 tracking-widest italic">Карточка босса</p>
                         <div class="mb-6">
-                            <div class="flex justify-between text-[8px] font-black uppercase mb-2"><span>Прогресс VIP</span><span>${state.totalSpent} / 5000 ₽</span></div>
+                            <div class="flex justify-between text-[9px] font-black uppercase mb-2"><span>Прогресс VIP</span><span>${state.totalSpent} / 5000 ₽</span></div>
                             <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-yellow-500" style="width:${progress}%"></div></div>
                         </div>
-                        <div class="grid grid-cols-2 gap-y-4 text-[9px] font-bold opacity-60">
+                        <div class="grid grid-cols-2 gap-y-4 text-[10px] font-bold opacity-80">
                             <div>ID: ${tg.initDataUnsafe.user?.id || '7727345054'}</div>
-                            <div>ЮЗЕР: @${tg.initDataUnsafe.user?.username || 'NMPRODA'}</div>
+                            <div>ЮЗЕР: @${tg.initDataUnsafe.user?.username |\ 
+| 'NMPRODA'}</div>
                             <div>СКИДКА: ${state.discount}%</div>
                             <div>РЕГ: ${state.regDate}</div>
                         </div>
@@ -163,8 +152,8 @@
                         <p class="text-[8px] font-black opacity-30 uppercase mb-4">Последние покупки</p>
                         <div class="space-y-3">
                             ${state.orders.length ? state.orders.map(o => `
-                                <div class="flex justify-between text-[10px] border-b border-white/5 pb-2"><span>${o.name}</span><span class="font-black">${o.price} ₽</span></div>
-                            `).join('') : '<p class="text-[8px] opacity-20">История пуста</p>'}
+                                <div class="flex justify-between text-[11px] border-b border-white/5 pb-2"><span>${o.name}</span><span class="font-black text-yellow-500">${o.price} ₽</span></div>
+                            `).join('') : '<p class="text-[9px] opacity-20">История пуста</p>'}
                         </div>
                     </div>
                 `;
@@ -182,33 +171,22 @@
                     </div>
                 `;
             }
-
-            if(page === 'scratch') {
-                app.innerHTML = `<div class="py-20 flex flex-col items-center">
-                    <div class="boss-card w-64 h-40 flex items-center justify-center border-yellow-500/20 mb-4 text-3xl font-black text-yellow-500">???</div>
-                    <p class="text-[8px] opacity-30 uppercase font-black tracking-widest">Будет доступно завтра</p>
-                </div>`;
-            }
         }
 
         function setCat(c) { currentCat = c; nav('shop'); }
 
-        function startPay(i) {
-            const p = products[i];
-            const q = document.getElementById('q-'+i).value;
+        function startPay(idx) {
+            const p = products[idx];
+            const q = document.getElementById('q-'+idx).value;
             const finalPrice = Math.floor((p.price * q) * (1 - state.discount/100));
             currentOrderMsg = `Привет! Оплатил(а) [${p.name} ${q}шт.], выдай пожалуйста заказ! Мой айди: ${tg.initDataUnsafe.user?.id || '7727345054'}`;
-            
-            // Сохраняем для истории (временно, до подтверждения)
             window.lastPendingOrder = { name: p.name, price: finalPrice };
-            
             document.getElementById('pay-modal').classList.remove('hidden');
         }
 
         function confirmPayment() {
             document.getElementById('pay-modal').classList.add('hidden');
             document.getElementById('success-screen').classList.remove('hidden');
-            
             if(window.lastPendingOrder) {
                 state.totalSpent += window.lastPendingOrder.price;
                 state.orders.unshift(window.lastPendingOrder);
