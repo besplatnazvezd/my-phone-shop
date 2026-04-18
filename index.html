@@ -3,99 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BOSS STORE</title>
+    <title>BOSS STORE - PREMIUM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
-        :root { --gold: #FFD700; --bg: #000; }
-        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; margin: 0; padding-bottom: 140px; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        :root { --gold: #FFD700; --dark-bg: #000000; --card-bg: #0a0a0a; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--dark-bg); color: #fff; margin: 0; padding-bottom: 100px; -webkit-font-smoothing: antialiased; }
+
+        /* Эстетичные карточки */
+        .boss-card { background: var(--card-bg); border: 1px solid rgba(255, 215, 0, 0.05); border-radius: 24px; overflow: hidden; position: relative; transition: all 0.3s ease; }
+        .boss-card:active { transform: scale(0.98); }
+        .btn-gold { background: linear-gradient(180deg, #FFD700 0%, #BA8B02 100%); color: #000; font-weight: 900; text-transform: uppercase; border-radius: 14px; transition: 0.2s; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2); }
         
-        .boss-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 20px; }
-        .btn-gold { background: linear-gradient(180deg, #FFD700 0%, #BA8B02 100%); color: #000; font-weight: 900; text-transform: uppercase; border-radius: 12px; cursor: pointer; }
-        
-        .q-input { background: #050505; border: 1px solid #1a1a1a; color: #fff; font-weight: 900; text-align: center; border-radius: 8px; width: 100%; outline: none; padding: 6px 0; font-size: 14px; }
+        /* РЕДКОСТЬ (Standoff) */
+        .rarity-common { border-bottom: 4px solid #4b69ff; background: linear-gradient(180deg, rgba(75,105,255,0.1) 0%, transparent 100%); }
+        .rarity-rare { border-bottom: 4px solid #8847ff; background: linear-gradient(180deg, rgba(136,71,255,0.1) 0%, transparent 100%); }
+        .rarity-epic { border-bottom: 4px solid #d32ee6; background: linear-gradient(180deg, rgba(211,46,230,0.1) 0%, transparent 100%); }
+        .rarity-arcane { border-bottom: 4px solid #eb4b4b; background: linear-gradient(180deg, rgba(235,75,75,0.1) 0%, transparent 100%); }
 
-        .checkout-bar { 
-            position: fixed; bottom: 85px; left: 15px; right: 15px; 
-            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); 
-            border: 1px solid rgba(255, 255, 255, 0.2); 
-            border-radius: 20px; padding: 15px; display: flex; 
-            justify-content: space-between; align-items: center; 
-            z-index: 5000; transition: 0.3s; transform: translateY(150%);
-        }
-        .checkout-bar.active { transform: translateY(0); }
+        /* РУЛЕТКА */
+        .roulette-wrapper { position: relative; width: 100%; height: 140px; overflow: hidden; background: #050505; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; }
+        .roulette-strip { display: flex; position: absolute; left: 0; transition: transform 8s cubic-bezier(0.1, 0, 0.05, 1); will-change: transform; }
+        .roulette-item { min-width: 110px; height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid rgba(255,255,255,0.02); }
+                .roulette-pointer { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: var(--gold); z-index: 10; box-shadow: 0 0 15px var(--gold); transform: translateX(-50%); }
 
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #050505; border-top: 1px solid #1a1a1a; padding: 10px 0 25px; display: flex; justify-content: space-around; z-index: 6000; }
-        .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #333; cursor: pointer; flex: 1; }
-        .nav-btn.active { color: var(--gold); }
+        /* ТАБ БАР */
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(5,5,5,0.95); backdrop-filter: blur(10px); border-top: 1px solid rgba(255,255,255,0.05); padding: 12px 10px 30px; display: flex; justify-content: space-around; z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #444; font-size: 9px; font-weight: 800; text-transform: uppercase; transition: 0.3s; }
+        .nav-item.active { color: var(--gold); }
 
-        .cat-item { opacity: 0.3; font-size: 11px; font-weight: 900; white-space: nowrap; text-transform: uppercase; cursor: pointer; }
-        .cat-item.active { opacity: 1; color: var(--gold); border-bottom: 2px solid var(--gold); }
+        /* МОДАЛКИ */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .hidden { display: none !important; }
 
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-                #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; padding: 10px 20px; border-radius: 50px; font-weight: 900; font-size: 10px; z-index: 20000; display: none; }
+        /* СКРЕТЧ КАРТА */
+        #scratch-container { position: relative; width: 280px; height: 160px; background: #111; border-radius: 20px; overflow: hidden; display: flex; items: center; justify-content: center; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 10; cursor: crosshair; touch-action: none; }
 
-        canvas { cursor: crosshair; touch-action: none; border-radius: 15px; }
+        .vip-progress-bg { background: rgba(255,255,255,0.05); height: 6px; border-radius: 10px; overflow: hidden; }
+        .vip-progress-fill { background: var(--gold); height: 100%; box-shadow: 0 0 10px var(--gold); }
+
+        /* Загрузка */
+        #loader { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
-    <div id="toast">СКОПИРОВАНО!</div>
+    <div id="loader"><div class="animate-spin rounded-full h-10 w-10 border-t-2 border-yellow-500"></div></div>
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-yellow-500 text-black px-6 py-2 rounded-full font-black text-[10px] z-[10000] hidden">СКОПИРОВАНО</div>
 
-    <header class="pt-8 pb-2 text-center">
-        <h1 class="text-xl font-black italic uppercase text-yellow-500 italic" id="greet-title">ДОБРЫЙ ДЕНЬ, BOSS</h1>
-        <p class="text-[8px] opacity-20 uppercase tracking-[3px]">WELCOME, BOSS SYSTEM</p>
-    </header>
+    <main id="main-view" class="px-5 pt-8">
+        <!-- Сюда рендерится контент -->
+    </main>
 
-    <div id="cats-nav" class="flex gap-6 overflow-x-auto px-6 mb-4 no-scrollbar"></div>
-    <main id="app-content" class="px-4"></main>
-
-    <div id="checkout-bar" class="checkout-bar">
-        <div>
-            <p id="total-price" class="text-xl font-black text-yellow-500">0 ₽</p>
-            <p class="text-[7px] opacity-50 uppercase font-bold">К оплате со скидкой</p>
-        </div>
-        <div class="flex gap-2">
-            <button onclick="hideCheckout()" class="bg-red-600 text-white font-black text-[10px] px-5 py-3 rounded-xl uppercase">Отмена</button>
-            <button onclick="showRequisites()" class="btn-gold px-7 py-3 text-[10px]">Оплатить</button>
+    <!-- РУЛЕТКА МОДАЛКА -->
+    <div id="modal-roulette" class="modal hidden">
+        <div class="w-full text-center">
+                        <h2 class="text-xl font-black italic text-yellow-500 uppercase mb-8 tracking-tighter">ОТКРЫТИЕ КЕЙСА</h2>
+            <div class="roulette-wrapper">
+                <div class="roulette-pointer"></div>
+                <div id="roulette-strip" class="roulette-strip"></div>
+            </div>
+            <div id="won-display" class="hidden mt-10 animate-pulse">
+                <p class="text-[10px] opacity-40 uppercase mb-2">Предмет получен:</p>
+                <h3 id="won-item-name" class="text-2xl font-black text-yellow-500 uppercase italic"></h3>
+                <button onclick="claimPrize()" class="btn-gold px-12 py-4 mt-8 text-[10px]">ЗАБРАТЬ В ИНВЕНТАРЬ</button>
+            </div>
         </div>
     </div>
 
-    <!-- РЕКВИЗИТЫ С КОПИРОВАНИЕМ -->
-    <div id="pay-modal" class="modal hidden">
-        <div class="boss-card w-full p-6 text-center">
-            <h2 class="text-yellow-500 font-black uppercase mb-6 italic">Реквизиты</h2>
-            <p class="text-[8px] opacity-40 mb-4 uppercase">Нажми на номер, чтобы скопировать</p>
-            <div class="space-y-3">
-                <div onclick="copyText('4100119121976236')" class="text-left bg-white/5 p-3 rounded-xl active:bg-white/10">
-                    <p class="text-[7px] opacity-40 uppercase">ЮMoney</p><p class="text-xs font-bold">4100 1191 2197 6236</p>
+    <!-- ОПЛАТА МОДАЛКА -->
+    <div id="modal-pay" class="modal hidden">
+        <div class="boss-card w-full max-w-sm p-8 text-center border-yellow-500/20">
+            <h2 class="text-yellow-500 font-black italic uppercase mb-6">Оплата Кейса</h2>
+            <div class="space-y-4 mb-8">
+                <div onclick="copyText('4100119121976236')" class="bg-white/5 p-4 rounded-2xl text-left active:scale-95 transition">
+                    <p class="text-[8px] opacity-40 uppercase">ЮMoney</p>
+                    <p class="font-bold text-sm">4100 1191 2197 6236</p>
                 </div>
-                <div onclick="copyText('2200701955299232')" class="text-left bg-white/5 p-3 rounded-xl active:bg-white/10">
-                    <p class="text-[7px] opacity-40 uppercase">Карта</p><p class="text-xs font-bold">2200 7019 5529 9232</p>
-                                    </div>
-                <div onclick="copyText('+79501700787')" class="text-left bg-white/5 p-3 rounded-xl active:bg-white/10">
-                    <p class="text-[7px] opacity-40 uppercase">СБП (Т-Банк)</p><p class="text-xs font-bold">+7 950 170 07 87</p>
+                <div onclick="copyText('2200701955299232')" class="bg-white/5 p-4 rounded-2xl text-left active:scale-95 transition">
+                    <p class="text-[8px] opacity-40 uppercase">Карта</p>
+                    <p class="font-bold text-sm">2200 7019 5529 9232</p>
                 </div>
             </div>
-            <button onclick="confirmPayment()" class="btn-gold w-full py-4 mt-6 text-xs">Я оплатил(а)</button>
-            <button onclick="closeModal()" class="text-[9px] opacity-30 uppercase mt-5 block w-full font-bold">Назад</button>
-        </div>
-    </div>
-
-    <div id="success-screen" class="modal hidden">
-        <div class="flex flex-col items-center text-center">
-            <span class="text-6xl mb-6">👑</span>
-            <h2 class="text-2xl font-black text-yellow-500 italic uppercase">Босс доволен!</h2>
-            <button onclick="contactManager()" class="btn-gold px-10 py-4 mt-8 text-xs">Написать менеджеру</button>
+            <button onclick="startMysteryRoll()" class="btn-gold w-full py-5 text-[10px]">Я ОПЛАТИЛА</button>
         </div>
     </div>
 
     <nav class="nav-bar">
-        <div onclick="nav('shop')" id="n-shop" class="nav-btn active"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2"/></svg><span class="text-[9px] font-bold uppercase">Шоп</span></div>
-        <div onclick="nav('scratch')" id="n-scratch" class="nav-btn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="00 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/></svg><span class="text-[9px] font-bold uppercase">Удача</span></div>
-        <div onclick="nav('status')" id="n-status" class="nav-btn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-width="2"/></svg><span class="text-[9px] font-bold uppercase">Статус</span></div>
-        <div onclick="nav('support')" id="n-support" class="nav-btn"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke-width="2"/></svg><span class="text-[9px] font-bold uppercase">Связь</span></div>
+        <div onclick="render('shop')" id="nav-shop" class="nav-item active"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 9V5a1 1 0 112 0v4h3a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H6a1 1 0 110-2h3z"/></svg><span>Шоп</span></div>
+        <div onclick="render('luck')" id="nav-luck" class="nav-item"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM5.884 4.47a1 1 0 10-1.415 1.413l.708.709a1 1 0 101.414-1.414l-.707-.708zM14.116 4.47l-.707.708a1 1 0 101.414 1.414l.708-.709a1 1 0 10-1.415-1.412zM11 8a3 3 0 10-6 0 3 3 0 006 0zM2.5 10a1 1 0 100 2h1a1 1 0 100-2h-1zM15.5 10a1 1 0 100 2h1a1 1 0 100-2h-1zM3 15.364a1 1 0 101.414 1.414l.707-.707a1 1 0 10-1.414-1.414l-.707.707zM16.293 15.364l-.707-.707a1 1 0 10-1.414 1.414l.707.707a1 1 0 101.414-1.414zM9 15v1a1 1 0 102 0v-1a1 1 0 10-2 0z"/></svg><span>Удача</span></div>
+        <div onclick="render('status')" id="nav-status" class="nav-item"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"/><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"/></svg><span>Статус</span></div>
+        <div onclick="render('support')" id="nav-support" class="nav-item"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7z"/></svg><span>Связь</span></div>
     </nav>
 
     <script>
@@ -103,210 +103,218 @@
         tg.ready(); tg.expand();
 
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv';
-        let state = JSON.parse(localStorage.getItem('BOSS_V9_FIX')) || { 
-            totalSpent: 0, orders: [], discount: 0, regDate: '17.04.2026', lastScratch: 0 
-        };
-        let products = [];
-        let currentCat = 'Все';
-        let selectedProduct = null;
 
-        function save() { localStorage.setItem('BOSS_V9_FIX', JSON.stringify(state)); }
+        let state = JSON.parse(localStorage.getItem('BOSS_PREMIUM_V1')) || { discount: 0, lastLuck: 0, spent: 1177469 };
+        
+        const POOL = [
+            { n: "1000 звёзд", r: "arcane", i: "⭐" },
+            { n: "Прем на год", r: "arcane", i: "👑" },
+            { n: "Прем на 6 месяцев", r: "epic", i: "💎" },
+            { n: "500 звёзд", r: "epic", i: "🌟" },
+            { n: "Канал Анонимность", r: "rare", i: "🕶️" },
+            { n: "Бонус-код", r: "rare", i: "🏷️" },
+            { n: "100 звёзд", r: "common", i: "✨" },
+            { n: "ТГ Аккаунт", r: "common", i: "📱" }
+        ];
 
-        async function loadData() {
-            try {
+        let winningItem = null;
+
+        function isMysteryTime() {
+            const msk = new Date(new Date().getTime() + (new Date().getTimezoneOffset() + 180) * 60000);
+            return msk.getHours() === 0;
+        }
+
+        async function render(page) {
+            const view = document.getElementById('main-view');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('nav-'+page).classList.add('active');
+            
+            if(page === 'shop') {
+                view.innerHTML = `
+                <header class="text-center mb-8">
+                    <h1 class="text-2xl font-black italic text-yellow-500 uppercase italic">ДОБРЫЙ ДЕНЬ, BOSS</h1>
+                    <p class="text-[8px] opacity-20 tracking-[5px] font-bold">WELCOME BOSS SYSTEM</p>
+                </header>`;
+
+                if(isMysteryTime()) {
+                    view.innerHTML += `
+                    <div onclick="openMysteryPay()" class="boss-card p-6 mb-8 border border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-transparent flex items-center justify-between">
+                        <div>
+                            <h3 class="text-sm font-black italic text-yellow-500 uppercase leading-none">MYSTERY CASE</h3>
+                            <p class="text-[7px] opacity-40 uppercase mt-2 font-bold tracking-widest">LIMITED EDITION • 1 HOUR ONLY</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-lg font-black italic">499 ₽</span>
+                        </div>
+                    </div>`;
+                }
+
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-2 gap-5 pb-10';
+                view.appendChild(grid);
+
                 const res = await fetch(CSV_URL);
                 const text = await res.text();
                 const rows = text.split('\n').slice(1);
-                products = rows.map(r => {
+                
+                grid.innerHTML = rows.map(r => {
                     const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    return { cat: c[0].replace(/"/g,'').trim(), name: c[1].replace(/"/g,'').trim(), price: parseFloat(c[2]) || 0, desc: c[3]?.replace(/"/g,'').trim() || '', img: c[4]?.replace(/"/g,'').trim() || '' };
-                }).filter(p => p.name);
-                nav('shop');
-            } catch (e) { console.error(e); }
-        }
-
-        function isMysteryTime() {
-            const now = new Date();
-            const msk = new Date(now.getTime() + (now.getTimezoneOffset() + 180) * 60000);
-            return msk.getHours() === 0; 
-        }
-
-        function nav(page) {
-            const app = document.getElementById('app-content');
-            const cats = document.getElementById('cats-nav');
-            hideCheckout();
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('n-'+page).classList.add('active');
-            cats.style.display = (page === 'shop') ? 'flex' : 'none';
-
-            if(page === 'shop') {
-                const unique = ['Все', ...new Set(products.map(p => p.cat))];
-                cats.innerHTML = unique.map(c => `<div onclick="setCat('${c}')" class="cat-item ${currentCat === c ? 'active' : ''}">${c}</div>`).join('');
-                let filtered = currentCat === 'Все' ? products : products.filter(p => p.cat === currentCat);
-                
-                let html = `<div class="grid grid-cols-2 gap-4 pb-10">`;
-                
-                // МИСТЕРИ КЕЙС
-                if (isMysteryTime()) {
-                    html += `
-                    <div class="boss-card p-4 col-span-2 border-yellow-500 shadow-[0_0_15px_rgba(255,215,0,0.3)] bg-gradient-to-b from-yellow-500/10 to-transparent mb-2">
-                        <div class="flex items-center gap-4">
-                        <span class="text-4xl">🎁</span>
-                            <div class="flex-1">
-                                <h3 class="text-sm font-black text-yellow-500 uppercase italic">BOSS MYSTERY CASE</h3>
-                                <p class="text-[8px] opacity-70 uppercase">Только до 01:00 МСК. Внутри может быть что угодно!</p>
+                    if(!c[1]) return '';
+                    const name = c[1].replace(/"/g,''), price = c[2], desc = c[3]?.replace(/"/g,'') || '', img = c[4]?.replace(/"/g,'') || '', stock = parseInt(c[5]) || 0;
+                    const out = stock <= 0;
+                    return `
+                    <div class="boss-card p-4 flex flex-col ${out ? 'opacity-40' : ''}">
+                        <div class="relative mb-4">
+                            <img src="${img}" class="w-full aspect-square object-contain bg-white/5 rounded-2xl p-2">
+                        </div>
+                        <h3 class="text-[10px] font-black text-yellow-500 uppercase mb-1 truncate">${name}</h3>
+                        <p class="text-[7px] opacity-40 uppercase font-bold mb-3 h-4 truncate">${desc}</p>
+                        <div class="mt-auto">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-xs font-black italic">${price} ₽</span>
+                                <span class="text-[7px] font-black ${out ? 'text-red-500' : 'text-green-500'} uppercase">${out ? 'SOLD OUT' : stock+' ШТ.'}</span>
                             </div>
-                            <div class="text-right">
-                                <p class="text-lg font-black italic">499 ₽</p>
-                                <button onclick="buyMystery()" class="btn-gold px-4 py-2 text-[8px]">Забрать</button>
-                            </div>
+                            <button onclick="buy('${name}',${price})" ${out ? 'disabled' : ''} class="btn-gold w-full py-2.5 text-[9px]">${out ? 'ЖДЕМ' : 'ДОБАВИТЬ'}</button>
                         </div>
                     </div>`;
-                }
-
-                html += filtered.map((p, i) => `
-                    <div class="boss-card p-4">
-                        <img src="${p.img}" class="w-full aspect-square object-contain bg-[#111] rounded-2xl mb-3 p-1">
-                        <h3 class="text-[10px] font-black text-yellow-500 uppercase italic mb-1 h-6 overflow-hidden">${p.name}</h3>
-                        <p class="text-[9px] text-white opacity-80 uppercase mb-3 min-h-[24px] leading-tight">${p.desc}</p>
-                        <input type="number" id="q-${i}" value="1" min="1" oninput="updatePriceLive(${i})" class="q-input mb-3">
-                        <p class="text-base font-black italic mb-3 text-center">${p.price} ₽</p>
-                        <button onclick="prepareOrder(${i})" class="btn-gold w-full py-3 text-[10px]">Добавить</button>
-                    </div>`).join('') + `</div>`;
-                app.innerHTML = html;
+                }).join('');
+                document.getElementById('loader').style.display = 'none';
             }
 
-            if(page === 'scratch') {
-                const canScratch = (Date.now() - state.lastScratch) > 86400000;
-                app.innerHTML = `
-                <div class="py-10 flex flex-col items-center">
-                    <h2 class="text-yellow-500 font-black italic uppercase mb-6">Стирай и выигрывай</h2>
-                    <div class="relative w-64 h-40 boss-card overflow-hidden flex items-center justify-center">
-                        <div class="text-4xl font-black text-yellow-500" id="scratch-result">? ? ?</div>
-                        ${canScratch ? '<canvas id="scratch-canvas" class="absolute inset-0 z-20"></canvas>' : ''}
+            if(page === 'luck') {
+                const available = (Date.now() - state.lastLuck) > 86400000;
+                view.innerHTML = `
+                <div class="flex flex-col items-center pt-10">
+                    <h2 class="text-yellow-500 font-black italic uppercase mb-8">Стирай и выигрывай</h2>
+                    <div id="scratch-container" class="boss-card">
+                        <div class="text-5xl font-black text-yellow-500" id="scratch-res">${state.discount > 0 ? '-'+state.discount+'%' : '?'}</div>
+                        ${available ? '<canvas id="scratch-canvas"></canvas>' : ''}
                     </div>
-                    <p class="text-[9px] opacity-40 uppercase font-black mt-6 tracking-widest text-center px-10">
-                        ${canScratch ? 'Сотри слой пальцем, чтобы получить скидку на сегодня!' : 'Приходи завтра за новой скидкой!'}
-                    </p>
+                    <p class="text-[9px] opacity-40 uppercase font-bold mt-10 tracking-widest">ПРИХОДИ ЗАВТРА ЗА НОВОЙ СКИДКОЙ!</p>
                 </div>`;
-                if(canScratch) initScratch();
-                else document.getElementById('scratch-result').innerText = `-${state.discount}%`;
+                if(available) initScratch();
             }
 
             if(page === 'status') {
-                const progress = Math.min((state.totalSpent / 5000) * 100, 100);
-                app.innerHTML = `
-                    <div class="boss-card p-6 mb-4">
-                        <p class="text-[7px] font-black text-yellow-500 uppercase mb-3 italic">Карточка босса</p>
-                        <div class="mb-5">
-                            <div class="flex justify-between text-[9px] font-black mb-1"><span>ПРОГРЕСС VIP</span><span>${state.totalSpent} / 5000 ₽</span></div>
-                            <div class="w-full h-1.5 bg-white/5 rounded-full"><div class="h-full bg-yellow-500 rounded-full" style="width:${progress}%"></div></div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3 text-[9px] font-bold opacity-60">
-                            <div>ID: ${tg.initDataUnsafe.user?.id || '7727345054'}</div>
-                            <div>ЮЗЕР: @${tg.initDataUnsafe.user?.username || 'NMPRODA'}</div>
-                            <div>СКИДКА: ${state.discount}%</div>
-                            <div>РЕГ: ${state.regDate}</div>
-                        </div>
-                    </div>`;
+                view.innerHTML = `
+                <div class="boss-card p-8 bg-gradient-to-b from-white/5 to-transparent">
+                    <p class="text-[8px] font-black text-yellow-500 uppercase mb-6 italic tracking-widest">КАРТОЧКА БОССА</p>
+                    <div class="mb-10">
+                        <div class="flex justify-between text-[10px] font-black mb-3 italic"><span>ПРОГРЕСС VIP</span><span>${state.spent.toLocaleString()} / 5,000,000 ₽</span></div>
+                        <div class="vip-progress-bg"><div class="vip-progress-fill" style="width:${Math.min(state.spent/50000, 100)}%"></div></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-y-6 gap-x-4 text-[9px] font-black uppercase opacity-60">
+                        <div><p class="opacity-40 mb-1">ID КЛИЕНТА</p>${tg.initDataUnsafe.user?.id || '7727345054'}</div>
+                        <div><p class="opacity-40 mb-1">USER</p>@${tg.initDataUnsafe.user?.username || 'nmproda'}</div>
+                        <div><p class="opacity-40 mb-1">СКИДКА</p>${state.discount}%</div>
+                        <div><p class="opacity-40 mb-1">РЕГИСТРАЦИЯ</p>17.04.2026</div>
+                    </div>
+                </div>`;
             }
-            
+
             if(page === 'support') {
-                app.innerHTML = `
-                <div onclick="window.open('https://t.me/+P3p-W1BvO8syMzVi')" class="boss-card p-6 flex items-center gap-4 mb-4"><span class="text-3xl">📢</span><div><h2 class="font-black uppercase italic text-sm">Канал</h2><p class="text-[8px] opacity-40 uppercase">Новости</p></div></div>
-                <div onclick="window.open('https://t.me/nmproda')" class="boss-card p-6 flex items-center gap-4"><span class="text-3xl">🧑‍💻</span><div><h2 class="font-black uppercase italic text-sm">Менеджер</h2><p class="text-[8px] opacity-40 uppercase">@nmproda</p></div></div>`;
+                view.innerHTML = `
+                <div class="space-y-4 pt-10">
+                    <div onclick="window.open('https://t.me/+P3p-W1BvO8syMzVi')" class="boss-card p-6 flex items-center justify-between group active:scale-95 transition">
+                        <div class="flex items-center gap-6"><span class="text-3xl">📢</span><div><h3 class="font-black uppercase italic text-sm">КАНАЛ БОССА</h3><p class="text-[8px] opacity-30 uppercase font-bold">НОВОСТИ И ОБНОВЛЕНИЯ</p></div></div>
+                        <svg class="w-4 h-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                    <div onclick="window.open('https://t.me/nmproda')" class="boss-card p-6 flex items-center justify-between group active:scale-95 transition">
+                        <div class="flex items-center gap-6"><span class="text-3xl">🤵</span><div><h3 class="font-black uppercase italic text-sm">МЕНЕДЖЕР</h3><p class="text-[8px] opacity-30 uppercase font-bold">@NMPRODA</p></div></div>
+                        <svg class="w-4 h-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                </div>`;
             }
         }
 
-        function initScratch() {
-            const canvas = document.getElementById('scratch-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 256; canvas.height = 160;
-            ctx.fillStyle = '#333'; ctx.fillRect(0,0,256,160);
-            ctx.fillStyle = '#444'; ctx.font = '20px Montserrat'; ctx.fillText('BOSS STORE', 60, 90);
+        function openMysteryPay() { document.getElementById('modal-pay').classList.remove('hidden'); }
+
+        function startMysteryRoll() {
+            document.getElementById('modal-pay').classList.add('hidden');
+            document.getElementById('modal-roulette').classList.remove('hidden');
             
-            let isDrawing = false;
-            const scratch = (e) => {
-                if(!isDrawing) return;
-                const rect = canvas.getBoundingClientRect();
-                const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-                const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.beginPath(); ctx.arc(x, y, 25, 0, Math.PI * 2); ctx.fill();
-                checkScratch();
-            };
+            const strip = document.getElementById('roulette-strip');
+            let content = '';
+            for(let i=0; i<80; i++) {
+                const item = POOL[Math.floor(Math.random()*POOL.length)];
+                content += `<div class="roulette-item rarity-${item.r}"><span class="text-3xl mb-2">${item.i}</span><span class="text-[8px] font-black uppercase text-center">${item.n}</span></div>`;
+            }
+            strip.innerHTML = content;
 
-            const checkScratch = () => {
-                const data = ctx.getImageData(0,0,256,160).data;
-                let transparent = 0;
-                for(let i=3; i<data.length; i+=4) if(data[i] === 0) transparent++;
-                if(transparent > data.length / 4 * 0.5) {
-                    canvas.remove();
-                    const win = Math.floor(Math.random() * 3) + 1; // 1-3%
-                    state.discount = win;
-                    state.lastScratch = Date.now();
-                    save();
-                    document.getElementById('scratch-result').innerText = `-${win}%`;
-                    tg.HapticFeedback.notificationOccurred('success');
-                }
-            };
+            const winIdx = 70;
+            winningItem = POOL[Math.floor(Math.random()*POOL.length)];
+            const winEl = strip.querySelectorAll('.roulette-item')[winIdx];
+            winEl.innerHTML = `<span class="text-3xl mb-2">${winningItem.i}</span><span class="text-[8px] font-black uppercase text-center">${winningItem.n}</span>`;
+            winEl.className = `roulette-item rarity-${winningItem.r}`;
 
-            canvas.addEventListener('mousedown', () => isDrawing = true);
-            canvas.addEventListener('touchstart', () => isDrawing = true);
-            window.addEventListener('mouseup', () => isDrawing = false);
-            window.addEventListener('touchend', () => isDrawing = false);
-            canvas.addEventListener('mousemove', scratch);
-            canvas.addEventListener('touchmove', scratch);
+            setTimeout(() => {
+                const offset = (winIdx * 110) - (document.querySelector('.roulette-wrapper').offsetWidth / 2) + 55;
+                strip.style.transform = `translateX(-${offset}px)`;
+            }, 100);
+
+            setTimeout(() => {
+                document.getElementById('won-display').classList.remove('hidden');
+                document.getElementById('won-item-name').innerText = winningItem.n;
+                tg.HapticFeedback.notificationOccurred('success');
+            }, 8500);
         }
 
-        function copyText(txt) {
-            navigator.clipboard.writeText(txt);
-            const t = document.getElementById('toast');
-            t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 1500);
-            tg.HapticFeedback.impactOccurred('medium');
-        }
-
-        function prepareOrder(i) {
-            const p = products[i];
-            const q = document.getElementById('q-'+i).value || 1;
-            const final = Math.floor((p.price * q) * (1 - state.discount/100));
-            selectedProduct = { ...p, q, final };
-            document.getElementById('total-price').innerText = final + " ₽";
-            document.getElementById('checkout-bar').classList.add('active');
-            tg.HapticFeedback.impactOccurred('light');
-        }
-
-        function buyMystery() {
-            selectedProduct = { name: "BOSS MYSTERY CASE", q: 1, final: 499 };
-            showRequisites();
-        }
-
-        function updatePriceLive(i) {
-            if(selectedProduct && products[i].name === selectedProduct.name) prepareOrder(i);
-        }
-
-        function hideCheckout() { document.getElementById('checkout-bar').classList.remove('active'); selectedProduct = null; }
-        function showRequisites() { document.getElementById('pay-modal').classList.remove('hidden'); }
-        function closeModal() { document.getElementById('pay-modal').classList.add('hidden'); }
-
-        function confirmPayment() {
-            document.getElementById('pay-modal').classList.add('hidden');
-            document.getElementById('checkout-bar').classList.remove('active');
-            document.getElementById('success-screen').classList.remove('hidden');
-            state.totalSpent += selectedProduct.final;
-            state.orders.unshift({ name: selectedProduct.name, price: selectedProduct.final });
-            save();
-        }
-
-        function contactManager() {
-            const msg = `Привет! Оплатил(а) ${selectedProduct.name} за ${selectedProduct.final}₽. ID: ${tg.initDataUnsafe.user?.id || '000'}`;
-            window.open(`https://t.me/nmproda?text=${encodeURIComponent(msg)}`);
+        function claimPrize() {
+            window.open(`https://t.me/nmproda?text=Босс, оплатила кейс! Выпал приз: ${winningItem.n}. Мой ID: ${tg.initDataUnsafe.user?.id || 'Queen'}`);
             location.reload();
         }
 
-        function setCat(c) { currentCat = c; nav('shop'); }
-        window.onload = loadData;
+        function buy(name, price) {
+            const final = Math.floor(price * (1 - state.discount/100));
+            window.open(`https://t.me/nmproda?text=Босс, хочу купить: ${name}. Цена со скидкой: ${final} ₽. Мой ID: ${tg.initDataUnsafe.user?.id || 'Queen'}`);
+        }
+
+        function initScratch() {
+            const can = document.getElementById('scratch-canvas'), ctx = can.getContext('2d');
+            can.width = 280; can.height = 160;
+            ctx.fillStyle = '#222'; ctx.fillRect(0,0,280,160);
+            ctx.fillStyle = '#FFD700'; ctx.font = '900 20px Montserrat'; ctx.fillText('BOSS STORE', 70, 90);
+            
+            let painting = false;
+            const clear = (e) => {
+                if(!painting) return;
+                const rect = can.getBoundingClientRect();
+                const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+                const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI*2); ctx.fill();
+                
+                const pixels = ctx.getImageData(0,0,280,160).data;
+                let trans = 0;
+                for(let i=3; i<pixels.length; i+=4) if(pixels[i] === 0) trans++;
+                if(trans > pixels.length/4 * 0.6) {
+                    can.remove();
+                    state.discount = Math.floor(Math.random()*3)+1;
+                    state.lastLuck = Date.now();
+                    save();
+                    document.getElementById('scratch-res').innerText = `-${state.discount}%`;
+                }
+            };
+            can.addEventListener('mousedown', () => painting = true);
+            can.addEventListener('touchstart', () => painting = true);
+            window.addEventListener('mouseup', () => painting = false);
+            window.addEventListener('touchend', () => painting = false);
+            can.addEventListener('mousemove', clear);
+            can.addEventListener('touchmove', clear);
+        }
+
+        function copyText(t) {
+            navigator.clipboard.writeText(t);
+            const toast = document.getElementById('toast');
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 1500);
+            tg.HapticFeedback.impactOccurred('heavy');
+        }
+
+        function save() { localStorage.setItem('BOSS_PREMIUM_V1', JSON.stringify(state)); }
+        
+        render('shop');
     </script>
 </body>
 </html>
+                        
