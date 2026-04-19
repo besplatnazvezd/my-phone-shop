@@ -11,27 +11,26 @@
         :root { --gold: #FFD700; --bg: #000; --card: #0d0d0d; --neon: #ff00ff; }
         body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; margin: 0; padding-bottom: 120px; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
 
-        /* НЕОНОВЫЕ ЛЕНТЫ (не мешают кликам) */
-        .neon-border { position: fixed; top: 0; bottom: 0; width: 6px; z-index: 9999; pointer-events: none; display: none; background: linear-gradient(to bottom, #ff00ff, #8b5cf6, #ff00ff); box-shadow: 0 0 20px var(--neon); }
-        .promo-active .neon-border { display: block; }
+        /* НЕОНОВАЯ РАМКА ПО ВСЕМУ ЭКРАНУ */
+        .neon-frame { position: fixed; inset: 0; pointer-events: none; z-index: 9999; display: none; border: 4px solid var(--neon); box-shadow: inset 0 0 20px var(--neon), 0 0 20px var(--neon); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
+        
+        .promo-active .neon-frame { display: block; }
+        .promo-active .boss-card { box-shadow: 0 0 15px rgba(255, 0, 255, 0.2); border-color: var(--neon); }
+        .promo-active .price-glow { color: var(--neon) !important; text-shadow: 0 0 10px var(--neon); }
 
-        .boss-card { background: var(--card); border-radius: 18px; border: 1px solid rgba(255, 215, 0, 0.08); overflow: hidden; position: relative; }
+        .boss-card { background: var(--card); border-radius: 18px; border: 1px solid rgba(255, 215, 0, 0.08); overflow: hidden; position: relative; transition: 0.3s; }
         .btn-gold { background: linear-gradient(180deg, #FFD700 0%, #BA8B02 100%); color: #000; font-weight: 900; text-transform: uppercase; border-radius: 12px; }
         
-        /* SOLD OUT */
         .sold-out { opacity: 0.3; pointer-events: none; }
         .sold-out-stamp { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); background: #ff0000; color: #fff; font-weight: 900; padding: 5px 15px; border-radius: 4px; font-size: 14px; z-index: 100; border: 2px solid white; white-space: nowrap; }
 
-        /* СКРЕТЧ КАРТА (ГИГАНТСКАЯ) */
-        #scr-wrap { position: relative; width: 330px; height: 210px; background: #111; border-radius: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,215,0,0.3); overflow: hidden; box-shadow: 0 0 30px rgba(255,215,0,0.1); }
+        #scr-wrap { position: relative; width: 330px; height: 210px; background: #111; border-radius: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,215,0,0.3); overflow: hidden; }
         canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; touch-action: none; }
-
-        /* МЕНЮ (ВСЕГДА СВЕРХУ) */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: rgba(5,5,5,0.98); backdrop-filter: blur(15px); border-top: 1px solid rgba(255,215,0,0.1); padding: 12px 0 35px; display: flex; justify-content: space-around; z-index: 10000; }
-                .nav-item { color: #444; font-size: 8px; font-weight: 800; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+                .nav-bar { position: fixed; bottom: 0; width: 100%; background: rgba(5,5,5,0.98); backdrop-filter: blur(15px); border-top: 1px solid rgba(255,215,0,0.1); padding: 12px 0 35px; display: flex; justify-content: space-around; z-index: 10000; }
+        .nav-item { color: #444; font-size: 8px; font-weight: 800; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .nav-item.active { color: var(--gold); }
 
-        /* КАТЕГОРИИ */
         .cat-scroll { display: flex; overflow-x: auto; gap: 15px; padding: 10px 0 20px; scrollbar-width: none; }
         .cat-item { white-space: nowrap; font-size: 9px; font-weight: 900; color: #333; text-transform: uppercase; }
         .cat-item.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
@@ -40,20 +39,17 @@
         .hidden { display: none !important; }
 
         input { background: #1a1a1a !important; border: 1px solid rgba(255,215,0,0.2) !important; border-radius: 12px !important; padding: 14px !important; color: #fff !important; font-weight: 900 !important; text-align: center !important; outline: none !important; width: 100% !important; }
-        
-        .promo-active .price-glow { color: #ff00ff !important; text-shadow: 0 0 10px #ff00ff; }
     </style>
 </head>
 <body id="b-tag">
 
-    <div class="neon-border left-0"></div>
-    <div class="neon-border right-0"></div>
+    <div class="neon-frame"></div>
 
     <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-yellow-500 text-black px-6 py-2 rounded-full font-black text-[10px] z-[30000] hidden uppercase">Скопировано</div>
 
     <main id="app" class="px-4 pt-6"></main>
 
-    <!-- МОДАЛКА ОПЛАТЫ (С ЮMONEY) -->
+    <!-- МОДАЛКА ОПЛАТЫ -->
     <div id="m-pay" class="modal hidden">
         <div class="boss-card w-full max-w-sm p-6 text-center bg-[#0a0a0a] border-yellow-500/20">
             <h2 id="p-name" class="text-yellow-500 font-black italic uppercase mb-6 text-xl"></h2>
@@ -91,18 +87,18 @@
     </div>
 
     <nav class="nav-bar">
-        <div onclick="render('shop')" id="n-shop" class="nav-item active"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2" stroke-linecap="round"/></svg><span>Шоп</span></div>
-        <div onclick="render('luck')" id="n-luck" class="nav-item"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2" stroke-linecap="round"/></svg><span>Удача</span></div>
-        <div onclick="render('status')" id="n-status" class="nav-item"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10" stroke-width="2" stroke-linecap="round"/></svg><span>Статус</span></div>
-        <div onclick="render('promo')" id="n-promo" class="nav-item"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12" stroke-width="2" stroke-linecap="round"/></svg><span>Промо</span></div>
-        <div onclick="render('support')" id="n-support" class="nav-item"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01" stroke-width="2" stroke-linecap="round"/></svg><span>Связь</span></div>
+        <divonclick="render('shop')" id="n-shop" class="nav-item active"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-width="2"/></svg><span>Шоп</span></div>
+        <div onclick="render('luck')" id="n-luck" class="nav-item"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/></svg><span>Удача</span></div>
+        <div onclick="render('status')" id="n-status" class="nav-item"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10" stroke-width="2"/></svg><span>Статус</span></div>
+        <div onclick="render('promo')" id="n-promo" class="nav-item"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12" stroke-width="2"/></svg><span>Промо</span></div>
+        <div onclick="render('support')" id="n-support" class="nav-item"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01" stroke-width="2"/></svg><span>Связь</span></div>
     </nav>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
-        let state = JSON.parse(localStorage.getItem('BOSS_V27')) || { 
+        let state = JSON.parse(localStorage.getItem('BOSS_V28')) || { 
             discount: 0, lastLuck: 0, spent: 1177469, promoActive: false, promoVal: 0,
             promos: [{c:'BOSS777', l:20, d:9}, {c:'VIPGOLD', l:10, d:7}, {c:'START4', l:100, d:4}]
         };
@@ -130,7 +126,8 @@
 
             if(page === 'luck') {
                 const can = (Date.now() - state.lastLuck) > 86400000;
-                app.innerHTML = `<div class="flex flex-col items-center pt-10"><h2 class="text-yellow-500 font-black italic uppercase mb-10 italic">СКРЕТЧ-КАРТА</h2><div id="scr-wrap"><div class="text-center"><p class="text-[10px] font-black text-yellow-500 opacity-40 mb-2 uppercase">ВАША СКИДКА:</p><div class="text-6xl font-black text-yellow-500 italic">${state.discount > 0 ? '-'+state.discount+'%' : '???'}</div></div>${can ? '<canvas id="can"></canvas>' : ''}</div></div>`;
+                app.innerHTML = `<div class="flex flex-col items-center pt-10"><h2 class="text-yellow-500 font-black italic uppercase mb-10 italic">СКРЕТЧ-КАРТА</h2><div id="scr-wrap"><div class="text-center"><p class="text-[10px] font-black text-yellow-500 opacity-40 mb-2 uppercase">ВАША СКИДКА:</p><div class="text-6xl font-black text-yellow-500 italic">${state.discount > 0 ? '-'+state.discount+'%' : '???'}</div></div>${can ? '<canvas id="can"\
+                                                                                                                                                                                                                                                                                                                                                                                                                                         </canvas>' : ''}</div></div>`;
                 if(can) initScr();
             }
 
@@ -145,7 +142,7 @@
                     <p class="text-[8px] font-black opacity-30 uppercase mb-4 tracking-widest">Доступные коды (нажми чтобы скопировать):</p>
                     <div class="space-y-3">
                         ${state.promos.map(p => `
-                            <div onclick="copy('${p.c}')" class="boss-card p-4 flex justify-between items-center bg-white/5 border-white/5">
+                            <div onclick="copy('${p.c}')" class="boss-card p-4 flex justify-between items-center bg-white/5">
                                 <div><p class="font-black text-yellow-500">${p.c}</p><p class="text-[7px] opacity-40 font-black">СКИДКА ${p.d}%</p></div>
                                 <div class="text-right"><p class="font-black text-xs">${p.l}</p><p class="text-[6px] opacity-30 uppercase">ОСТАЛОСЬ</p></div>
                             </div>
@@ -166,7 +163,6 @@
         function setCat(c) {
             curCat = c;
             const grid = document.getElementById('grid');
-            if(!grid) return;
             const filt = c === 'BCE' ? products : products.filter(p => p[0]?.replace(/"/g,'') === c);
             grid.innerHTML = filt.map(p => {
                 const name = p[1]?.replace(/"/g,''), price = parseFloat(p[2]), desc = p[3]?.replace(/"/g,''), img = p[4]?.replace(/"/g,''), stock = parseInt(p[5]);
@@ -207,6 +203,10 @@
         }
 
         function applyP() {
+            if(state.promoActive) {
+                alert('У вас уже есть активный промокод!');
+                return;
+            }
             const code = document.getElementById('p-in').value.toUpperCase();
             const p = state.promos.find(x => x.c === code);
             if(p && p.l > 0) {
@@ -220,9 +220,16 @@
             let q = document.getElementById('p-qty').value;
             const total = ((activeItem.p * q) * (1 - (state.discount + state.promoVal)/100)).toFixed(2);
             const text = `Босс, я оплатила!\n\n🛒 Товар: ${activeItem.n}\n🔢 Кол-во: ${q} шт.\n📦 Остаток: ${activeItem.s} шт.\n💰 Сумма: ${total} ₽\n🎁 Скидка: ${state.discount + state.promoVal}%\n👤 Юзер: @${tg.initDataUnsafe.user?.username || 'user'}\n🆔 ID: ${tg.initDataUnsafe.user?.id || '000'}`;
+            
+            // СБРОС ПРОМО ПОСЛЕ ПОКУПКИ
+            state.promoActive = false;
+            state.promoVal = 0;
+            save();
+
             try { tg.sendData(text); } catch(e) {}
             window.open(`https://t.me/nmproda?text=${encodeURIComponent(text)}`);
             closeM();
+            render('shop'); // Обновляем экран, чтобы убрать неон
         }
 
         function initScr() {
@@ -259,7 +266,7 @@
             tg.HapticFeedback.impactOccurred('medium');
         }
 
-        function save() { localStorage.setItem('BOSS_V27', JSON.stringify(state)); }
+        function save() { localStorage.setItem('BOSS_V28', JSON.stringify(state)); }
         function closeM() { document.getElementById('m-pay').classList.add('hidden'); }
         render('shop');
     </script>
