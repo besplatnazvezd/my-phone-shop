@@ -8,36 +8,44 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
-        :root { --gold: #FFD700; --bg: #000; --card: #0d0d0d; }
-        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; margin: 0; padding-bottom: 120px; -webkit-tap-highlight-color: transparent; }
+        :root { --gold: #FFD700; --bg: #000; --card: #0d0d0d; --neon: #ff00ff; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; margin: 0; padding-bottom: 120px; overflow-x: hidden; }
 
         .boss-card { background: var(--card); border: 1px solid rgba(255, 215, 0, 0.1); border-radius: 20px; transition: 0.3s; position: relative; }
         .btn-gold { background: linear-gradient(180deg, #FFD700 0%, #BA8B02 100%); color: #000; font-weight: 900; text-transform: uppercase; border-radius: 12px; box-shadow: 0 4px 15px rgba(255,215,0,0.3); }
         
+        /* SOLD OUT */
         .sold-out { opacity: 0.3; pointer-events: none; }
         .sold-out-stamp { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); background: #ff0000; color: #fff; font-weight: 900; padding: 5px 15px; border-radius: 6px; font-size: 14px; z-index: 100; border: 2px solid white; box-shadow: 0 0 20px rgba(255,0,0,0.5); }
 
-        #scr-wrap { position: relative; width: 280px; height: 160px; background: #111; border-radius: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,215,0,0.3); overflow: hidden; }
-        canvas { position: absolute; inset: 0; z-index: 10; cursor: crosshair; touch-action: none; }
+        /* НЕОНОВЫЕ ЛЕНТЫ (ПОЯВЛЯЮТСЯ ПРИ ПРОМО) */
+        .neon-ribbon { position: fixed; top: 0; bottom: 0; width: 4px; background: linear-gradient(to bottom, #ff00ff, #00ffff, #ff00ff); box-shadow: 0 0 15px var(--neon); z-index: 9999; display: none; }
+        .ribbon-left { left: 0; }
+        .ribbon-right { right: 0; }
+        .promo-active .neon-ribbon { display: block; }
+        .promo-active .price-tag { color: var(--neon) !important; text-shadow: 0 0 10px var(--neon); }
 
+        /* МЕНЮ */
         .nav-bar { position: fixed; bottom: 0; width: 100%; background: rgba(5,5,5,0.98); backdrop-filter: blur(15px); border-top: 1px solid rgba(255,215,0,0.1); padding: 12px 0 35px; display: flex; justify-content: space-around; z-index: 1000; }
-        .nav-item { color: #444; font-size: 9px; font-weight: 800; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .nav-item { color: #444; font-size: 8px; font-weight: 800; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 20%; }
         .nav-item.active { color: var(--gold); }
-
-        .cat-scroll { display: flex; overflow-x: auto; gap: 20px; padding: 10px 5px; scrollbar-width: none; }
+                .cat-scroll { display: flex; overflow-x: auto; gap: 20px; padding: 10px 5px; scrollbar-width: none; }
         .cat-item { white-space: nowrap; font-size: 10px; font-weight: 900; color: #333; text-transform: uppercase; }
-                .cat-item.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
+        .cat-item.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .hidden { display: none !important; }
         
         .pay-option { background: #161616; padding: 10px 14px; border-radius: 14px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.03); }
         
-        /* КРУТИЛКА КОЛИЧЕСТВА */
-        .qty-btn { width: 32px; height: 32px; background: #222; border-radius: 8px; font-weight: 900; color: var(--gold); display: flex; align-items: center; justify-content: center; }
+        /* ВВОД КОЛИЧЕСТВА */
+        #p-qty-input { background: #111; border: 1px solid var(--gold); border-radius: 10px; width: 100px; text-align: center; font-size: 20px; font-weight: 900; color: #fff; outline: none; }
     </style>
 </head>
-<body>
+<body id="body-tag">
+
+    <div class="neon-ribbon ribbon-left"></div>
+    <div class="neon-ribbon ribbon-right"></div>
 
     <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-yellow-500 text-black px-6 py-2 rounded-full font-black text-[10px] z-[10000] hidden">СКОПИРОВАНО</div>
 
@@ -45,19 +53,14 @@
         <!-- Контент -->
     </main>
 
-    <!-- ОПЛАТА С ВЫБОРОМ КОЛИЧЕСТВА -->
+    <!-- ОПЛАТА -->
     <div id="m-pay" class="modal hidden">
         <div class="boss-card w-full max-w-sm p-6 text-center">
-            <h2 id="p-name" class="text-yellow-500 font-black italic uppercase mb-2 text-lg"></h2>
+            <h2 id="p-name" class="text-yellow-500 font-black italic uppercase mb-4 text-lg"></h2>
             
-            <!-- Выбор кол-ва -->
-            <div class="flex items-center justify-center gap-6 mb-6 bg-white/5 p-3 rounded-2xl">
-                <button onclick="changeQty(-1)" class="qty-btn text-xl">-</button>
-                <div class="flex flex-col">
-                    <span id="p-qty" class="text-xl font-black">1</span>
-                    <span class="text-[7px] opacity-40 font-bold uppercase">КОЛИЧЕСТВО</span>
-                </div>
-                <button onclick="changeQty(1)" class="qty-btn text-xl">+</button>
+            <div class="mb-6 flex flex-col items-center">
+                <input type="number" id="p-qty-input" value="1" oninput="updateTotal()">
+                <span class="text-[7px] opacity-40 font-bold uppercase mt-2 tracking-widest">Введите количество</span>
             </div>
 
             <div class="pay-option" onclick="copy('+79501700787')">
@@ -66,8 +69,8 @@
             </div>
 
             <div class="pay-option" onclick="copy('2200701955299232')">
-                <p class="text-[7px] opacity-40 uppercase mb-0.5 font-bold">💳 Т-Банк (Карта)</p>
-                                <p class="font-bold text-sm text-yellow-500">2200 7019 5529 9232</p>
+                                <p class="text-[7px] opacity-40 uppercase mb-0.5 font-bold">💳 Т-Банк (Карта)</p>
+                <p class="font-bold text-sm text-yellow-500">2200 7019 5529 9232</p>
             </div>
 
             <div class="pay-option" onclick="copy('4100119121976236')">
@@ -76,7 +79,7 @@
             </div>
 
             <div class="text-[10px] font-black italic my-4 text-white/60">
-                ИТОГО: <span id="p-total" class="text-yellow-500 text-lg ml-1">0 ₽</span>
+                ИТОГО: <span id="p-total" class="text-yellow-500 text-xl ml-1 price-tag">0.00 ₽</span>
             </div>
 
             <div class="flex gap-3">
@@ -90,6 +93,7 @@
         <div onclick="render('shop')" id="n-shop" class="nav-item active"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg><span>Шоп</span></div>
         <div onclick="render('luck')" id="n-luck" class="nav-item"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg><span>Удача</span></div>
         <div onclick="render('status')" id="n-status" class="nav-item"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg><span>Статус</span></div>
+        <div onclick="render('promo')" id="n-promo" class="nav-item"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path></svg><span>Промо</span></div>
         <div onclick="render('support')" id="n-support" class="nav-item"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg><span>Связь</span></div>
     </nav>
 
@@ -98,7 +102,16 @@
         tg.ready(); tg.expand();
 
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv';
-        let state = JSON.parse(localStorage.getItem('BOSS_V23')) || { discount: 0, lastLuck: 0, spent: 1177469 };
+        let state = JSON.parse(localStorage.getItem('BOSS_V24')) || { 
+            discount: 0, 
+            lastLuck: 0, 
+            spent: 1177469, 
+            promoActive: false,
+            promos: [
+                { code: 'BOSS2026', left: 20, disc: 5 },
+                { code: 'VIPGOLD', left: 5, disc: 10 }
+            ]
+        };
         let products = [];
         let currentCat = 'BCE';
         let activeOrder = { qty: 1 };
@@ -107,9 +120,11 @@
             const app = document.getElementById('app');
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             document.getElementById('n-'+page).classList.add('active');
+            
+            if(state.promoActive) document.getElementById('body-tag').classList.add('promo-active');
 
             if(page === 'shop') {
-                app.innerHTML = `<header class="text-center mb-6"><h1 class="text-2xl font-black italic text-yellow-500 uppercase italic">ДОБРЫЙ ДЕНЬ, BOSS</h1><p class="text-[7px] opacity-20 tracking-[4px] font-bold">WELCOME BOSS SYSTEM</p></header><div class="cat-scroll mb-4" id="cat-bar"></div><div id="grid" class="grid grid-cols-2 gap-5 pb-10"></div>`;
+                app.innerHTML = `<header class="text-center mb-6"><h1 class="text-2xl font-black italic text-yellow-500 uppercase italic">ДОБРЫЙ ДЕНЬ, BOSS</h1></header><div class="cat-scroll mb-4" id="cat-bar"></div><div id="grid" class="grid grid-cols-2 gap-5 pb-10"></div>`;
                 if(products.length === 0) {
                     const res = await fetch(CSV_URL);
                     const text = await res.text();
@@ -120,6 +135,32 @@
                 setCat(currentCat);
             }
 
+            if(page === 'promo') {
+                app.innerHTML = `
+                <div class="flex flex-col items-center pt-6">
+                    <h2 class="text-yellow-500 font-black italic uppercase mb-8 italic">АКТИВАЦИЯ ПРОМО</h2>
+                    <div class="boss-card p-6 w-full mb-8">
+                        <inputtype="text" id="promo-input" placeholder="ВВЕДИТЕ КОД" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-center font-black uppercase mb-4 outline-none focus:border-yellow-500">
+                        <button onclick="applyPromo()" class="btn-gold w-full py-4 text-[10px]">АКТИВИРОВАТЬ</button>
+                    </div>
+                    <div class="w-full space-y-4">
+                        <p class="text-[8px] font-black opacity-30 uppercase tracking-[3px] mb-2">Доступные коды:</p>
+                        ${state.promos.map(p => `
+                            <div onclick="copy('${p.code}')" class="boss-card p-4 flex justify-between items-center bg-white/5">
+                                <div>
+                                    <p class="font-black text-yellow-500">${p.code}</p>
+                                    <p class="text-[7px] opacity-40 uppercase font-black">Скидка ${p.disc}%</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[10px] font-black">${p.left}</p>
+                                    <p class="text-[6px] opacity-30 uppercase">Осталось</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            }
+
             if(page === 'luck') {
                 const can = (Date.now() - state.lastLuck) > 86400000;
                 app.innerHTML = `<div class="flex flex-col items-center pt-10"><h2 class="text-yellow-500 font-black italic uppercase mb-8 italic">Скретч-карта</h2><div id="scr-wrap" class="boss-card"><div class="text-center"><p class="text-[10px] font-bold text-yellow-500 opacity-40 mb-2 uppercase">ТВОЯ СКИДКА:</p><div class="text-6xl font-black text-yellow-500 italic">${state.discount > 0 ? '-'+state.discount+'%' : '???'}</div></div>${can ? '<canvas id="can"></canvas>' : ''}</div></div>`;
@@ -127,34 +168,33 @@
             }
 
             if(page === 'status') {
-                app.innerHTML = `<div class="boss-card p-8 bg-gradient-to-br from-yellow-500/10 to-transparent"><p class="text-yellow-500 font-black italic text-[10px] uppercase mb-10 tracking-[3px]">BOSS VIP STATUS</p><div class="mb-10"><div class="flex justify-between text-[11px] font-black mb-3 italic">\
-                    <span>PROGRESS</span><span>${state.spent.toLocaleString()} / 5,000,000 ₽</span></div><div class="h-2 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-yellow-500 shadow-[0_0_15px_#FFD700]" style="width:${Math.min(state.spent/50000, 100)}%"></div></div></div><div class="grid grid-cols-2 gap-8 text-[10px] font-black uppercase"><div><p class="opacity-20 mb-1 text-[7px]">ID</p>${tg.initDataUnsafe.user?.id || '7727345054'}</div><div><p class="opacity-20 mb-1 text-[7px]">USER</p>@${tg.initDataUnsafe.user?.username || 'nmproda'}</div><div class="text-yellow-500"><p class="opacity-20 mb-1 text-[7px] text-white">DISCOUNT</p>${state.discount}%</div><div><p class="opacity-20 mb-1 text-[7px]">REG</p>18.04.2026</div></div></div>`;
+                app.innerHTML = `<div class="boss-card p-8 bg-gradient-to-br from-yellow-500/10 to-transparent"><p class="text-yellow-500 font-black italic text-[10px] uppercase mb-10 tracking-[3px]">BOSS VIP STATUS</p><div class="mb-10"><div class="flex justify-between text-[11px] font-black mb-3 italic"><span>PROGRESS</span><span>${state.spent.toLocaleString()} ₽</span></div><div class="h-2 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-yellow-500 shadow-[0_0_15px_#FFD700]" style="width:${Math.min(state.spent/50000, 100)}%"></div></div></div><div class="grid grid-cols-2 gap-8 text-[10px] font-black uppercase"><div><p class="opacity-20 mb-1 text-[7px]">ID</p>${tg.initDataUnsafe.user?.id || '7727345054'}</div><div><p class="opacity-20 mb-1 text-[7px]">USER</p>@${tg.initDataUnsafe.user?.username || 'nmproda'}</div><div class="text-yellow-500"><p class="opacity-20 mb-1 text-[7px] text-white">DISCOUNT</p>${state.discount + (state.promoActive ? 5 : 0)}%</div><div><p class="opacity-20 mb-1 text-[7px]">REG</p>18.04.2026</div></div></div>`;
             }
 
             if(page === 'support') {
-                app.innerHTML = `<div class="space-y-6 pt-10"><div onclick="window.open('https://t.me/+P3p-W1BvO8syMzVi')" class="boss-card p-6 flex items-center gap-6 active:scale-95 transition"><div class="w-14 h-14 bg-yellow-500 rounded-2xl flex items-center justify-center text-black text-2xl">📢</div><div><h3 class="font-black italic text-sm uppercase">BOSS CHANNEL</h3><p class="text-[8px] opacity-40 font-bold uppercase tracking-widest">НОВОСТИ И ОБНОВЛЕНИЯ</p></div></div><div onclick="window.open('https://t.me/nmproda')" class="boss-card p-6 flex items-center gap-6 active:scale-95 transition"><div class="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-2xl">🤵</div><div><h3 class="font-black italic text-sm uppercase">MANAGER</h3><p class="text-[8px] opacity-40 font-bold uppercase tracking-widest">@NMPRODA (СВЯЗЬ 24/7)</p></div></div></div>`;
+                app.innerHTML = `<div class="space-y-6 pt-10"><div onclick="window.open('https://t.me/+P3p-W1BvO8syMzVi')" class="boss-card p-6 flex items-center gap-6 active:scale-95 transition"><div class="w-14 h-14 bg-yellow-500 rounded-2xl flex items-center justify-center text-black text-2xl">📢</div><div><h3 class="font-black italic text-sm uppercase">BOSS CHANNEL</h3><p class="text-[8px] opacity-40 font-bold uppercase tracking-widest">НОВОСТИ</p></div></div><div onclick="window.open('https://t.me/nmproda')" class="boss-card p-6 flex items-center gap-6 active:scale-95 transition"><div class="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-2xl">🤵</div><div><h3 class="font-black italic text-sm uppercase">MANAGER</h3><p class="text-[8px] opacity-40 font-bold uppercase tracking-widest">@NMPRODA</p></div></div></div>`;
             }
         }
 
         function setCat(c) {
             currentCat = c;
-            document.querySelectorAll('.cat-item').forEach(i => i.classList.toggle('active', i.innerText === c));
             const grid = document.getElementById('grid');
+            if(!grid) return;
             const filt = c === 'BCE' ? products : products.filter(p => p[0]?.replace(/"/g,'') === c);
             grid.innerHTML = filt.map(p => {
                 if(!p[1]) return '';
-                const name = p[1].replace(/"/g,''), price = p[2], desc = p[3]?.replace(/"/g,'') || '', img = p[4]?.replace(/"/g,'') || '', stock = parseInt(p[5]) || 0;
+                const name = p[1].replace(/"/g,''), price = parseFloat(p[2]), desc = p[3]?.replace(/"/g,'') || '', img = p[4]?.replace(/"/g,'') || '', stock = parseInt(p[5]) || 0;
                 const out = stock <= 0;
                 return `
                 <div class="boss-card p-4 flex flex-col ${out ? 'sold-out' : ''}">
                     ${out ? '<div class="sold-out-stamp">SOLD OUT</div>' : ''}
                     <img src="${img}" class="w-full aspect-square object-contain bg-white/5 rounded-2xl mb-4">
                     <h3 class="text-[10px] font-black text-yellow-500 uppercase leading-none truncate mb-1">${name}</h3>
-                    <p class="text-[8px] opacity-40 uppercase font-bold h-6 overflow-hidden mb-4 leading-tight">${desc}</p>
+                    <p class="text-[8px] opacity-40 h-6 overflow-hidden mb-4 leading-tight">${desc}</p>
                     <div class="mt-auto">
                         <div class="flex justify-between items-center mb-3 font-black italic">
-                            <span class="text-xs">${price} ₽</span>
-                            <span class="text-[8px] uppercase ${out ? 'text-red-500' : 'text-green-500'}">${stock} шт.</span>
+                            <span class="text-[10px] price-tag">${price.toFixed(2)} ₽</span>
+                            <span class="text-[7px] uppercase ${out ? 'text-red-500' : 'text-green-500'}">${stock} шт.</span>
                         </div>
                         <button onclick="initPay('${name}', ${price}, ${stock})" class="btn-gold w-full py-3 text-[9px]">ДОБАВИТЬ</button>
                     </div>
@@ -165,36 +205,49 @@
         function initPay(name, price, stock) {
             activeOrder = { name, price, stock, qty: 1 };
             document.getElementById('p-name').innerText = name;
+            document.getElementById('p-qty-input').value = 1;
             updateTotal();
             document.getElementById('m-pay').classList.remove('hidden');
         }
 
-        function changeQty(v) {
-            const newQty = activeOrder.qty + v;
-            if(newQty >= 1 && newQty <= activeOrder.stock) {
-                activeOrder.qty = newQty;
-                updateTotal();
+        function updateTotal() {
+            let val = parseInt(document.getElementById('p-qty-input').value) || 1;
+            if(val > activeOrder.stock) val = activeOrder.stock;
+            if(val < 1) val = 1;
+            activeOrder.qty = val;
+            
+            const baseDisc = state.discount || 0;
+            const promoDisc = state.promoActive ? 5 : 0;
+            const sum = activeOrder.price * activeOrder.qty;
+            const final = sum * (1 - (baseDisc + promoDisc)/100);
+            
+            document.getElementById('p-total').innerText = final.toFixed(2) + ' ₽';
+        }
+
+        function applyPromo() {
+            const code = document.getElementById('promo-input').value.toUpperCase();
+            const p = state.promos.find(x => x.code === code);
+            if(p && p.left > 0) {
+                p.left--;
+                state.promoActive = true;
+                localStorage.setItem('BOSS_V24', JSON.stringify(state));
+                tg.HapticFeedback.notificationOccurred('success');
+                render('shop');
+            } else {
+                alert('КОД НЕВЕРЕН ИЛИ ЗАКОНЧИЛСЯ');
             }
         }
 
-        function updateTotal() {
-            const sum = activeOrder.price * activeOrder.qty;
-            const final = Math.floor(sum * (1 - state.discount/100));
-            document.getElementById('p-qty').innerText = activeOrder.qty;
-            document.getElementById('p-total').innerText = final + ' ₽';
-        }
-
         function sendOrder() {
+            const baseDisc = state.discount || 0;
+            const promoDisc = state.promoActive ? 5 : 0;
             const sum = activeOrder.price * activeOrder.qty;
-            const final = Math.floor(sum * (1 - state.discount/100));
-            const text = `Босс, я оплатила!\n\n🛒 Товар: ${activeOrder.name}\n🔢 Количество: ${activeOrder.qty} шт.\n📦 Остаток: ${activeOrder.stock} шт.\n💰 Итоговая сумма: ${final} ₽\n🎁 Скидка: ${state.discount}%\n👤 Юзер: @${tg.initDataUnsafe.user?.username || 'user'}\n🆔 ID: ${tg.initDataUnsafe.user?.id || '000'}`;
+            const final = (sum * (1 - (baseDisc + promoDisc)/100)).toFixed(2);
             
-            // 1. Шлем данные в бота
+            const text = `Босс, я оплатила!\n\n🛒 Товар: ${activeOrder.name}\n🔢 Кол-во: ${activeOrder.qty} шт.\n💰 Итоговая сумма: ${final} ₽\n🎁 Скидка: ${baseDisc + promoDisc}%\n👤 Юзер: @${tg.initDataUnsafe.user?.username || 'user'}\n🆔 ID: ${tg.initDataUnsafe.user?.id || '000'}`;
+            
             try { tg.sendData(text); } catch(e) {}
-            
-            // 2. Шлем текст админу
             window.open(`https://t.me/nmproda?text=${encodeURIComponent(text)}`);
-            
             closeM();
         }
 
@@ -214,7 +267,7 @@
                 let t = 0; for(let i=3; i<d.length; i+=4) if(d[i]===0) t++;
                 if(t > d.length/4*0.5) {
                     can.remove(); state.discount = Math.floor(Math.random()*3)+1; state.lastLuck = Date.now();
-                    localStorage.setItem('BOSS_V23', JSON.stringify(state)); render('luck');
+                    localStorage.setItem('BOSS_V24', JSON.stringify(state)); render('luck');
                 }
             };
             can.addEventListener('mousedown',()=>active=true); can.addEventListener('touchstart',()=>active=true);
