@@ -147,12 +147,22 @@
             }
 
             if(page === 'status') {
-                const user = tg.initDataUnsafe.user || {id: '7727345054', username: 'nmproda'};
-                const progress = Math.min((state.spent / state.maxProgress) * 100, 100);
-                let hist = state.history.length > 0 
-                    ? state.history.slice(-10).reverse().map(h => `<div class="history-item"><div class="flex justify-between font-black text-[9px] uppercase"><span>${h.n}</span><span class="price-pink">${h.p} ₽</span></div><div class="text-[7px] opacity-40 mt-1">${h.t}</div></div>`).join('') 
-                    : '<p class="text-center opacity-20 text-[10px] uppercase py-10">История заказов пуста</p>';
-                
+    // Теперь расчет идет от 100 000 вместо 1 000 000
+    const progress = Math.min((state.spent / 100000) * 100, 100); 
+
+    app.innerHTML = `<div class="boss-card p-8 bg-gradient-to-br from-yellow-500/10 to-transparent">
+        <p class="text-yellow-500 font-black italic text-[10px] uppercase mb-10 tracking-[3px]">BOSS VIP STATUS</p>
+        <div class="mb-10">
+            <div class="flex justify-between text-[11px] font-black mb-3">
+                <span>PROGRESS TO 100K</span>
+                <span>${state.spent.toLocaleString()} / 100 000 Р</span>
+            </div>
+            <div class="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div class="h-full bg-yellow-500" style="width:${progress}%"></div>
+            </div>
+        </div>
+        <!-- Остальной код (ID клиента, Юзернейм и т.д.) остается без изменений -->
+                                                                                                                                                                                                                                                                                                                                                                              
                 app.innerHTML = `<div class="boss-card p-8 bg-gradient-to-br from-purple-900/20 to-transparent">
                     <p class="text-yellow-500 font-black italic text-[10px] uppercase mb-10 tracking-[3px]">BOSS VIP STATUS</p>
                     <div class="mb-10"><div class="flex justify-between text-[11px] font-black mb-3"><span>PROGRESS TO 1M</span><span>${state.spent.toLocaleString()} / ${state.maxProgress.toLocaleString()} ₽</span></div><div class="h-1.5 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-yellow-500" style="width:${progress}%"></div></div></div>
@@ -187,27 +197,45 @@
         function calcTotal() { let q=parseInt(document.getElementById('p-qty').value)||1; if(q>activeItem.s) q=activeItem.s; const total=(activeItem.p*q)*(1-(state.discount+state.promoVal)/100); document.getElementById('p-total').innerText=total.toFixed(2)+' ₽'; }
 
         async function order() {
-            let q = parseInt(document.getElementById('p-qty').value) || 1;
-            const total = ((activeItem.p * q) * (1 - (state.discount + state.promoVal)/100)).toFixed(2);
-            const user = tg.initDataUnsafe.user || {id: '7727345054', username: 'nmproda'};
-            const rem = activeItem.s - q;
-            const now = new Date().toLocaleString('ru-RU');
+    let q = parseInt(document.getElementById('p-qty').value);
+    
+    // ... (тут твой код проверки наличия товара) ...
 
-            // Текст ЗАКАЗА ДЛЯ АДМИНА И ЛС
-            const text = `🔥НОВЫЙ ЗАКАЗ🔥\n💎 Товар-[${activeItem.n}]💎\n 📦Количество-[${q}]📦\n 🔢Остаток-[${rem}]🔢\n 👛Цена-[${total} ₽]👛\n 🙊Скидка-[${state.discount + state.promoVal}%]🙈\n ❤️Мой айди-[${user.id}]❤️\n ⭐️Мой юзернейм-[@${user.username}]⭐️`;
-            
-            try { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`); } catch(e){}
+    const total = ((activeItem.p * q) * (1 - (state.discount + state.promoVal)/100)).toFixed(2);
+    const user = tg.initDataUnsafe.user || { id: '7727345054', username: 'nmproda' };
+    const remainder = activeItem.s - q;
+    
+    // Получаем текущую дату и время
+    const now = new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
 
-            state.history.push({n: activeItem.n, p: total, t: now});
-            state.spent = (parseFloat(state.spent) + parseFloat(total)).toFixed(2);
-            state.promoActive = false; state.promoVal = 0; save();
+    // НОВЫЙ ФОРМАТ ТЕКСТА (Добавлена дата и время)
+    const text = `🔥 НОВЫЙ ЗАКАЗ 🔥\n` +
+                 `📅 Дата/Время: ${now}\n` +
+                 `💎 Товар: [${activeItem.n}]\n` +
+                 `📦 Количество: [${q}]\n` +
+                 `💰 Цена: [${total} ₽]\n` +
+                 `📉 Скидка: [${state.discount + state.promoVal}%]\n` +
+                 `👤 ID: [${user.id}]\n` +
+                 `⭐️ Юзер: [@${user.username}]`;
 
-            // Эта строка ОТКРЫВАЕТ ЛС с предзаполненным текстом
-            tg.openTelegramLink(`https://t.me/nmproda?text=${encodeURIComponent(text)}`);
-            
-            closeM(); 
-            render('status'); 
-            tg.HapticFeedback.notificationOccurred('success');
+    // ОБНОВЛЯЕМ СУММУ ПОКУПОК (чтобы рос прогресс-бар)
+    state.spent += parseFloat(total);
+
+    // ОТПРАВКА АДМИНУ
+    try {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`);
+    } catch(e) { console.error('Ошибка:', e); }
+
+    state.promoActive = false;
+    state.promoVal = 0;
+    save(); // Сохраняем прогресс spent и сброс промокода
+
+    // ПЕРЕХОД К АДМИНУ
+    window.open(`https://t.me/nmproda?text=${encodeURIComponent(text)}`);
+
+    closeM();
+    render('shop');
+    tg.HapticFeedback.notificationOccurred('success');
         }
 
         function initScr() {
