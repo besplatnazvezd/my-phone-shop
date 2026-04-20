@@ -8,11 +8,10 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
-        :root { --gold: #FFD700; --bg: #000; --card: #0d0d0d; --neon: #bc13fe; --pink: #ff00ff; }
+        :root { --gold: #FFD700; --bg: #000; --card: #0d0d0d; --neon: #bc13fe; --pink: #ff00ff; --shadow-card: rgba(188, 19, 254, 0.2); }
         body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; margin: 0; padding-bottom: 120px; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
 
-        /* ЭФФЕКТЫ НЕОНА ИЗ СКРИНШОТА */
-        .boss-card { background: var(--card); border-radius: 18px; border: 1px solid var(--neon); box-shadow: 0 0 10px rgba(188, 19, 254, 0.2); overflow: hidden; position: relative; transition: 0.3s; }
+        .boss-card { background: var(--card); border-radius: 18px; border: 1px solid var(--neon); box-shadow: 0 0 10px var(--shadow-card); overflow: hidden; position: relative; transition: 0.3s; }
         .price-pink { color: var(--pink); text-shadow: 0 0 8px var(--pink); font-weight: 900; }
         .btn-gold { background: linear-gradient(180deg, #FFD700 0%, #BA8B02 100%); color: #000; font-weight: 900; text-transform: uppercase; border-radius: 12px; transition: 0.2s; }
         .btn-gold:active { transform: scale(0.96); opacity: 0.8; }
@@ -64,7 +63,7 @@
         <div onclick="render('luck')" id="n-luck" class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2"/></svg><span>Удача</span></div>
         <div onclick="render('status')" id="n-status" class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-width="2"/></svg><span>Статус</span></div>
         <div onclick="render('promo')" id="n-promo" class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109
-                                                                                                                                            canvas { position: absolute; inset: 0; z-index: 10; touch-action: none; }
+                                                                                                                                          canvas { position: absolute; inset: 0; z-index: 10; touch-action: none; }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 20000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .hidden { display: none !important; }
@@ -109,10 +108,12 @@
 
         tg.ready(); tg.expand();
 
-        let state = JSON.parse(localStorage.getItem('BOSS_V41')) || { 
+        // Универсальное хранилище для всех данных
+        let state = JSON.parse(localStorage.getItem('BOSS_FINAL_BUILD')) || { 
             discount: 0, lastLuck: 0, spent: 0, promoActive: false, promoVal: 0,
             regDate: '19.04.2026', history: [],
-            promos: [{c:'BOSS2026', l:25, d:5}, {c:'VIPGOLD', l:25, d:10}]
+            promos: [{c:'BOSS2026', l:25, d:5}, {c:'VIPGOLD', l:25, d:10}],
+            maxProgress: 1000000 // Лимит для прогресс-бара
         };
         
         let products = []; let curCat = 'BCE'; let activeItem = null;
@@ -126,9 +127,13 @@
             if(page === 'shop') {
                 app.innerHTML = `<h1 class="text-xl font-black italic text-yellow-500 uppercase text-center mb-2 italic">BOSS STORE</h1><div class="cat-scroll" id="cat-bar"></div><div id="grid" class="grid grid-cols-2 gap-4 pb-10"></div>`;
                 if(products.length === 0) {
-                    const res = await fetch('https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv');
-                    const text = await res.text();
-                    products = text.split('\n').slice(1).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
+                    try {
+                        const res = await fetch('https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv');
+                        const text = await res.text();
+                        products = text.split('\n').slice(1).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
+                    } catch(e) {
+                        app.innerHTML = '<p class="text-center text-red-500 mt-10 uppercase text-[10px]">Ошибка загрузки товаров</p>'; return;
+                    }
                 }
                 const cats = ['BCE', ...new Set(products.map(p => p[0]?.replace(/"/g,'')).filter(Boolean))];
                 document.getElementById('cat-bar').innerHTML = cats.map(c => `<div onclick="setCat('${c}')" class="cat-item ${curCat === c ? 'active' : ''}">${c}</div>`).join('');
@@ -136,19 +141,21 @@
             }
 
             if(page === 'luck') {
-                const can = (Date.now() - state.lastLuck) > 86400000;
-                app.innerHTML = `<div class="flex flex-col items-center pt-10"><h2 class="text-yellow-500 font-black italic uppercase mb-10 italic">СКРЕТЧ-КАРТА</h2><div id="scr-wrap"><div class="text-center"><p class="text-[10px] font-black text-yellow-500 opacity-40 mb-2 uppercase italic">ВАША СКИДКА:</p><div class="text-6xl font-black text-yellow-500 italic">${state.discount > 0 ? '-'+state.discount+'%' : '???'}</div></div>${can ? '<canvas id="can"></canvas>' : ''}</div></div>`;
-                if(can) initScr();
+                const canPlay = (Date.now() - state.lastLuck) > 86400000; // 24 часа
+                app.innerHTML = `<div class="flex flex-col items-center pt-10"><h2 class="text-yellow-500 font-black italic uppercase mb-10 italic">СКРЕТЧ-КАРТА</h2><div id="scr-wrap"><div class="text-center"><p class="text-[10px] font-black text-yellow-500 opacity-40 mb-2 uppercase italic">ВАША СКИДКА:</p><div class="text-6xl font-black text-yellow-500 italic">${state.discount > 0 ? '-'+state.discount+'%' : '???'}</div></div>${canPlay ? '<canvas id="can"></canvas>' : ''}</div></div>`;
+                if(canPlay) initScr();
             }
 
             if(page === 'status') {
                 const user = tg.initDataUnsafe.user || {id: '7727345054', username: 'nmproda'};
-                const prog = Math.min((state.spent / 1000000) * 100, 100);
-                let hist = state.history.length > 0 ? state.history.map(h => `<div class="history-item"><div class="flex justify-between font-black text-[9px] uppercase"><span>${h.n}</span><span class="price-pink">${h.p} ₽</span></div><div class="text-[7px] opacity-40 mt-1">${h.t}</div></div>`).reverse().join('') : '<p class="text-center opacity-20 text-[10px] uppercase py-10">История пуста</p>';
+                const progress = Math.min((state.spent / state.maxProgress) * 100, 100);
+                let hist = state.history.length > 0 
+                    ? state.history.slice(-10).reverse().map(h => `<div class="history-item"><div class="flex justify-between font-black text-[9px] uppercase"><span>${h.n}</span><span class="price-pink">${h.p} ₽</span></div><div class="text-[7px] opacity-40 mt-1">${h.t}</div></div>`).join('') 
+                    : '<p class="text-center opacity-20 text-[10px] uppercase py-10">История заказов пуста</p>';
                 
                 app.innerHTML = `<div class="boss-card p-8 bg-gradient-to-br from-purple-900/20 to-transparent">
                     <p class="text-yellow-500 font-black italic text-[10px] uppercase mb-10 tracking-[3px]">BOSS VIP STATUS</p>
-                    <div class="mb-10"><div class="flex justify-between text-[11px] font-black mb-3"><span>PROGRESS TO 1M</span><span>${state.spent.toLocaleString()} / 1 000 000 ₽</span></div><div class="h-1.5 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-yellow-500" style="width:${prog}%"></div></div></div>
+                    <div class="mb-10"><div class="flex justify-between text-[11px] font-black mb-3"><span>PROGRESS TO 1M</span><span>${state.spent.toLocaleString()} / ${state.maxProgress.toLocaleString()} ₽</span></div><div class="h-1.5 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-yellow-500" style="width:${progress}%"></div></div></div>
                     <div class="grid grid-cols-2 gap-8 text-[10px] font-black uppercase">
                         <div><p class="opacity-20 mb-1 text-[7px]">ID КЛИЕНТА</p>${user.id}</div>
                         <div><p class="opacity-20 mb-1 text-[7px]">ЮЗЕР</p>@${user.username}</div>
@@ -158,11 +165,11 @@
             }
 
             if(page === 'promo') {
-                app.innerHTML = `<div class="pt-6"><h2 class="text-yellow-500 font-black italic uppercase text-center mb-8 italic">АКТИВАЦИЯ ПРОМО</h2><div class="boss-card p-6 mb-8 bg-white/5"><input type="text" id="p-in" placeholder="ВВЕДИТЕ КОД" class="uppercase mb-4 font-black"><button onclick="applyP()" class="btn-gold w-full py-4 text-[11px] mt-2">АКТИВИРОВАТЬ</button></div></div>`;
+                app.innerHTML = `<div class="pt-6"><h2 class="text-yellow-500 font-black italic uppercase text-center mb-8 italic">АКТИВАЦИЯ ПРОМО</h2><div class="boss-card p-6 mb-8 bg-white/5"><input type="text" id="p-in" placeholder="ВВЕДИТЕ КОД" class="uppercase mb-4 font-black"><button onclick="applyP()" class="btn-gold w-full py-4 text-[11px] mt-2">АКТИВИРОВАТЬ</button></div><div class="space-y-3">${state.promos.map(p => `<div onclick="copy('${p.c}')" class="boss-card p-4 flex justify-between items-center bg-white/5 border-white/5"><div><p class="font-black text-yellow-500">${p.c}</p><p class="text-[7px] opacity-40 font-black italic uppercase">СКИДКА ${p.d}%</p></div><div class="text-right"><p class="font-black text-xs">${p.l}</p><p class="text-[6px] opacity-30 uppercase">ОСТАЛОСЬ</p></div></div>`).join('')}</div></div>`;
             }
 
             if(page === 'support') {
-                app.innerHTML = `<div class="space-y-4 pt-10"><div onclick="window.open('https://t.me/osnovabossstore')" class="boss-card p-6 flex items-center gap-6 bg-white/5"><div class="text-3xl">📢</div><div><p class="font-black text-sm uppercase italic">BOSS КАНАЛ</p><p class="text-[8px] opacity-40 uppercase font-bold text-yellow-500">НОВОСТИ И СКИДКИ</p></div></div></div>`;
+                app.innerHTML = `<div class="space-y-4 pt-10"><div onclick="window.open('https://t.me/osnovabossstore')" class="boss-card p-6 flex items-center gap-6 bg-white/5"><div class="text-3xl">📢</div><div><p class="font-black text-sm uppercase italic">BOSS КАНАЛ</p><p class="text-[8px] opacity-40 uppercase font-bold text-yellow-500">НОВОСТИ И СКИДКИ</p></div></div><div onclick="window.open('https://t.me/nmproda')" class="boss-card p-6 flex items-center gap-6 bg-white/5"><div class="text-3xl">👨‍💻</div><div><p class="font-black text-sm uppercase italic">МЕНЕДЖЕР</p><p class="text-[8px] opacity-40 uppercase font-bold text-yellow-500">@NMPRODA</p></div></div></div>`;
             }
         }
 
@@ -176,7 +183,7 @@
             }).join('');
         }
 
-        function openPay(n, p, s) { activeItem={n,p,s}; document.getElementById('p-name').innerText=n; document.getElementById('p-qty').value=1; calcTotal(); document.getElementById('m-pay').classList.remove('hidden'); }
+        function openPay(n, p, s) { activeItem={n,p,s}; document.getElementById('p-name').innerText=n; document.getElementById('p-qty').value=1; calcTotal(); document.getElementById('m-pay').classList.remove('hidden'); tg.HapticFeedback.impactOccurred('medium'); }
         function calcTotal() { let q=parseInt(document.getElementById('p-qty').value)||1; if(q>activeItem.s) q=activeItem.s; const total=(activeItem.p*q)*(1-(state.discount+state.promoVal)/100); document.getElementById('p-total').innerText=total.toFixed(2)+' ₽'; }
 
         async function order() {
@@ -186,20 +193,21 @@
             const rem = activeItem.s - q;
             const now = new Date().toLocaleString('ru-RU');
 
+            // Текст ЗАКАЗА ДЛЯ АДМИНА И ЛС
             const text = `🔥НОВЫЙ ЗАКАЗ🔥\n💎 Товар-[${activeItem.n}]💎\n 📦Количество-[${q}]📦\n 🔢Остаток-[${rem}]🔢\n 👛Цена-[${total} ₽]👛\n 🙊Скидка-[${state.discount + state.promoVal}%]🙈\n ❤️Мой айди-[${user.id}]❤️\n ⭐️Мой юзернейм-[@${user.username}]⭐️`;
             
-            // 1. Отправка боту
-            try { fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`); } catch(e){}
+            try { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`); } catch(e){}
 
-            // 2. Сохраняем историю
             state.history.push({n: activeItem.n, p: total, t: now});
-            state.spent += parseFloat(total);
+            state.spent = (parseFloat(state.spent) + parseFloat(total)).toFixed(2);
             state.promoActive = false; state.promoVal = 0; save();
 
-            // 3. ПЕРЕХОД В ЛС (С ТЕКСТОМ)
+            // Эта строка ОТКРЫВАЕТ ЛС с предзаполненным текстом
             tg.openTelegramLink(`https://t.me/nmproda?text=${encodeURIComponent(text)}`);
             
-            closeM(); render('status'); tg.HapticFeedback.notificationOccurred('success');
+            closeM(); 
+            render('status'); 
+            tg.HapticFeedback.notificationOccurred('success');
         }
 
         function initScr() {
@@ -212,7 +220,7 @@
                 const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left, y=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
                 ctx.globalCompositeOperation='destination-out'; ctx.beginPath(); ctx.arc(x,y,40,0,Math.PI*2); ctx.fill();
                 const d=ctx.getImageData(0,0,330,210).data; let t=0; for(let i=3;i<d.length;i+=4) if(d[i]===0) t++;
-                if(t>d.length/4*0.5) { can.remove(); state.discount=Math.floor(Math.random()*3)+1; state.lastLuck=Date.now(); save(); render('luck'); }
+                if(t>d.length/4*0.5) { can.remove(); state.discount=Math.floor(Math.random()*3)+1; state.lastLuck=Date.now(); save(); render('luck'); tg.HapticFeedback.notificationOccurred('success'); }
             };
             can.onmousedown=()=>act=true; can.ontouchstart=()=>act=true;
             can.onmousemove=scr; can.ontouchmove=scr;
@@ -222,13 +230,12 @@
         function applyP() {
             const code=document.getElementById('p-in').value.toUpperCase();
             const p=state.promos.find(x=>x.c===code);
-            if(p && p.l>0){ p.l--; state.promoActive=true; state.promoVal=p.d; save(); render('shop'); } else alert('НЕВЕРНЫЙ КОД');
+            if(p && p.l>0){ p.l--; state.promoActive=true; state.promoVal=p.d; save(); render('shop'); tg.HapticFeedback.notificationOccurred('success'); } else alert('КОД НЕВЕРЕН ИЛИ ЗАКОНЧИЛСЯ');
         }
 
         function copy(t) { navigator.clipboard.writeText(t); document.getElementById('toast').classList.remove('hidden'); setTimeout(()=>document.getElementById('toast').classList.add('hidden'),1500); tg.HapticFeedback.impactOccurred('medium'); }
-        function save() { localStorage.setItem('BOSS_V41', JSON.stringify(state)); }
-        function closeM() { document.getElementById('m-pay')
-                           .classList.add('hidden'); }
+        function save() { localStorage.setItem('BOSS_FINAL_BUILD', JSON.stringify(state)); }
+        function closeM() { document.getElementById('m-pay').classList.add('hidden'); tg.HapticFeedback.impactOccurred('light'); }
         render('shop');
     </script>
 </body>
