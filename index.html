@@ -81,7 +81,7 @@
 
         tg.ready(); tg.expand();
 
-        let state = JSON.parse(localStorage.getItem('BOSS_V30')) || { 
+        let state = JSON.parse(localStorage.getItem('BOSS_V30.1')) || { 
             discount: 0, lastLuck: 0, spent: 1177469, promoActive: false, promoVal: 0,
             promos: [{c:'BOSS2026', l:25, d:5}, {c:'VIPGOLD', l:25, d:10}]
         };
@@ -152,14 +152,25 @@
         async function order() {
             let q = document.getElementById('p-qty').value;
             const total = ((activeItem.p * q) * (1 - (state.discount + state.promoVal)/100)).toFixed(2);
-            const user = tg.initDataUnsafe.user || {id: '7727345054', username: 'nmproda'};
+            const user = tg.initDataUnsafe.user || {id: '7727345054', username: 'nmproda'}; // Fallback для тестов
+            const currentPrice = activeItem.p * q;
+            const finalPrice = parseFloat(total);
             
-            const text = `🔥 НОВЫЙ ЗАКАЗ В BOSS STORE 🔥\n\n📦 Товар: ${activeItem.n}\n🔢 Кол-во: ${q} шт.\n💰 Сумма: ${total} ₽\n🎁 Скидка: ${state.discount + state.promoVal}%\n\n👤 Клиент: @${user.username}\n🆔 ID: ${user.id}`;
+            // ТЕКСТ ДЛЯ КЛИЕНТА
+            const clientText = `✅ Ваш заказ принят!\n\n💎 Товар: ${activeItem.n} 💎\n📦 Количество: ${q} шт. 📦\n🔢 Остаток: ${activeItem.s - q} шт. 🔢\n👛 Цена: ${currentPrice.toFixed(2)} ₽ 👛\n🙊 Скидка: ${state.discount + state.promoVal}% 🙈\n❤️ Ваш ID: ${user.id} ❤️\n⭐️ Ваш ник: @${user.username} ⭐️`;
+
+            // ТЕКСТ ДЛЯ АДМИНА
+            const adminText = `🔥 НОВЫЙ ЗАКАЗ В BOSS STORE 🔥\n\n💎 Товар: ${activeItem.n} 💎\n📦 Количество: ${q} шт. 📦\n🔢 Остаток: ${activeItem.s - q} шт. 🔢\n👛 Цена: ${currentPrice.toFixed(2)} ₽ 👛\n🙊 Скидка: ${state.discount + state.promoVal}% 🙈\n❤️ ID клиента: ${user.id} ❤️\n⭐️ Ник клиента: @${user.username} ⭐️`;
             
+            // ОТПРАВКА СООБЩЕНИЯ КЛИЕНТУ (в личный чат с ботом)
+            try {
+                tg.sendData(clientText); // Это отправит сообщение в чат с ботом, если он будет открыт
+            } catch(e) { console.error('Ошибка отправки клиенту: ', e); }
+
             // ОТПРАВКА АДМИНУ ЧЕРЕЗ API
             try {
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`);
-            } catch(e) { console.error('Ошибка уведомления'); }
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(adminText)}`);
+            } catch(e) { console.error('Ошибка уведомления админа: ', e); }
 
             state.promoActive = false; state.promoVal = 0; save();
             window.open(`https://t.me/nmproda?text=${encodeURIComponent('Босс, я оплатила заказ!')}`);
@@ -175,7 +186,7 @@
         }
 
         function copy(t) { navigator.clipboard.writeText(t); document.getElementById('toast').classList.remove('hidden'); setTimeout(()=>document.getElementById('toast').classList.add('hidden'),1500); tg.HapticFeedback.impactOccurred('medium'); }
-        function save() { localStorage.setItem('BOSS_V30', JSON.stringify(state)); }
+        function save() { localStorage.setItem('BOSS_V30.1', JSON.stringify(state)); }
         function closeM() { document.getElementById('m-pay').classList.add('hidden'); }
         render('shop');
     </script>
