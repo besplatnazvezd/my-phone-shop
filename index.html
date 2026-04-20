@@ -53,7 +53,7 @@
                 <div onclick="copy('2200701955299232')" class="bg-white/5 p-4 rounded-xl border border-white/5"><p class="text-[7px] opacity-40 font-black uppercase">💳 Карта Т-Банк</p><p class="font-bold text-yellow-500 text-sm">2200 7019 5529 9232</p></div>
             </div>
             <div class="mb-6"><p class="text-[9px] font-black opacity-40 uppercase">К оплате:</p><p id="p-total" class="text-2xl font-black text-yellow-500 price-glow">0.00 ₽</p></div>
-                        <div class="flex gap-3"><button onclick="closeM()" class="w-1/3 py-4 text-[9px] font-black opacity-30">НАЗАД</button><button onclick="order()" class="w-2/3 btn-gold py-4 text-[10px]">Я ОПЛАТИЛ(А)</button></div>
+                        <div class="flex gap-3"><button onclick="closeM()" class="w-1/3 py-4 text-[9px] font-black opacity-30">НАЗАД</button><button onclick="order()" class="w-2/3 btn-gold py-4 text-[10px]">Я ОПЛАТИЛА</button></div>
         </div>
     </div>
 
@@ -72,7 +72,7 @@
 
         tg.ready(); tg.expand();
 
-        let state = JSON.parse(localStorage.getItem('BOSS_V32')) || { 
+        let state = JSON.parse(localStorage.getItem('BOSS_V35')) || { 
             discount: 0, lastLuck: 0, spent: 0, promoActive: false, promoVal: 0,
             regDate: new Date().toLocaleDateString('ru-RU'),
             promos: [{c:'BOSS2026', l:25, d:5}, {c:'VIPGOLD', l:25, d:10}]
@@ -127,7 +127,7 @@
 
         tg.ready(); tg.expand();
 
-        let state = JSON.parse(localStorage.getItem('BOSS_V32')) || { 
+        let state = JSON.parse(localStorage.getItem('BOSS_V35')) || { 
             discount: 0, lastLuck: 0, spent: 0, promoActive: false, promoVal: 0,
             regDate: new Date().toLocaleDateString('ru-RU'),
             promos: [{c:'BOSS2026', l:25, d:5}, {c:'VIPGOLD', l:25, d:10}]
@@ -145,7 +145,7 @@
                 if(products.length === 0) {
                     const res = await fetch('https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv');
                     const text = await res.text();
-                    products = text.split('\n').slice(1).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
+                    if(text) products = text.split('\n').slice(1).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
                 }
                 const cats = ['BCE', ...new Set(products.map(p => p[0]?.replace(/"/g,'')).filter(Boolean))];
                 document.getElementById('cat-bar').innerHTML = cats.map(c => `<div onclick="setCat('${c}')" class="cat-item ${curCat === c ? 'active' : ''}">${c}</div>`).join('');
@@ -168,7 +168,6 @@
                     </div></div>`;
             }
             if(page === 'luck' || page === 'promo' || page === 'support') {
-                // (Остальной функционал из v31 сохраняется здесь для краткости)
                 app.innerHTML = `<div class="text-center pt-10 font-black text-yellow-500 uppercase">Раздел ${page} активен</div>`;
                 if(page === 'promo') renderPromo(app);
             }
@@ -202,24 +201,25 @@
             const total = ((activeItem.p * q) * (1 - (state.discount + state.promoVal)/100)).toFixed(2);
             const user = tg.initDataUnsafe.user || {id: '7727345054', username: 'nmproda'};
             
-            // ТОТ САМЫЙ ТЕКСТ ПО ШАБЛОНУ
-            const text = `🔥НОВЫЙ ЗАКАЗ🔥\n💎 Товар-${activeItem.n}💎\n 📦Количество-${q}📦\n 🔢Остаток-${activeItem.s - q}🔢\n 👛Цена-${total} ₽👛\n 🙊Скидка-${state.discount + state.promoVal}%🙈\n ❤️Мой айди-${user.id}❤️\n ⭐️Мой юзернейм-@${user.username}⭐️`;
+            // Текст для отправки в бота
+            const textForBot = `🔥НОВЫЙ ЗАКАЗ🔥\n💎 Товар-${activeItem.n}💎\n 📦Количество-${q}📦\n 🔢Остаток-${activeItem.s - q}🔢\n 👛Цена-${total} ₽👛\n 🙊Скидка-${state.discount + state.promoVal}%🙈\n ❤️Мой айди-${user.id}❤️\n ⭐️Мой юзернейм-@${user.username}⭐️`;
             
             // 1. Отправка тебе в бота
-            try { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`); } catch(e){}
+            try { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(textForBot)}`); } catch(e){}
 
             // 2. Обновление честной статистики
             state.spent += parseFloat(total);
             state.promoActive = false; state.promoVal = 0; save();
 
-            // 3. Отправка в ЛС менеджеру (ТОТ ЖЕ ТЕКСТ)
-            tg.openTelegramLink(`https://t.me/nmproda?text=${encodeURIComponent(text)}`);
+            // 3. Отправка в ЛС менеджеру (другой текст)
+            const textForManager = `💥 Новый заказ от клиента!\n\nТовар: ${activeItem.n}\nКоличество: ${q}\nИтого к оплате: ${total} ₽\nСкидка: ${state.discount + state.promoVal}%\n\nID клиента: ${user.id}\nНик: @${user.username}`;
+            tg.openTelegramLink(`https://t.me/nmproda?text=${encodeURIComponent(textForManager)}`);
             
             closeM(); render('status');
         }
 
         function copy(t) { navigator.clipboard.writeText(t); document.getElementById('toast').classList.remove('hidden'); setTimeout(()=>document.getElementById('toast').classList.add('hidden'),1500); }
-        function save() { localStorage.setItem('BOSS_V32', JSON.stringify(state)); }
+        function save() { localStorage.setItem('BOSS_V35', JSON.stringify(state)); }
         function closeM() { document.getElementById('m-pay').classList.add('hidden'); }
         render('shop');
     </script>
