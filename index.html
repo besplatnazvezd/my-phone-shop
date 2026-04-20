@@ -72,7 +72,7 @@
 
         tg.ready(); tg.expand();
 
-        let state = JSON.parse(localStorage.getItem('BOSS_V35')) || { 
+        let state = JSON.parse(localStorage.getItem('BOSS_V37')) || { 
             discount: 0, lastLuck: 0, spent: 0, promoActive: false, promoVal: 0,
             regDate: new Date().toLocaleDateString('ru-RU'),
             promos: [{c:'BOSS2026', l:25, d:5}, {c:'VIPGOLD', l:25, d:10}]
@@ -81,8 +81,7 @@
 
         async function render(page) {
             const app = document.getElementById('app');
-            document.querySelectorAll('.nav
-                                              .nav-item.active { color: var(--gold); }
+            document.querySelectorAll('.nav        .nav-item.active { color: var(--gold); }
 
         .cat-item { white-space: nowrap; font-size: 9px; font-weight: 900; color: #333; text-transform: uppercase; padding-bottom: 4px; }
         .cat-item.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
@@ -127,7 +126,7 @@
 
         tg.ready(); tg.expand();
 
-        let state = JSON.parse(localStorage.getItem('BOSS_V35')) || { 
+        let state = JSON.parse(localStorage.getItem('BOSS_V37')) || { 
             discount: 0, lastLuck: 0, spent: 0, promoActive: false, promoVal: 0,
             regDate: new Date().toLocaleDateString('ru-RU'),
             promos: [{c:'BOSS2026', l:25, d:5}, {c:'VIPGOLD', l:25, d:10}]
@@ -142,32 +141,53 @@
 
             if(page === 'shop') {
                 app.innerHTML = `<h1 class="text-xl font-black italic text-yellow-500 uppercase text-center mb-2 italic">BOSS STORE</h1><div class="flex overflow-x-auto gap-4 mb-4" id="cat-bar"></div><div id="grid" class="grid grid-cols-2 gap-4 pb-10"></div>`;
-                if(products.length === 0) {
+                try {
                     const res = await fetch('https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv');
                     const text = await res.text();
-                    if(text) products = text.split('\n').slice(1).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
+                    if(text && text.split('\n').length > 1) { // Проверяем, что есть хотя бы строка заголовка и одна строка данных
+                        products = text.split('\n').slice(1).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
+                        const cats = ['BCE', ...new Set(products.map(p => p[0]?.replace(/"/g,'')).filter(Boolean))];
+                        const catBar = document.getElementById('cat-bar');
+                        if(catBar) catBar.innerHTML = cats.map(c => `<div onclick="setCat('${c}')" class="cat-item ${curCat === c ? 'active' : ''}">${c}</div>`).join('');
+                        setCat(curCat);
+                    } else {
+                        app.innerHTML += '<p class="text-center text-red-500 mt-4">Нет товаров для отображения.</p>';
+                        console.warn("Product table is empty or contains only headers.");
+                    }
+                } catch (e) {
+                    console.error("Error fetching products:", e);
+                    app.innerHTML += '<p class="text-center text-red-500 mt-4">Не удалось загрузить товары.</p>';
                 }
-                const cats = ['BCE', ...new Set(products.map(p => p[0]?.replace(/"/g,'')).filter(Boolean))];
-                document.getElementById('cat-bar').innerHTML = cats.map(c => `<div onclick="setCat('${c}')" class="cat-item ${curCat === c ? 'active' : ''}">${c}</div>`).join('');
-                setCat(curCat);
             }
 
             if(page === 'status') {
                 const user = tg.initDataUnsafe.user || {id: '7727345054', username: 'nmproda'};
-                app.innerHTML = `<div class="boss-card p-8 bg-gradient-to-br from-yellow-500/10 to-transparent">
-                    <p class="text-yellow-500 font-black italic text-[10px] uppercase mb-10 tracking-[3px]">BOSS VIP STATUS</p>
-                    <div class="mb-10">
-                        <div class="flex justify-between text-[11px] font-black mb-3"><span>PROGRESS</span><span>${state.spent} ₽</span></div>
-                        <div class="h-1.5 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-yellow-500" style="width:${Math.min(state.spent/500, 100)}%"></div></div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-8 text-[10px] font-black uppercase">
-                        <div><p class="opacity-20 mb-1 text-[7px]">ID КЛИЕНТА</p>${user.id}</div>
-                        <div><p class="opacity-20 mb-1 text-[7px]">ЮЗЕР</p>@${user.username}</div>
-                        <div class="text-yellow-500"><p class="opacity-20 mb-1 text-[7px] text-white">СКИДКА</p>${state.discount + state.promoVal}%</div>
-                        <div><p class="opacity-20 mb-1 text-[7px]">РЕГ</p>${state.regDate}</div>
-                    </div></div>`;
+                app.innerHTML = `
+                    <div class="boss-card p-8 bg-gradient-to-br from-yellow-500/10 to-transparent">
+                        <p class="text-yellow-500 font-black italic text-[10px] uppercase mb-10 tracking-[3px]">BOSS VIP STATUS</p>
+                        <div class="mb-10">
+                            <div class="flex justify-between text-[11px] font-black mb-3"><span>PROGRESS</span><span>${state.spent} ₽</span></div>
+                            <div class="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                <div class="h-full bg-yellow-500" style="width:${Math.min(state.spent / 500, 100)}%"></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-8 text-[10px] font-black uppercase">
+                            <div><p class="opacity-20 mb-1 text-[7px]">ID КЛИЕНТА</p>${user.id}</div>
+                            <div><p class="opacity-20 mb-1 text-[7px]">ЮЗЕР</p>@${user.username}</div>
+                            <div class="text-yellow-500">
+                                <p class="opacity-20 mb-1 text-[7px] text-white">СКИДКА</p>
+                                ${state.discount + state.promoVal}%
+                            </div>
+                            <div>
+                                <p class="opacity-20 mb-1 text-[7px]">РЕГ</p>
+                                ${state.regDate}
+                            </div>
+                        </div>
+                    </div>`;
             }
             if(page === 'luck' || page === 'promo' || page === 'support') {
+                // Pl
+            aceholder for other pages, can be expanded
                 app.innerHTML = `<div class="text-center pt-10 font-black text-yellow-500 uppercase">Раздел ${page} активен</div>`;
                 if(page === 'promo') renderPromo(app);
             }
@@ -180,47 +200,95 @@
         function setCat(c) {
             curCat = c; const grid = document.getElementById('grid'); if(!grid) return;
             const filt = c === 'BCE' ? products : products.filter(p => p[0]?.replace(/"/g,'') === c);
+            if (filt.length === 0) {
+                grid.innerHTML = '<p class="text-center text-gray-500 mt-8 col-span-2">Товары данной категории отсутствуют.</p>';
+                return;
+            }
             grid.innerHTML = filt.map(p => {
                 const name = p[1]?.replace(/"/g,''), price = parseFloat(p[2]), img = p[4]?.replace(/"/g,''), stock = parseInt(p[5]);
                 if(!name) return ''; const out = stock <= 0;
-                return `<div class="boss-card flex flex-col ${out ? 'sold-out' : ''}">${out ? '<div class="sold-out-stamp">SOLD OUT</div>' : ''}<img src="${img}" class="w-full aspect-square object-cover"><div class="p-3"><h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2">${name}</h3><span class="text-xs font-black price-glow">${price} ₽</span><button onclick="openPay('${name}', ${price}, ${stock})" class="btn-gold w-full py-2 mt-2 text-[9px]">КУПИТЬ</button></div></div>`;
+                return `<div class="boss-card flex flex-col ${out ? 'sold-out' : ''}">${out ? '<div class="sold-out-stamp">SOLD OUT</div>' : ''}<img src="${img}" class="w-full aspect-square object-cover"><div class="p-3 flex flex-col flex-1"><h3 class="text-[9px] font-black text-yellow-500 uppercase mb-2">${name}</h3><div class="mt-auto"><span class="text-xs font-black price-glow">${price.toFixed(2)} ₽</span><button onclick="openPay('${name}', ${price}, ${stock})" class="btn-gold w-full py-2 mt-2 text-[9px]">КУПИТЬ</button></div></div></div>`;
             }).join('');
         }
 
-        function openPay(n, p, s) { activeItem={n,p,s}; document.getElementById('p-name').innerText=n; document.getElementById('p-qty').value=1; calcTotal(); document.getElementById('m-pay').classList.remove('hidden'); }
-        function calcTotal() { let q=parseInt(document.getElementById('p-qty').value)||1; const total=(activeItem.p*q)*(1-(state.discount+state.promoVal)/100); document.getElementById('p-total').innerText=total.toFixed(2)+' ₽'; }
+        function openPay(n, p, s) { activeItem={n,p,s}; document.getElementById('p-name').innerText=n; document.getElementById('p-qty').value=1; calcTotal(); document.getElementById('m-pay').classList.remove('hidden'); tg.HapticFeedback.impactOccurred('medium'); }
+        function calcTotal() { 
+            let q = parseInt(document.getElementById('p-qty').value) || 1;
+            if (q < 1) q = 1;
+            const itemStock = activeItem.s;
+            if (q > itemStock) q = itemStock;
+            document.getElementById('p-qty').value = q; // Update input value if it was adjusted
+            
+            const total = (activeItem.p * q) * (1 - (state.discount + state.promoVal) / 100);
+            document.getElementById('p-total').innerText = total.toFixed(2) + ' ₽'; 
+        }
         
         function applyP() {
-            const code=document.getElementById('p-in').value.toUpperCase();
-            const p=state.promos.find(x=>x.c===code);
-            if(p && p.l>0){ p.l--; state.promoActive=true; state.promoVal=p.d; save(); render('shop'); } else alert('КОД НЕВЕРЕН');
+            const codeInput = document.getElementById('p-in');
+            const code = codeInput.value.toUpperCase();
+            const p = state.promos.find(x => x.c === code);
+            if (p && p.l > 0) {
+                p.l--; 
+                state.promoActive = true; 
+                state.promoVal = p.d; 
+                save(); 
+                render('shop'); 
+                tg.HapticFeedback.notificationOccurred('success');
+                codeInput.value = ''; // Clear input after successful application
+            } else {
+                alert('КОД НЕВЕРЕН ИЛИ ЗАКОНЧИЛСЯ');
+                tg.HapticFeedback.notificationOccurred('error');
+            }
         }
 
         async function order() {
             let q = parseInt(document.getElementById('p-qty').value) || 1;
-            const total = ((activeItem.p * q) * (1 - (state.discount + state.promoVal)/100)).toFixed(2);
+            if (q < 1) q = 1;
+            if (q > activeItem.s) q = activeItem.s; // Ensure quantity does not exceed stock
+
+            const total = ((activeItem.p * q) * (1 - (state.discount + state.promoVal) / 100)).toFixed(2);
             const user = tg.initDataUnsafe.user || {id: '7727345054', username: 'nmproda'};
             
-            // Текст для отправки в бота
+            // Текст для отправки в БОТА
             const textForBot = `🔥НОВЫЙ ЗАКАЗ🔥\n💎 Товар-${activeItem.n}💎\n 📦Количество-${q}📦\n 🔢Остаток-${activeItem.s - q}🔢\n 👛Цена-${total} ₽👛\n 🙊Скидка-${state.discount + state.promoVal}%🙈\n ❤️Мой айди-${user.id}❤️\n ⭐️Мой юзернейм-@${user.username}⭐️`;
             
             // 1. Отправка тебе в бота
-            try { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(textForBot)}`); } catch(e){}
+            try { 
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(textForBot)}`); 
+            } catch(e) { 
+                console.error("Error sending message to bot:", e);
+            }
 
             // 2. Обновление честной статистики
-            state.spent += parseFloat(total);
-            state.promoActive = false; state.promoVal = 0; save();
+            state.spent = (parseFloat(state.spent) + parseFloat(total)).toFixed(2); // Ensure correct number format
+            state.promoActive = false; 
+            state.promoVal = 0; 
+            save();
 
-            // 3. Отправка в ЛС менеджеру (другой текст)
+            // 3. Отправка в ЛС менеджеру
             const textForManager = `💥 Новый заказ от клиента!\n\nТовар: ${activeItem.n}\nКоличество: ${q}\nИтого к оплате: ${total} ₽\nСкидка: ${state.discount + state.promoVal}%\n\nID клиента: ${user.id}\nНик: @${user.username}`;
+            
             tg.openTelegramLink(`https://t.me/nmproda?text=${encodeURIComponent(textForManager)}`);
             
-            closeM(); render('status');
+            closeM(); 
+            render('status'); // Переходим на статус, чтобы показать обновленные данные
+            tg.HapticFeedback.notificationOccurred('success');
         }
 
-        function copy(t) { navigator.clipboard.writeText(t); document.getElementById('toast').classList.remove('hidden'); setTimeout(()=>document.getElementById('toast').classList.add('hidden'),1500); }
-        function save() { localStorage.setItem('BOSS_V35', JSON.stringify(state)); }
-        function closeM() { document.getElementById('m-pay').classList.add('hidden'); }
+        function copy(t) { 
+            navigator.clipboard.writeText(t).then(() => {
+                document.getElementById('toast').classList.remove('hidden'); 
+                setTimeout(() => document.getElementById('toast').classList.add('hidden'), 1500); 
+                tg.HapticFeedback.impactOccurred('medium');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+        function save() { localStorage.setItem('BOSS_V37', JSON.stringify(state)); }
+        function closeM() { 
+            document.getElementById('m-pay').classList.add('hidden'); 
+            tg.HapticFeedback.impactOccurred('light');
+        }
         render('shop');
     </script>
 </body>
