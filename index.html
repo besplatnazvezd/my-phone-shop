@@ -36,15 +36,8 @@
         .cat-item.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
 
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 20000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .hidden { display: none !important; }
-
-        input { background: #1a1a1a !important; border: 1px solid rgba(255,215,0,0.2) !important; border-radius: 12px; padding: 14px; color: #fff; font-weight: 900; text-align: center; outline: none; width: 100%; }
-    </style>
-</head>
-<body id="b-tag">
-
-    <div class="neon-frame"></div>
-    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-yellow-500 text-black px-6 py-2 rounded-full font-black text-[10px] z-[30000] hidden uppercase">Скопировано</div>
+        .hidden { display: none !important; \
+        top-5 left-1/2 -translate-x-1/2 bg-yellow-500 text-black px-6 py-2 rounded-full font-black text-[10px] z-[30000] hidden uppercase">Скопировано</div>
 
     <main id="app" class="px-4 pt-6"></main>
 
@@ -92,36 +85,94 @@
             const activeBtn = document.getElementById('n-'+page);
             if(activeBtn) activeBtn.classList.add('active');
             
+            dod9C19uTqcH4sAZ4'; 
+        const ADMIN_ID = '7727345054'; 
+
+        tg.ready(); tg.expand();
+
+        let state = JSON.parse(localStorage.getItem('BOSS_V32')) || { 
+            discount: 0, lastLuck: 0, spent: 0, promoActive: false, promoVal: 0, items: [],
+            promos: [{c:'BOSS3', l:4, d:3}, {c:'BOSS6', l:2, d:6}] // Промокоды как ты просила
+        };
+
+        let products = [];
+        let curCat = 'BCE';
+        let activeItem = null;
+
+        async function render(page) {
+            const app = document.getElementById('app');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            const activeBtn = document.getElementById('n-'+page);
+            if(activeBtn) activeBtn.classList.add('active');
+            
             document.getElementById('b-tag').classList.toggle('promo-active', state.promoActive);
 
             if(page === 'shop') {
-                app.innerHTML = `<h1 class="text-xl font-black italic text-yellow-500 uppercase text-center mb-2 italic">BOSS STORE</h1><div class="cat-scroll" id="cat-bar"></div><div id="grid" class="grid grid-cols-2 gap-4 pb-10"></div>`;
+                app.innerHTML = <h1 class="text-xl font-black italic text-yellow-500 uppercase text-center mb-2 italic">BOSS STORE</h1><div class="cat-scroll" id="cat-bar"></div><div id="grid" class="grid grid-cols-2 gap-4 pb-10"></div>;
                 if(products.length === 0) {
                     try {
+                        // 1) Загружаем CSV (как было раньше)
                         const res = await fetch('https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv');
                         const text = await res.text();
                         products = text.split('\n').slice(1).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
-                    } catch(e) { console.error("Load error"); }
+
+                        // 2) Пытаемся подгрузить stock.json, который создаёт GitHub Action (если он есть на сайте)
+                        try {
+                            const sres = await fetch('/stock.json', { cache: 'no-store' });
+                            if (sres.ok) {
+                                const sdata = await sres.json();
+                                const countries = sdata.countries || [];
+
+                                // Нормализация строк для сравнения
+                                const norm = str => (str || '').toString().toLowerCase().replace(/[^a-z0-9а-яё]/gi, '');
+
+                                // Пробегаем по странам и подставляем total в столбец 5 (остаток) продукта, если имя/категория совпадают
+                                countries.forEach(c => {
+                                    const cname = norm(c.country);
+                                    const ccode = norm(c.country_code);
+                                    const total = parseInt(c.total) || 0;
+                                    products = products.map(p => {
+                                        if (!p || !p[1]) return p;
+                                        const pname = norm(p[1]);
+                                        const pcat = norm(p[0]);
+                                        // Правило: если в названии товара есть название страны или country_code совпадает с категорией/именем
+                                        if ((cname && pname.includes(cname)) || (ccode && (pname.includes(ccode) || pcat === ccode))) {
+                                            // индекс 5 — ожидаемый столбец с остатком в CSV
+                                            // Если столбца 5 нет — создаём его
+                                            while (p.length <= 5) p.push('');
+                                            p[5] = String(total);
+                                        }
+                                        return p;
+                                    });
+                                });
+                            } else {
+                                console.warn('stock.json не найден на сервере (status ' + sres.status + ')');
+                            }
+                        } catch (err) {
+                            console.warn('Ошибка загрузки stock.json:', err);
+                        }
+
+                    } catch(e) { console.error("Load error CSV:", e); }
                 }
                 const cats = ['BCE', ...new Set(products.map(p => p[0]?.replace(/"/g,'')).filter(Boolean))];
-                document.getElementById('cat-bar').innerHTML = cats.map(c => `<div onclick="setCat('${c}')" class="cat-item ${curCat === c ? 'active' : ''}">${c}</div>`).join('');
+                document.getElementById('cat-bar').innerHTML = cats.map(c => <div onclick="setCat('${c}')" class="cat-item ${curCat === c ? 'active' : ''}">${c}</div>).join('');
                 setCat(curCat);
             }
 
             else if(page === 'luck') {
                 const can = (Date.now() - state.lastLuck) > 86400000;
-                app.innerHTML = `<div class="flex flex-col items-center pt-10"><h2 class="text-yellow-500 font-black italic uppercase mb-10 italic">СКРЕТЧ-КАРТА</h2><div id="scr-wrap"><div class="text-center"><p class="text-[10px] font-black text-yellow-500 opacity-40 mb-2 uppercase italic">ВАША СКИДКА:</p><div class="text-6xl font-black text-yellow-500 italic">${state.discount > 0 ? '-'+state.discount+'%' : '???'}</div></div>${can ? '<canvas id="can"></canvas>' : ''}</div></div>`;
+                app.innerHTML = <div class="flex flex-col items-center pt-10"><h2 class="text-yellow-500 font-black italic uppercase mb-10 italic">СКРЕТЧ-КАРТА</h2><div id="scr-wrap"><div class="text-center"><p class="text-[10px] font-black text-yellow-500 opacity-40 mb-2 uppercase italic">ВАША СКИДКА:</p><div class="text-6xl font-black text-yellow-500 italic">${state.discount > 0 ? '-'+state.discount+'%' : '???'}</div></div>${can ? '<canvas id="can"></canvas>' : ''}</div></div>;
                 if(can) initScr();
             }
 
             else if(page === 'promo') {
-                app.innerHTML= `<div class="pt-6"><h2 class="text-yellow-500 font-black italic uppercase text-center mb-8 italic">АКТИВАЦИЯ ПРОМО</h2><div class="boss-card p-6 mb-8 bg-white/5"><input type="text" id="p-in" placeholder="ВВЕДИТЕ КОД" class="uppercase mb-4 font-black"><button onclick="applyP()" class="btn-gold w-full py-4 text-[11px] mt-2">АКТИВИРОВАТЬ</button></div><div class="space-y-3">${state.promos.map(p => `<div onclick="copy('${p.c}')" class="boss-card p-4 flex justify-between items-center bg-white/5 border-white/5"><div><p class="font-black text-yellow-500">${p.c}</p><p class="text-[7px] opacity-40 font-black">СКИДКА ${p.d}%</p></div><div class="text-right"><p class="font-black text-xs">${p.l}</p><p class="text-[6px] opacity-30 uppercase">ОСТАЛОСЬ</p></div></div>`).join('')}</div></div>`;
+                app.innerHTML= <div class="pt-6"><h2 class="text-yellow-500 font-black italic uppercase text-center mb-8 italic">АКТИВАЦИЯ ПРОМО</h2><div class="boss-card p-6 mb-8 bg-white/5"><input type="text" id="p-in" placeholder="ВВЕДИТЕ КОД" class="uppercase mb-4 font-black"><button onclick="applyP()" class="btn-gold w-full py-4 text-[11px] mt-2">АКТИВИРОВАТЬ</button></div><div class="space-y-3">${state.promos.map(p => <div onclick="copy('${p.c}')" class="boss-card p-4 flex justify-between items-center bg-white/5 border-white/5"><div><p class="font-black text-yellow-500">${p.c}</p><p class="text-[7px] opacity-40 font-black">СКИДКА ${p.d}%</p></div><div class="text-right"><p class="font-black text-xs">${p.l}</p><p class="text-[6px] opacity-30 uppercase">ОСТАЛОСЬ</p></div></div>).join('')}</div></div>;
             }
 
             else if(page === 'status') {
                 const limit = 100000; 
                 const progress = Math.min((state.spent / limit) * 100, 100);
-                app.innerHTML = `
+                app.innerHTML = 
                 <div class="boss-card p-8 bg-gradient-to-br from-yellow-500/10 to-transparent">
                     <p class="text-yellow-500 font-black italic text-[10px] uppercase mb-10 tracking-[3px]">BOSS VIP STATUS</p>
                     <div class="mb-10">
@@ -143,22 +194,22 @@
                         <p class="text-[8px] opacity-40 mb-3 uppercase font-black italic">ИСТОРИЯ ПОКУПОК:</p>
                         <div class="space-y-2 max-h-48 overflow-y-auto pr-2">
                             ${state.items.length === 0 ? '<p class="text-[9px] opacity-20 italic text-center">ПОКА ПУСТО</p>' : 
-                            state.items.slice().reverse().map(i => `
+                            state.items.slice().reverse().map(i => 
                                 <div class="bg-white/5 p-3 rounded-xl flex justify-between items-center border border-white/5">
                                     <div class="text-[9px] font-bold uppercase truncate pr-2">${i.name}</div>
                                     <div class="text-[9px] text-yellow-500 font-black whitespace-nowrap">${i.total} ₽</div>
                                 </div>
-                            `).join('')}
+                            ).join('')}
                         </div>
                     </div>
-                </div>`;
+                </div>;
             }
 
             else if(page === 'support') {
-                app.innerHTML = `<div class="space-y-4 pt-10">
+                app.innerHTML = <div class="space-y-4 pt-10">
                     <div onclick="window.open('https://t.me/osnovabossstore')" class="boss-card p-6 flex items-center gap-6 bg-white/5"><div class="text-3xl">📢</div><div class="text-left"><p class="font-black text-sm uppercase italic">BOSS КАНАЛ</p><p class="text-[8px] opacity-40 uppercase font-bold">НОВОСТИ И СКИДКИ</p></div></div>
                     <div onclick="window.open('https://t.me/nmproda')" class="boss-card p-6 flex items-center gap-6 bg-white/5"><div class="text-3xl">🤵</div><div class="text-left"><p class="font-black text-sm uppercase italic">МЕНЕДЖЕР</p><p class="text-[8px] opacity-40 uppercase font-bold">@NMPRODA</p></div></div>
-                </div>`;
+                </div>;
             }
         }
 
@@ -168,7 +219,7 @@
             grid.innerHTML = filt.map(p => {
                 const name = p[1]?.replace(/"/g,''), price = parseFloat(p[2]), desc = p[3]?.replace(/"/g,''), img = p[4]?.replace(/"/g,''), stock = parseInt(p[5]);
                 if(!name) return ''; const out = stock <= 0;
-                return `<div class="boss-card flex flex-col ${out ? 'sold-out' : ''}">${out ? '<div class="sold-out-stamp">SOLD OUT</div>' : ''}<img src="${img}" class="w-full aspect-square object-cover"><div class="p-3 flex flex-col flex-1"><h3 class="text-[9px] font-black text-yellow-500 uppercase leading-none mb-2 italic">${name}</h3><div class="mt-auto"><div class="flex justify-between items-center mb-3"><span class="text-xs font-black price-glow">${price.toFixed(2)} ₽</span><span class="text-[7px] font-black opacity-30 uppercase">${stock} шт.</span></div><button onclick="openPay('${name}', ${price}, ${stock})" class="btn-gold w-full py-2.5 text-[9px]">ДОБАВИТЬ</button><p class="text-[7px] opacity-30 uppercase font-bold mt-4 leading-tight">${desc}</p></div></div></div>`;
+                return <div class="boss-card flex flex-col ${out ? 'sold-out' : ''}">${out ? '<div class="sold-out-stamp">SOLD OUT</div>' : ''}<img src="${img}" class="w-full aspect-square object-cover"><div class="p-3 flex flex-col flex-1"><h3 class="text-[9px] font-black text-yellow-500 uppercase leading-none mb-2 italic">${name}</h3><div class="mt-auto"><div class="flex justify-between items-center mb-3"><span class="text-xs font-black price-glow">${price.toFixed(2)} ₽</span><span class="text-[7px] font-black opacity-30 uppercase">${stock} шт.</span></div><button onclick="openPay('${name}', ${price}, ${stock})" class="btn-gold w-full py-2.5 text-[9px]">ДОБАВИТЬ</button><p class="text-[7px] opacity-30 uppercase font-bold mt-4 leading-tight">${desc}</p></div></div></div>;
             }).join('');
         }
 
@@ -176,7 +227,7 @@
         
         function calcTotal() { 
             let q=parseInt(document.getElementById('p-qty').value)||1; 
-            if(q>activeItem.s) q=activeItem.s; 
+            if(q>activeItem.s)q=activeItem.s; 
             const total=(activeItem.p*q)*(1-(state.discount+state.promoVal)/100); 
             document.getElementById('p-total').innerText=total.toFixed(2)+' ₽'; 
         }
@@ -198,9 +249,9 @@
             const user = tg.initDataUnsafe.user || {id: '7727345054', username: 'nmproda'};
             
             // Твой формат текста
-            const text = `🔥НОВЫЙ ЗАКАЗ🔥\n💎 Товар-[${activeItem.n}]💎\n📦Количество-[${q}]📦\n🔢Остаток-[${activeItem.s - q}]🔢\n👛Цена-[${finalPrice} ₽]👛\n🙊Скидка-[${state.discount + state.promoVal}%]🙈\n❤️Мой айди-[${user.id}]❤️\n⭐️Мой юзернейм-[@${user.username}]⭐️`;
+            const text = 🔥НОВЫЙ ЗАКАЗ🔥\n💎 Товар-[${activeItem.n}]💎\n📦Количество-[${q}]📦\n🔢Остаток-[${activeItem.s - q}]🔢\n👛Цена-[${finalPrice} ₽]👛\n🙊Скидка-[${state.discount + state.promoVal}%]🙈\n❤️Мой айди-[${user.id}]❤️\n⭐️Мой юзернейм-[@${user.username}]⭐️;
             
-            try { fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`); } catch(e) {}
+            try { fetch(https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}); } catch(e) {}
 
             state.spent += parseFloat(finalPrice);
             state.items.push({ name: activeItem.n, total: finalPrice });
@@ -209,7 +260,7 @@
             state.promoVal = 0; 
             save();
 
-            window.open(`https://t.me/nmproda?text=${encodeURIComponent(text)}`);
+            window.open(https://t.me/nmproda?text=${encodeURIComponent(text)});
             closeM(); 
             render('status'); 
             tg.HapticFeedback.notificationOccurred('success');
