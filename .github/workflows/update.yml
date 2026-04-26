@@ -1,0 +1,19 @@
+name: Update Stock
+on:
+  schedule:
+    - cron: '0 * * * *' # Запуск каждый час
+  workflow_dispatch: # Чтобы можно было запустить вручную
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run script
+        run: python get_stock.py
+      - name: Commit changes
+        run: |
+          git config --global user.name 'StockBot'
+          git config --global user.email 'bot@github.com'
+          git add stock.json
+          git commit -m "Автообновление остатков" || exit 0
+          git push
