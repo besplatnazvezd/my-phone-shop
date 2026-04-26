@@ -96,43 +96,47 @@
 
             if(page === 'shop') {
                 app.innerHTML = `<h1 class="text-xl font-black italic text-yellow-500 uppercase text-center mb-2 italic">BOSS STORE</h1><div class="cat-scroll" id="cat-bar"></div><div id="grid" class="grid grid-cols-2 gap-4 pb-10"></div>`;
-                            if (products.length === 0) {
+                                        if (products.length === 0) {
                 try {
-                    // 1. Грузим основную инфу из твоей гугл-таблицы (исправил пробел в ссылке)
+                    // 1. Грузим основную инфу из твоей гугл-таблицы (ссылка проверена)
                     const res = await fetch('https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdf009-jodyIi9Ew/export?format=csv');
                     const text = await res.text();
                     
                     // Создаем список товаров
                     products = text.split('\n').slice(1).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
 
-                    // 2. Пробуем наложить живые остатки из stock.json
+                    // 2. Пытаемся наложить живые остатки из stock.json
                     try {
                         const stockRes = await fetch('stock.json');
-                        if (stockRes.ok) {
+                        if (stockRes.ok) { // Проверяем, что файл stock.json существует
                             const liveStock = await stockRes.json();
                             products = products.map(p => {
+                                // Получаем название страны из таблицы (p[1] - это вторая колонка)
                                 let countryName = p[1]?.replace(/"/g, '').trim(); 
-                                if (liveStock[countryName] !== undefined) {
-                                    p[5] = liveStock[countryName]; 
+                                
+                                // Если такая страна есть в stock.json, заменяем остаток
+                                if (countryName && liveStock[countryName] !== undefined) {
+                                    p[5] = liveStock[countryName]; // p[5] - это, предположительно, остаток в твоей таблице
                                 }
                                 return p;
                             });
+                        } else {
+                            console.log("stock.json не найден или недоступен. Используем данные из таблицы.");
                         }
                     } catch (err) {
-                        console.log("stock.json не найден, это нормально для первого раза");
+                        console.log("Ошибка загрузки stock.json (это нормально, если он еще не создан): ", err);
                     }
 
                     // Отрисовываем категории и товары
                     const cats = ['BCE', ...new Set(products.map(p => p[0]?.replace(/"/g, '')).filter(Boolean))];
                     document.getElementById('cat-bar').innerHTML = cats.map(c => `<div onclick="setCat('${c}')" class="cat-item ${curCat === c ? 'active' : ''}">${c}</div>`).join('');
-                    setCat(curCat);
+                    setCat(curCat); // Устанавливаем текущую категорию
 
                 } catch (e) {
-                    console.error("Ошибка загрузки данных:", e);
+                    console.error("Ошибка загрузки данных из Google Sheets:", e);
                 }
-                            }
-
-            else if(page === 'luck') {
+                                        }
+                                        else if(page === 'luck') {
                 const can = (Date.now() - state.lastLuck) > 86400000;
                 app.innerHTML = `<div class="flex flex-col items-center pt-10"><h2 class="text-yellow-500 font-black italic uppercase mb-10 italic">СКРЕТЧ-КАРТА</h2><div id="scr-wrap"><div class="text-center"><p class="text-[10px] font-black text-yellow-500 opacity-40 mb-2 uppercase italic">ВАША СКИДКА:</p><div class="text-6xl font-black text-yellow-500 italic">${state.discount > 0 ? '-'+state.discount+'%' : '???'}</div></div>${can ? '<canvas id="can"></canvas>' : ''}</div></div>`;
                 if(can) initScr();
