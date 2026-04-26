@@ -119,49 +119,46 @@
                                 });
                             }
                         } catch(e) {}
+            if (products.length === 0) {
+                try {
+                    // 1. Грузим основную инфу из твоей гугл-таблицы (ссылка проверена)
+                    const res = await fetch('https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdf009-jodyIi9Ew/export?format=csv');
+                    const text = await res.text();
+                    
+                    // Создаем список товаров
+                    products = text.split('\n').slice(1).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
 
-                        const cats = ['BCE', ...new Set(products.map(p => p[0]?.replace(/"/g, '')).filter(Boolean))];
-                        document.getElementById('cat-bar').innerHTML = cats.map(c => `<div onclick="setCat('${c}')" class="cat-item ${curCat === c ? 'active' : ''}">${c}</div>`).join('');
-                        setCat(curCat);
-                    } catch (e) {
-                        console.error("Ошибка загрузки:", e);
-                        app.innerHTML = "<p class='text-center'>Ошибка загрузки товаров. Проверьте публикацию таблицы.</p>";
-                    }} else {
-                    const cats = ['BCE', ...new Set(products.map(p => p[0]?.replace(/"/g, '')).filter(Boolean))];
+                    // 2. Пытаемся наложить живые остатки из stock.json
+                    try {
+                        const stockRes = await fetch('stock.json');
+                        if (stockRes.ok) { // Проверяем, что файл stock.json существует
+                            const liveStock = await stockRes.json();
+                            products = products.map(p => {
+                                // Получаем название страны из таблицы (p[1] - это вторая колонка)
+                                let countryName = p[1]?.replace(/"/g, '').trim(); 
+                                
+                                // Если такая страна есть в stock.json, заменяем остаток
+                                if (countryName && liveStock[countryName] !== undefined) {
+                                    p[5] = liveStock[countryName]; // p[5] - это, предположительно, остаток в твоей таблице
+                                }
+                                return p;
+                            });
+                        } else {
+                            console.log("stock.json не найден или недоступен. Используем данные из таблицы.");
+                        }
+                    } catch (err) {
+                        console.log("Ошибка загрузки stock.json (это нормально, если он еще не создан): ", err);
+                    }
+
+                    // Отрисовываем категории и товары
+                    const cats = ['BCE', ...new Set(products.map(p => p[1]?.replace(/"/g, '')).filter(Boolean))]; // Берем категории из колонки B (1)
                     document.getElementById('cat-bar').innerHTML = cats.map(c => `<div onclick="setCat('${c}')" class="cat-item ${curCat === c ? 'active' : ''}">${c}</div>`).join('');
-                    setCat(curCat);
-                }
-            } else if (page === 'promo') {
-                app.innerHTML = `<h2 class="text-xl font-black italic text-yellow-500 uppercase text-center mb-8">АКТИВАЦИЯ ПРОМО</h2><div class="boss-card p-6 mb-8 bg-white/5"><input type="text" id="p-in" placeholder="ВВЕДИТЕ КОД" class="uppercase mb-4 text-black"><button onclick="applyP()" class="btn-gold w-full py-3">АКТИВИРОВАТЬ</button></div>`;
-            } else if (page === 'status') {
-                let limit = 100000;
-                let progress = Math.min((state.spent / limit) * 100, 100);
-                app.innerHTML = `<div class="boss-card p-6 bg-gradient-to-br from-yellow-500/10 to-transparent"><p class="text-[10px] text-yellow-500 font-black italic text-center mb-2">BOSS STATUS</p><div class="mb-6"><div class="flex justify-between items-center mb-1"><span class="text-[10px]">PROGRESS TO 100k</span><span class="text-[10px] font-bold">${Math.floor(state.spent).toLocaleString()} / ${limit.toLocaleString()}</span></div><div class="h-1.5 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-yellow-500" style="width:${progress}%"></div></div></div><div class="grid grid-cols-2 gap-4 text-left"><p class="text-[7px] opacity-40">ID КЛИЕНТА</p><p class="text-[7px] opacity-20 text-right">${tg.initDataUnsafe.user?.id || '---'}</p><p class="text-[7px] opacity-40">ЮЗЕРНЕЙМ</p><p class="text-[7px] opacity-20 text-right">@${tg.initDataUnsafe.user?.username || '---'}</p></div><div class="mt-4 text-center"><p class="text-[7px] opacity-40">СКИДКА ${state.discount + state.promoVal}%</p></div></div><h3 class="mt-6 mb-2 text-[10px] opacity-40 uppercase">История покупок</h3><div class="space-y-2 max-h-48 overflow-y-auto">${state.items.length === 0 ? '<p class="text-center opacity-20 text-[10px]">ПОКА ПУСТО</p>' : state.items.slice().reverse().map(i => `<div class="bg-white/5 p-3 rounded-xl flex justify-between items-center"><span>${i.name}</span><span>${i.total} ₽</span></div>`).join('')}</div>`;
-            } else if (page === 'support') {
-                app.innerHTML = `<div onclick="window.open('https://t.me/osnovabossstore')" class="boss-card p-6 flex items-center gap-4 bg-white/5 mb-4"><p>BOSS КАНАЛ</p></div><div onclick="window.open('https://t.me/nmproda')" class="boss-card p-6 flex items-center gap-4 bg-white/5"><p>ПОДДЕРЖКА</p></div>`;
-            } else if (page === 'luck') {
-                app.innerHTML = `<h2 class="text-center mb-4">ВАША СКИДКА</h2><div class="scr-wrap"><canvas id="can"></canvas><div class="text-center">СКИДКА ИСПОЛЬЗОВАНА</div></div>`;
-                initScr();
-            }
-        }
+                    setCat(curCat); // Устанавливаем текущую категорию
 
-        function setCat(c) {
-            curCat = c;
-            const grid = document.getElementById('grid');
-            if (!grid) return;
-            grid.innerHTML = products.filter(p => p[0]?.replace(/"/g, '') === c || c === 'BCE').map(p => {
-                const name = p[1]?.replace(/"/g, '');
-                const price = p[2];
-                const img = p[3]?.replace(/"/g, '');
-                const desc = p[4]?.replace(/"/g, '');
-                const stock = parseInt(p[5]) || 0;
-                const statusClass = stock <= 0 ? 'sold-out' : '';
-                return `<div class="boss-card p-3 flex-col flex-grow relative ${statusClass}" onclick="openPay('${name}', '${price}', '${stock}')">${stock <= 0 ? '<div class="sold-out-stamp">SOLD OUT</div>' : ''}<img src="${img}" class="w-full aspect-square object-cover rounded-lg mb-2"><h3 class="text-[9px] font-bold text-yellow-500 uppercase leading-none mb-1">${name}</h3><p class="text-[7px] opacity-50 mb-2">${desc}</p><div class="flex justify-between items-center"><span class="text-xs font-black price-glow">${price}₽</span><span class="text-[7px] opacity-30">${stock} шт.</span></div></div>`;
-            }).join('');
-            document.querySelectorAll('.cat-item').forEach(item => {
-                item.classList.toggle('active', item.textContent.trim() === c);
-            });
-        }
+                } catch (e) {
+                    console.error("Ошибка загрузки данных из Google Sheets:", e);
+                }
+                                                    }
 
         function openPay(n, p, s) {
             if (parseInt(s) <= 0) return alert('Товар закончился!');
