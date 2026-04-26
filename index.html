@@ -96,40 +96,41 @@
 
             if(page === 'shop') {
                 app.innerHTML = `<h1 class="text-xl font-black italic text-yellow-500 uppercase text-center mb-2 italic">BOSS STORE</h1><div class="cat-scroll" id="cat-bar"></div><div id="grid" class="grid grid-cols-2 gap-4 pb-10"></div>`;
-                if(products.length === 0) {
+                            if (products.length === 0) {
+                try {
+                    // 1. Грузим основную инфу из твоей гугл-таблицы (исправил пробел в ссылке)
+                    const res = await fetch('https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdf009-jodyIi9Ew/export?format=csv');
+                    const text = await res.text();
+                    
+                    // Создаем список товаров
+                    products = text.split('\n').slice(1).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
+
+                    // 2. Пробуем наложить живые остатки из stock.json
                     try {
-                        try {
-            // 1. Грузим основную инфу из твоей гугл-таблицы
-            const res = await fetch('https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIw bZU4_EDtvpJdf009-jodyIi9Ew/export?format=csv');
-            const text = await res.text();
-            
-            // Создаем список товаров из таблицы
-            products = text.split('\n').slice(1).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
-
-            // 2. А теперь МАГИЯ: Синхронизируем остатки с донором
-            try {
-                const stockRes = await fetch('stock.json'); // Подтягиваем наш файл с API донора
-                const liveStock = await stockRes.json();
-                
-                products = products.map(p => {
-                    let countryName = p[1]?.replace(/"/g, ''); // Название страны из таблицы
-                    if (liveStock[countryName] !== undefined) {
-                        p[5] = liveStock[countryName]; // Заменяем остаток на живой с донора
-                    }
-                    return p;
-                });
-            } catch (e) {
-                console.log("Синхронизация не удалась, используем данные из таблицы");
-            }
-
-        } catch (e) { 
-            console.error("Load error"); 
+                        const stockRes = await fetch('stock.json');
+                        if (stockRes.ok) {
+                            const liveStock = await stockRes.json();
+                            products = products.map(p => {
+                                let countryName = p[1]?.replace(/"/g, '').trim(); 
+                                if (liveStock[countryName] !== undefined) {
+                                    p[5] = liveStock[countryName]; 
                                 }
+                                return p;
+                            });
+                        }
+                    } catch (err) {
+                        console.log("stock.json не найден, это нормально для первого раза");
+                    }
+
+                    // Отрисовываем категории и товары
+                    const cats = ['BCE', ...new Set(products.map(p => p[0]?.replace(/"/g, '')).filter(Boolean))];
+                    document.getElementById('cat-bar').innerHTML = cats.map(c => `<div onclick="setCat('${c}')" class="cat-item ${curCat === c ? 'active' : ''}">${c}</div>`).join('');
+                    setCat(curCat);
+
+                } catch (e) {
+                    console.error("Ошибка загрузки данных:", e);
                 }
-                const cats = ['BCE', ...new Set(products.map(p => p[0]?.replace(/"/g,'')).filter(Boolean))];
-                document.getElementById('cat-bar').innerHTML = cats.map(c => `<div onclick="setCat('${c}')" class="cat-item ${curCat === c ? 'active' : ''}">${c}</div>`).join('');
-                setCat(curCat);
-            }
+                            }
 
             else if(page === 'luck') {
                 const can = (Date.now() - state.lastLuck) > 86400000;
