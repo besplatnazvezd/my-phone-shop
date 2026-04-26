@@ -98,6 +98,7 @@
                 app.innerHTML = `<h1 class="text-xl font-black italic text-yellow-500 uppercase text-center mb-2 italic">BOSS STORE</h1><div class="cat-scroll" id="cat-bar"></div><div id="grid" class="grid grid-cols-2 gap-4 pb-10"></div>`;
                 if(products.length === 0) {
                     try {
+                        try {
             // 1. Грузим основную инфу из твоей гугл-таблицы
             const res = await fetch('https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIw bZU4_EDtvpJdf009-jodyIi9Ew/export?format=csv');
             const text = await res.text();
