@@ -10,33 +10,27 @@
     <style>
         :root { --gold: #FFD700; --bg: #000; --card: #0d0d0d; --neon: #ff00ff; }
         body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; margin: 0; padding-bottom: 110px; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
-        
         .neon-frame { position: fixed; inset: 0; border: 3px solid var(--neon); box-shadow: inset 0 0 15px var(--neon), 0 0 15px var(--neon); z-index: 9998; pointer-events: none; display: none; opacity: 0.6; animation: breathe 1.5s infinite ease-in-out; }
         @keyframes breathe { 0%, 100% { opacity: 0.3; box-shadow: inset 0 0 10px var(--neon), 0 0 10px var(--neon); } 50% { opacity: 0.8; box-shadow: inset 0 0 25px var(--neon), 0 0 25px var(--neon); } }
-        
         .promo-active .neon-frame { display: block; }
         .promo-active .price-glow { color: var(--neon) !important; text-shadow: 0 0 12px var(--neon); }
         .promo-active .boss-card { border-color: var(--neon); }
-
         .boss-card { background: var(--card); border-radius: 18px; border: 1px solid rgba(255, 215, 0, 0.08); overflow: hidden; position: relative; transition: 0.4s; }
         .btn-gold { background: linear-gradient(180deg, #FFD700 0%, #BA8B02 100%); color: #000; font-weight: 900; text-transform: uppercase; border-radius: 12px; }
-        
         .sold-out { opacity: 0.3; pointer-events: none; }
         .sold-out-stamp { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); background: #ff0000; color: #fff; font-weight: 900; padding: 5px 15px; border-radius: 4px; z-index: 100; border: 2px solid white; font-size: 14px; }
-
         #scr-wrap { position: relative; width: 330px; height: 210px; background: #111; border-radius: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255, 215, 0, 0.2); overflow: hidden; }
         canvas { position: absolute; inset: 0; z-index: 10; touch-action: none; cursor: crosshair; }
                 .nav-bar { position: fixed; bottom: 0; width: 100%; background: rgba(5,5,5,0.96); backdrop-filter: blur(12px); border-top: 1px solid rgba(255, 215, 0, 0.1); padding: 12px 0 35px; display: flex; justify-content: space-around; z-index: 10000; }
         .nav-item { color: #444; font-size: 8px; font-weight: 800; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
         .nav-item.active { color: var(--gold); }
-
         .cat-scroll { display: flex; overflow-x: auto; gap: 15px; padding: 10px 0 20px; scrollbar-width: none; }
-        .cat-item { white-space: nowrap; font-size: 9px; font-weight: 900; color: #333; text-transform: uppercase; }
+        .cat-item { white-space: nowrap; font-size: 9px; font-weight: 900; color: #333; text-transform: uppercase; border-bottom: 2px solid transparent; padding-bottom: 2px; }
         .cat-item.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
-
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 20000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .hidden { display: none !important; }
-        input, textarea { background: #1a1a1a !important; border: 1px solid rgba(255, 215, 0, 0.2) !important; border-radius: 12px; padding: 14px; color: #fff; font-weight: 900; width: 100%; outline: none; }
+        input, textarea { background: #1a1a1a !important; border: 1px solid rgba(255, 215, 0, 0.2) !important; border-radius: 12px; padding: 14px; color: #fff; font-weight: 900; text-align: center; outline: none; width: 100%; }
+        textarea { text-align: left; resize: none; }
     </style>
 </head>
 <body id="b-tag">
@@ -46,7 +40,7 @@
 
     <main id="app" class="px-4 pt-6"></main>
 
-    <!-- Модалка оплаты (Шаг 1) -->
+    <!-- Окно оплаты реквизиты -->
     <div id="m-pay" class="modal hidden">
         <div class="boss-card w-full max-w-sm p-6 text-center bg-[#0a0a0a]">
             <h2 id="p-name" class="text-yellow-500 font-black italic uppercase mb-6 text-xl"></h2>
@@ -55,9 +49,9 @@
                 <input type="number" id="p-qty" value="1" oninput="calcTotal()">
             </div>
             <div class="space-y-2 mb-6 text-left">
-                <div onclick="copy('+79501700787')" class="bg-white/5 p-4 rounded-xl border border-white/5">
+                                <div onclick="copy('+79501700787')" class="bg-white/5 p-4 rounded-xl border border-white/5">
                     <p class="text-[7px] opacity-40 font-black uppercase">💛 Т-Банк / СБП</p>
-                                        <p class="font-bold text-yellow-500 text-sm">+7 950 170 07 87</p>
+                    <p class="font-bold text-yellow-500 text-sm">+7 950 170 07 87</p>
                 </div>
                 <div onclick="copy('2200701955299232')" class="bg-white/5 p-4 rounded-xl border border-white/5">
                     <p class="text-[7px] opacity-40 font-black uppercase">💳 Карта Т-Банк</p>
@@ -70,20 +64,20 @@
             </div>
             <div class="flex gap-3">
                 <button onclick="closeM()" class="w-1/3 py-4 text-[9px] font-black opacity-30">НАЗАД</button>
-                <button onclick="showAddressStep()" class="w-2/3 btn-gold py-4 text-[10px]">Я ОПЛАТИЛ(А)</button>
+                <button onclick="showInfoCard()" class="w-2/3 btn-gold py-4 text-[10px]">Я ОПЛАТИЛ(А)</button>
             </div>
         </div>
     </div>
 
-    <!-- Модалка данных (Шаг 2 - ТВОЕ ЗАДАНИЕ) -->
-    <div id="m-address" class="modal hidden">
+    <!-- ТВОЯ НОВАЯ КАРТОЧКА ДАННЫХ -->
+    <div id="m-info" class="modal hidden">
         <div class="boss-card w-full max-w-sm p-6 text-center bg-[#0a0a0a]">
             <h2 class="text-yellow-500 font-black italic uppercase mb-4 text-lg">КУДА ОТПРАВИТЬ?</h2>
-            <p class="text-[8px] opacity-40 uppercase mb-4">Укажите данные для получения товара, если надо связаться с админом перейдите во вкладку связь.</p>
-            <textarea id="client-info" rows="3" placeholder="Пример: тг звёзды, юзернейм @nnnnn" class="text-sm mb-6"></textarea>
+            <p class="text-[8px] opacity-40 uppercase mb-4">Укажите данные для получения или отправьте точку и напишите в лс.</p>
+            <textarea id="delivery-data" rows="3" placeholder="Пример: тг звёзды, юзернейм @nnnnn" class="text-xs mb-6"></textarea>
             <div class="flex gap-3">
-                <button onclick="closeAddress()" class="w-1/3 py-4 text-[9px] font-black opacity-30">НАЗАД</button>
-                <button onclick="finalOrder()" class="w-2/3 btn-gold py-4 text-[10px]">ОТПРАВИТЬ ДАННЫЕ</button>
+                <button onclick="hideInfoCard()" class="w-1/3 py-4 text-[9px] font-black opacity-30">ОТМЕНА</button>
+                <button onclick="order()" class="w-2/3 btn-gold py-4 text-[10px]">ОТПРАВИТЬ ЗАКАЗ</button>
             </div>
         </div>
     </div>
@@ -105,8 +99,12 @@
 
         let state = JSON.parse(localStorage.getItem('BOSS_V32')) || {
             discount: 0, lastLuck: 0, spent: 0, promoActive: false, promoVal: 0, items: [],
-            promos: [{c:'BOSS3', l:100, d:3}, {c:'BOSS6', l:100, d:6}] // УСТАНОВЛЕНО ПО 100 КОЛИЧЕСТВА
+            regDate: new Date().toLocaleDateString(),
+            promos: [{c:'BOSS3', l:100, d:3}, {c:'BOSS6', l:100, d:6}]
         };
+
+        // Форсируем 100 промокодов, если они изменились
+        state.promos.forEach(p => { if(p.l < 5) p.l = 100; });
 
         let products = [];
         let curCat = 'ВСЕ';
@@ -123,11 +121,11 @@
                 app.innerHTML = `<h1 class="text-xl font-black italic text-yellow-500 uppercase text-center mb-2 italic">BOSS STORE</h1><div class="cat-scroll" id="cat-bar"></div><div id="grid" class="grid grid-cols-2 gap-4 pb-10"></div>`;
                 if(products.length === 0) {
                     try {
-                        const res = await fetch('https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv');
+                        const res = await fetch('https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdf0O9-jodyTi9Ew/export?format=csv');
                         const text = await res.text();
                         products = text.split('\n').slice(1).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
                     } catch(e) { console.error("Load error"); }
-                 }
+                }
                 const cats = ['ВСЕ', ...new Set(products.map(p => p[0]?.replace(/"/g, '')).filter(Boolean))];
                 document.getElementById('cat-bar').innerHTML = cats.map(c => `<div onclick="setCat('${c}')" class="cat-item ${curCat === c ? 'active' : ''}">${c}</div>`).join('');
                 setCat(curCat);
@@ -143,7 +141,7 @@
             else if (page === 'status') {
                 const limit = 100000;
                 const progress = Math.min((state.spent / limit) * 100, 100);
-                app.innerHTML = `<div class="boss-card p-8 bg-gradient-to-br from-yellow-500/10 to-transparent"><p class="text-yellow-500 font-black italic text-[10px] uppercase mb-10 tracking-[3px]">BOSS VIP STATUS</p><div class="mb-10"><div class="flex justify-between text-[11px] font-black mb-3"><span>PROGRESS TO 100K</span><span>${Math.floor(state.spent).toLocaleString()} / 100 000 ₽</span></div><div class="h-1.5 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-yellow-500" style="width:${progress}%"></div></div></div><div class="grid grid-cols-2 gap-8 text-[10px] font-black uppercase text-left"><div><p class="opacity-20 mb-1 text-[7px]">ID КЛИЕНТА</p>${tg.initDataUnsafe.user?.id || '---'}</div><div><p class="opacity-20 mb-1 text-[7px]">ЮЗЕР</p>@${tg.initDataUnsafe.user?.username || 'user'}</div><div class="text-yellow-500"><p class="opacity-20 mb-1 text-[7px] text-white">СКИДКА</p>${state.discount + state.promoVal}%</div><div><p class="opacity-20 mb-1 text-[7px]">РЕГ</p>21.04.2024</div></div><div class="mt-8 border-t border-white/5 pt-4 text-left"><p class="text-[8px] opacity-40 mb-3 uppercase font-black italic">ИСТОРИЯ ПОКУПОК:</p><div class="space-y-2 max-h-48 overflow-y-auto pr-2">${state.items.length === 0 ? '<p class="text-[9px] opacity-20 italic text-center">ПОКА ПУСТО</p>' : state.items.slice().reverse().map(i => `<div class="bg-white/5 p-3 rounded-xl flex justify-between items-center border-white/5"><div class="text-[9px] font-bold uppercase truncate pr-2">${i.name}</div><div class="text-[9px] text-yellow-500 font-black whitespace-nowrap">${i.total} ₽</div></div>`).join('')}</div></div></div>`;
+                app.innerHTML = `<div class="boss-card p-8 bg-gradient-to-br from-yellow-500/10 to-transparent"><p class="text-yellow-500 font-black italic text-[10px] uppercase mb-10 tracking-[3px]">BOSS VIP STATUS</p><div class="mb-10"><div class="flex justify-between text-[11px] font-black mb-3"><span>PROGRESS TO 100K</span><span>${Math.floor(state.spent).toLocaleString()} / 100 000 ₽</span></div><div class="h-1.5 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-yellow-500" style="width:${progress}%"></div></div></div><div class="grid grid-cols-2 gap-8 text-[10px] font-black uppercase text-left"><div><p class="opacity-20 mb-1 text-[7px]">ID КЛИЕНТА</p>${tg.initDataUnsafe.user?.id || '---'}</div><div><p class="opacity-20 mb-1 text-[7px]">ЮЗЕР</p>@${tg.initDataUnsafe.user?.username || 'user'}</div><div class="text-yellow-500"><p class="opacity-20 mb-1 text-[7px] text-white">СКИДКА</p>${state.discount + state.promoVal}%</div><div><p class="opacity-20 mb-1 text-[7px]">РЕГ</p>${state.regDate}</div></div><div class="mt-8 border-t border-white/5 pt-4 text-left"><p class="text-[8px] opacity-40 mb-3 uppercase font-black italic">ИСТОРИЯ ПОКУПОК:</p><div class="space-y-2 max-h-48 overflow-y-auto pr-2">${state.items.length === 0 ? '<p class="text-[9px] opacity-20 italic text-center">ПОКА ПУСТО</p>' : state.items.slice().reverse().map(i => `<div class="bg-white/5 p-3 rounded-xl flex justify-between items-center border-white/5"><div class="text-[9px] font-bold uppercase truncate pr-2">${i.name}</div><div class="text-[9px] text-yellow-500 font-black whitespace-nowrap">${i.total} ₽</div></div>`).join('')}</div></div></div>`;
             }
             else if (page === 'support') {
                 app.innerHTML = `<div class="space-y-4 pt-10"><div onclick="window.open('https://t.me/osnovabossstore')" class="boss-card p-6 flex items-center gap-6 bg-white/5"><div class="text-3xl">📢</div><div class="text-left"><p class="font-black text-sm uppercase italic">BOSS КАНАЛ</p><p class="text-[8px] opacity-40 uppercase font-bold">НОВОСТИ И СКИДКИ</p></div></div><div onclick="window.open('https://t.me/nmproda')" class="boss-card p-6 flex items-center gap-6 bg-white/5"><div class="text-3xl">👨‍💻</div><div class="text-left"><p class="font-black text-sm uppercase italic">МЕНЕДЖЕР</p><p class="text-[8px] opacity-40 uppercase font-bold">@NMPRODA</p></div></div></div>`;
@@ -151,7 +149,11 @@
         }
 
         function setCat(c) {
-            curCat = c; const grid = document.getElementById('grid'); if(!grid) return;
+            curCat = c; 
+            document.querySelectorAll('.cat-item').forEach(el => {
+                el.classList.toggle('active', el.innerText === c);
+            });
+            const grid = document.getElementById('grid'); if(!grid) return;
             const filt = c === 'ВСЕ' ? products : products.filter(p => p[0]?.replace(/"/g, '') === c);
             grid.innerHTML = filt.map(p => {
                 const name = p[1]?.replace(/"/g, ''), price = parseFloat(p[2]), desc = p[3]?.replace(/"/g, ''), img = p[4]?.replace(/"/g, ''), stock = parseInt(p[5]);
@@ -161,12 +163,39 @@
         }
 
         function openPay(n, p, s) { activeItem = {n, p, s}; document.getElementById('p-name').innerText=n; document.getElementById('p-qty').value=1; calcTotal(); document.getElementById('m-pay').classList.remove('hidden'); }
-        
         function calcTotal() {
             let q = parseInt(document.getElementById('p-qty').value)||1;
             if(q > activeItem.s) q = activeItem.s;
             const total = (activeItem.p * q) * (1 - (state.discount + state.promoVal)/100);
             document.getElementById('p-total').innerText = total.toFixed(2) + ' ₽';
+        }
+
+        function showInfoCard() { document.getElementById('m-pay').classList.add('hidden'); document.getElementById('m-info').classList.remove('hidden'); }
+        function hideInfoCard() { document.getElementById('m-info').classList.add('hidden'); document.getElementById('m-pay').classList.remove('hidden'); }
+
+        async function order() {
+            const delivery = document.getElementById('delivery-data').value;
+            if(!delivery) return alert("Введите данные для отправки!");
+            
+            let q = parseInt(document.getElementById('p-qty').value);
+            if (q > activeItem.s) q = activeItem.s;
+            const finalPrice = ((activeItem.p * q) * (1 - (state.discount + state.promoVal)/100)).toFixed(2);
+            const user = tg.initDataUnsafe.user || {id: '7727345054', username: 'nmproda'};
+
+            const text = `🔥 НОВЫЙ ЗАКАЗ 🔥\n💎 Товар- [${activeItem.n}]💎\n📦 Количество- [${q}]📦\n📉 Остаток- [${activeItem.s - q}]📉\n💰 Цена- [${finalPrice} ₽]💰\n🎁 Скидка- [${state.discount + state.promoVal}%]🎁\n👤 Мой айди- [${user.id}]❤️\n⭐ Мой юзернейм- [@${user.username}]⭐\n\n📍 КУДА ОТПРАВИТЬ:\n${delivery}`;
+
+            try {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`);
+                state.spent += parseFloat(finalPrice);
+                state.items.push({ name: activeItem.n, total: finalPrice });
+                state.promoActive = false; state.promoVal = 0;
+                save();
+                alert("ЗАКАЗ ОТПРАВЛЕН АДМИНУ!");
+                document.getElementById('m-info').classList.add('hidden');
+                document.getElementById('delivery-data').value = "";
+                render('status');
+                tg.HapticFeedback.notificationOccurred('success');
+            } catch(e) {}
         }
 
         function applyP() {
@@ -178,49 +207,6 @@
                 save(); render('shop');
                 tg.HapticFeedback.notificationOccurred('success');
             } else alert('КОД НЕВЕРЕН ИЛИ ЗАКОНЧИЛСЯ');
-        }
-
-        // Шаг переключения на ввод данных
-        function showAddressStep() {
-            document.getElementById('m-pay').classList.add('hidden');
-            document.getElementById('m-address').classList.remove('hidden');
-        }
-
-        function closeAddress() {
-            document.getElementById('m-address').classList.add('hidden');
-            document.getElementById('m-pay').classList.remove('hidden');
-        }
-
-        // ФИНАЛЬНАЯ ОТПРАВКА (ТВОЕ ЗАДАНИЕ)
-        async function finalOrder() {
-            const clientInfo = document.getElementById('client-info').value.trim();
-            if(!clientInfo) { alert("Пожалуйста, заполните данные!"); return; }
-
-            let q = parseInt(document.getElementById('p-qty').value);
-            if (q > activeItem.s) q = activeItem.s;
-            const finalPrice = ((activeItem.p * q) * (1 - (state.discount + state.promoVal)/100)).toFixed(2);
-            const user = tg.initDataUnsafe.user || {id: '7727345054', username: 'nmproda'};
-
-            const text = `🔥 НОВЫЙ ЗАКАЗ 🔥\n💎 Товар- [${activeItem.n}]💎\n📦 Количество- [${q}]📦\n📉 Остаток- [${activeItem.s - q}]📉\n💰 Цена- [${finalPrice} ₽]💰\n🎁 Скидка- [${state.discount + state.promoVal}%]🎁\n👤 Мой айди- [${user.id}]❤️\n⭐ Мой юзернейм- [@${user.username}]⭐\n\n📝 ДАННЫЕ КЛИЕНТА:\n${clientInfo}`;
-
-            try {
-                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`);
-                
-                state.spent += parseFloat(finalPrice);
-                state.items.push({ name: activeItem.n, total: finalPrice });
-                state.promoActive = false;
-                state.promoVal = 0;
-                save();
-
-                alert("Данные успешно отправлены админу!");
-                
-                document.getElementById('m-address').classList.add('hidden');
-                document.getElementById('client-info').value = ""; // очистка
-                render('status');
-                tg.HapticFeedback.notificationOccurred('success');
-            } catch(e) {
-                alert("Ошибка при отправке. Попробуйте еще раз.");
-            }
         }
 
         function initScr() {
@@ -249,7 +235,7 @@
         }
 
         function copy(t) { navigator.clipboard.writeText(t); document.getElementById('toast').classList.remove('hidden'); setTimeout(()=>document.getElementById('toast').classList.add('hidden'),1500); tg.HapticFeedback.impactOccurred('medium'); }
-        function save() {localStorage.setItem('BOSS_V32', JSON.stringify(state)); }
+        function save() { localStorage.setItem('BOSS_V32', JSON.stringify(state)); }
         function closeM() { document.getElementById('m-pay').classList.add('hidden'); }
 
         render('shop');
