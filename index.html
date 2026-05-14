@@ -49,7 +49,7 @@
                 <input type="number" id="p-qty" value="1" oninput="calcTotal()">
             </div>
             <div class="space-y-2 mb-6 text-left">
-                                <div onclick="copy('+79501700787')" class="bg-white/5 p-4 rounded-xl border border-white/5">
+                <div onclick="copy('+79501700787')" class="bg-white/5 p-4 rounded-xl border border-white/5">
                     <p class="text-[7px] opacity-40 font-black uppercase">💛 Т-Банк / СБП</p>
                     <p class="font-bold text-yellow-500 text-sm">+7 950 170 07 87</p>
                 </div>
@@ -97,20 +97,30 @@
 
         tg.ready(); tg.expand();
 
+        // Получаем уникальный ID пользователя Telegram или используем 'default_user' для тестов
         const userId = tg.initDataUnsafe.user?.id || 'default_user';
         let state = {};
 
+        // Загружаем состояние конкретного пользователя из localStorage
         const storedState = localStorage.getItem('BOSS_V32_' + userId);
         
         if (storedState) {
             state = JSON.parse(storedState);
-            // Проверяем актуальность промокодов (100 шт)
-            state.promos.forEach(p => { if (p.l === undefined) p.l = 100; });
+            // Убедимся, что промокодов всегда 100, даже если старое состояние было другим
+            state.promos.forEach(p => { 
+                if (p.l < 100) p.l = 100; // Исправлено на 100, если было меньше
+            });
         } else {
+            // Начальное состояние для нового пользователя
             state = {
-                discount: 0, lastLuck: 0, spent: 0, promoActive: false, promoVal: 0, items: [],
-                regDate: new Date().toLocaleDateString('ru-RU'),
-                promos: [{c:'BOSS3', l:100, d:3}, {c:'BOSS6', l:100, d:6}]
+                discount: 0, 
+                lastLuck: 0, 
+                spent: 0, 
+                promoActive: false, 
+                promoVal: 0, 
+                items: [],
+                regDate: new Date().toLocaleDateString('ru-RU'), // Дата регистрации нового пользователя
+                promos: [{c:'BOSS3', l:100, d:3}, {c:'BOSS6', l:100, d:6}] // Промокоды по 100 штук
             };
         }
         
@@ -118,7 +128,10 @@
         let curCat = 'ВСЕ';
         let activeItem = null;
 
-        function save() { localStorage.setItem('BOSS_V32_' + userId, JSON.stringify(state)); }
+        // Функция сохранения состояния (теперь с привязкой к userId)
+        function save() { 
+            localStorage.setItem('BOSS_V32_' + userId, JSON.stringify(state)); 
+        }
 
         async function render(page) {
             const app = document.getElementById('app');
@@ -128,8 +141,7 @@
             document.getElementById('b-tag').classList.toggle('promo-active', state.promoActive);
 
             if (page === 'shop') {
-                app.innerHTML = `<h1 class="text-xl font-black italic text-yellow-500 uppercase text-center mb-2 italic">BOSS STORE</h1\
-                <div class="cat-scroll" id="cat-bar"></div><div id="grid" class="grid grid-cols-2 gap-4 pb-10"></div>`;
+                app.innerHTML = `<h1 class="text-xl font-black italic text-yellow-500 uppercase text-center mb-2 italic">BOSS STORE</h1><div class="cat-scroll" id="cat-bar"></div><div id="grid" class="grid grid-cols-2 gap-4 pb-10"></div>`;
                 if(products.length === 0) {
                     try {
                         const res = await fetch('https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdf0O9-jodyTi9Ew/export?format=csv');
@@ -139,19 +151,30 @@
                 }
                 const cats = ['ВСЕ', ...new Set(products.map(p => p[0]?.replace(/"/g, '')).filter(Boolean))];
                 document.getElementById('cat-bar').innerHTML = cats.map(c => `<div onclick="setCat('${c}')" class="cat-item ${curCat === c ? 'active' : ''}">${c}</div>`).join('');
-                setCat(curCat);
+                setCat(curCat); // Убедимся, что при рендере категории правильно выделяются
             } 
             else if (page === 'luck') {
                 const canScratch = (Date.now() - state.lastLuck) > 86400000;
-                app.innerHTML = `<div class="flex flex-col items-center pt-10"><h2 class="text-yellow-500 font-black italic uppercase mb-10 italic">СКРЕТЧ-КАРТА</h2><div id="scr-wrap"><div class="text-center"><p class="text-[10px] font-black text-yellow-500 opacity-40 mb-2 uppercase">ВАША СКИДКА:</p><div class="text-6xl font-black text-yellow-500 italic">${canScratch ? '???' : (state.discount > 0 ? '-'+state.discount+'%' : '---')}</div></div>${canScratch ? '<canvas id="can"></canvas>' : ''}</div></div>`;
+                app.innerHTML = `
+                    <div class="flex flex-col items-center pt-10">
+                        <h2 class="text-yellow-500 font-black italic uppercase mb-10 italic">СКРЕТЧ-КАРТА</h2>
+                        <div id="scr-wrap">
+                            <div class="text-center">
+                                <p class="text-[10px] font-black text-yellow-500 opacity-40 mb-2 uppercase">ВАША СКИДКА:</p>
+                                <div class="text-6xl font-black text-yellow-500 italic">${canScratch ? '???' : (state.discount > 0 ? '-'+state.discount+'%' : '---')}</div>
+                            </div>
+                            ${canScratch ? '<canvas id="can"></canvas>' : ''}
+                        </div>
+                        ${!canScratch && state.discount === 0 ? '<p class="text-[8px] opacity-40 uppercase mt-4">Приходите завтра за новой скидкой!</p>' : ''}
+                    </div>`;
                 if(canScratch) initScr();
             }
             else if (page === 'promo') {
                 app.innerHTML = `<div class="pt-6"><h2 class="text-yellow-500 font-black italic uppercase text-center mb-8 italic">АКТИВАЦИЯ ПРОМО</h2><div class="boss-card p-6 mb-8 bg-white/5"><input type="text" id="p-in" placeholder="ВВЕДИТЕ КОД" class="uppercase mb-4 font-black"><button onclick="applyP()" class="btn-gold w-full py-4 text-[11px] mt-2">АКТИВИРОВАТЬ</button></div><div class="space-y-3">${state.promos.map(p => `<div onclick="copy('${p.c}')" class="boss-card p-4 flex justify-between items-center bg-white/5 border-white/5"><div><p class="font-black text-yellow-500">${p.c}</p><p class="text-[7px] opacity-40 font-black">СКИДКА ${p.d}%</p></div><div class="text-right"><p class="font-black text-xs">${p.l}</p><p class="text-[6px] opacity-30 uppercase">ОСТАЛОСЬ</p></div></div>`).join('')}</div></div>`;
             }
             else if (page === 'status') {
-                const limit = 100000, progress = Math.min((state.spent / limit) * 100, 100);
-                app.innerHTML = `<div class="boss-card p-8 bg-gradient-to-br from-yellow-500/10 to-transparent"><p class="text-yellow-500 font-black italic text-[10px] uppercase mb-10 tracking-[3px]">BOSS VIP STATUS</p><div class="mb-10"><div class="flex justify-between text-[11px] font-black mb-3"><span>PROGRESS TO 100K</span><span>${Math.floor(state.spent).toLocaleString()} / 100 000 ₽</span></div><div class="h-1.5 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-yellow-500" style="width:${progress}%"></div></div></div><div class="grid grid-cols-2 gap-8 text-[10px] font-black uppercase text-left"><div><p class="opacity-20 mb-1 text-[7px]">ID КЛИЕНТА</p>${tg.initDataUnsafe.user?.id || '---'}</div><div><p class="opacity-20 mb-1 text-[7px]">ЮЗЕР</p>@${tg.initDataUnsafe.user?.username || 'user'}</div><div class="text-yellow-500"><p class="opacity-20 mb-1 text-[7px] text-white">СКИДКА</p>${state.discount + state.promoVal}%</div><div><p class="opacity-20 mb-1 text-[7px]">РЕГ</p>${state.regDate}</div></div><div class="mt-8 border-t border-white/5 pt-4 text-left"><p class="text-[8px] opacity-40 mb-3 uppercase font-black italic">ИСТОРИЯ ПОКУПОК:</p><div class="space-y-2 max-h-48 overflow-y-auto pr-2">${state.items.length === 0 ? '<p class="text-[9px] opacity-20 italic text-center">ПОКА ПУСТО</p>' : state.items.slice().reverse().map(i => `<div class="bg-white/5 p-3 rounded-xl flex justify-between items-center border-white/5"><div class="text-[9px] font-bold uppercase truncate pr-2">${i.name}</div><div class="text-[9px] text-yellow-500 font-black whitespace-nowrap">${i.total} ₽</div></div>`).join('')}</div></div></div>`;
+                const limit = 100000;
+                const progress = Math.min((state.spent / limit) * 100, 100);app.innerHTML = `<div class="boss-card p-8 bg-gradient-to-br from-yellow-500/10 to-transparent"><p class="text-yellow-500 font-black italic text-[10px] uppercase mb-10 tracking-[3px]">BOSS VIP STATUS</p><div class="mb-10"><div class="flex justify-between text-[11px] font-black mb-3"><span>PROGRESS TO 100K</span><span>${Math.floor(state.spent).toLocaleString()} / 100 000 ₽</span></div><div class="h-1.5 bg-white/5 rounded-full overflow-hidden"><div class="h-full bg-yellow-500" style="width:${progress}%"></div></div></div><div class="grid grid-cols-2 gap-8 text-[10px] font-black uppercase text-left"><div><p class="opacity-20 mb-1 text-[7px]">ID КЛИЕНТА</p>${tg.initDataUnsafe.user?.id || '---'}</div><div><p class="opacity-20 mb-1 text-[7px]">ЮЗЕР</p>@${tg.initDataUnsafe.user?.username || 'user'}</div><div class="text-yellow-500"><p class="opacity-20 mb-1 text-[7px] text-white">СКИДКА</p>${state.discount + state.promoVal}%</div><div><p class="opacity-20 mb-1 text-[7px]">РЕГ</p>${state.regDate}</div></div><div class="mt-8 border-t border-white/5 pt-4 text-left"><p class="text-[8px] opacity-40 mb-3 uppercase font-black italic">ИСТОРИЯ ПОКУПОК:</p><div class="space-y-2 max-h-48 overflow-y-auto pr-2">${state.items.length === 0 ? '<p class="text-[9px] opacity-20 italic text-center">ПОКА ПУСТО</p>' : state.items.slice().reverse().map(i => `<div class="bg-white/5 p-3 rounded-xl flex justify-between items-center border-white/5"><div class="text-[9px] font-bold uppercase truncate pr-2">${i.name}</div><div class="text-[9px] text-yellow-500 font-black whitespace-nowrap">${i.total} ₽</div></div>`).join('')}</div></div></div>`;
             }
             else if (page === 'support') {
                 app.innerHTML = `<div class="space-y-4 pt-10"><div onclick="window.open('https://t.me/osnovabossstore')" class="boss-card p-6 flex items-center gap-6 bg-white/5"><div class="text-3xl">📢</div><div class="text-left"><p class="font-black text-sm uppercase italic">BOSS КАНАЛ</p><p class="text-[8px] opacity-40 uppercase font-bold">НОВОСТИ И СКИДКИ</p></div></div><div onclick="window.open('https://t.me/nmproda')" class="boss-card p-6 flex items-center gap-6 bg-white/5"><div class="text-3xl">👨‍💻</div><div class="text-left"><p class="font-black text-sm uppercase italic">МЕНЕДЖЕР</p><p class="text-[8px] opacity-40 uppercase font-bold">@NMPRODA</p></div></div></div>`;
@@ -160,40 +183,21 @@
 
         function setCat(c) {
             curCat = c; 
+            // Управление активным классом для подчеркивания
             document.querySelectorAll('.cat-item').forEach(el => {
-                el.classList.toggle('active', el.innerText === c);
+                el.classList.remove('active');
             });
+            const activeCatElement = document.querySelector(`#cat-bar .cat-item[onclick="setCat('${c}')"]`);
+            if (activeCatElement) {
+                activeCatElement.classList.add('active');
+            }
+
             const grid = document.getElementById('grid'); if(!grid) return;
             const filt = c === 'ВСЕ' ? products : products.filter(p => p[0]?.replace(/"/g, '') === c);
-            
-            // СЧИТАЕМ ТЕКУЩУЮ ОБЩУЮ СКИДКУ ДЛЯ МАГАЗИНА
-            const totalDisc = state.discount + state.promoVal;
-
             grid.innerHTML = filt.map(p => {
                 const name = p[1]?.replace(/"/g, ''), price = parseFloat(p[2]), desc = p[3]?.replace(/"/g, ''), img = p[4]?.replace(/"/g, ''), stock = parseInt(p[5]);
                 if(!name) return ''; const out = stock <= 0;
-                
-                // РАССЧЕТ НОВОЙ ЦЕНЫ СРАЗУ
-                const finalPrice = price * (1 - totalDisc/100);
-
-                return `
-                <div class="boss-card flex flex-col ${out ? 'sold-out' : ''}">
-                    ${out ? '<div class="sold-out-stamp">SOLD OUT</div>' : ''}
-                    <img src="${img}" class="w-full aspect-square object-cover">
-                    <div class="p-3 flex flex-col flex-1">
-                        <h3 class="text-[9px] font-black text-yellow-500 uppercase leading-none mb-2 italic">${name}</h3>
-                        <div class="mt-auto">
-                            <div class="flex flex-col mb-3">
-                                ${totalDisc > 0 ? `<span class="text-[8px] line-through opacity-30">${price.toFixed(2)} ₽</span>` : ''}
-                                <span class="text-xs font-black price-glow ${state.promoActive ? 'text-pink-500' : 'text-yellow-500'}">
-                                    ${finalPrice.toFixed(2)} ₽
-                                </span>
-                            </div>
-                            <button onclick="openPay('${name}', ${price}, ${stock})" class="btn-gold w-full py-2.5 text-[9px]">ДОБАВИТЬ</button>
-                            <p class="text-[7px] opacity-30 uppercase font-bold mt-4 leading-tight">${desc}\</p>
-                        </div>
-                    </div>
-                </div>`;
+                return `<div class="boss-card flex flex-col ${out ? 'sold-out' : ''}">${out ? '<div class="sold-out-stamp">SOLD OUT</div>' : ''}<img src="${img}" class="w-full aspect-square object-cover"><div class="p-3 flexflex-col flex-1"><h3 class="text-[9px] font-black text-yellow-500 uppercase leading-none mb-2 italic">${name}</h3><div class="mt-auto"><div class="flex justify-between items-center mb-3"><span class="text-xs font-black price-glow">${price.toFixed(2)} ₽</span><span class="text-[7px] font-black opacity-30 uppercase">${stock} шт.</span></div><button onclick="openPay('${name}', ${price}, ${stock})" class="btn-gold w-full py-2.5 text-[9px]">ДОБАВИТЬ</button><p class="text-[7px] opacity-30 uppercase font-bold mt-4 leading-tight">${desc}</p></div></div></div>`;
             }).join('');
         }
 
@@ -211,11 +215,14 @@
         async function order() {
             const delivery = document.getElementById('delivery-data').value;
             if(!delivery) return alert("Введите данные для отправки!");
+            
             let q = parseInt(document.getElementById('p-qty').value);
             if (q > activeItem.s) q = activeItem.s;
             const finalPrice = ((activeItem.p * q) * (1 - (state.discount + state.promoVal)/100)).toFixed(2);
-            const user = tg.initDataUnsafe.user || {id: 'default', username: 'user'};
+            const user = tg.initDataUnsafe.user || {id: 'default_user_id', username: 'default_user'}; // Fallback для пользователя
+
             const text = `🔥 НОВЫЙ ЗАКАЗ 🔥\n💎 Товар- [${activeItem.n}]💎\n📦 Количество- [${q}]📦\n📉 Остаток- [${activeItem.s - q}]📉\n💰 Цена- [${finalPrice} ₽]💰\n🎁 Скидка- [${state.discount + state.promoVal}%]🎁\n👤 Мой айди- [${user.id}]❤️\n⭐ Мой юзернейм- [@${user.username}]⭐\n\n📍 КУДА ОТПРАВИТЬ:\n${delivery}`;
+
             try {
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`);
                 state.spent += parseFloat(finalPrice);
@@ -227,28 +234,27 @@
                 document.getElementById('delivery-data').value = "";
                 render('status');
                 tg.HapticFeedback.notificationOccurred('success');
-            } catch(e) {}
+            } catch(e) {
+                alert("Ошибка при отправке. Попробуйте еще раз.");
+            }
         }
 
         function applyP() {
-            if(state.promoActive){alert('У вас уже активирован промокод!'); return;}
+            if(state.promoActive){alert('У вас уже есть активный промокод!'); return;}
             const code = document.getElementById('p-in').value.toUpperCase();
             const p = state.promos.find(x=>x.c===code);
             if(p && p.l>0){
-                p.l--; // Уменьшаем общее количество
-                state.promoActive = true; 
-                state.promoVal = p.d;
-                save(); 
-                render('shop'); // СРАЗУ ОБНОВЛЯЕМ ЦЕНЫ В ШОПЕ
+                p.l--; state.promoActive=true; state.promoVal=p.d;
+                save(); render('shop');
                 tg.HapticFeedback.notificationOccurred('success');
             } else alert('КОД НЕВЕРЕН ИЛИ ЗАКОНЧИЛСЯ');
         }
 
         function initScr() {
             const can=document.getElementById('can'), ctx=can.getContext('2d'); can.width=330; can.height=210;
-            ctx.fillStyle='#222'; ctx.fillRect(0,0,330,210);
+            ctx.fillStyle='#222'; ctx.fillRect(0,0,330,210); // Заливка карты
             ctx.fillStyle='#FFD700'; ctx.font='900 28px Montserrat';
-            for(let i=0;i<4;i++) for(let j=0;j<3;j++) ctx.fillText('?',50+i*80,70+j*65);
+            for(let i=0;i<4;i++) for(let j=0;j<3;j++) ctx.fillText('?',50+i*80,70+j*65); // Отображаем '???'
             let active=false;
             const scratch=(e)=>{
                 if(!active)return;
@@ -258,11 +264,12 @@
                 ctx.beginPath(); ctx.arc(x,y,40,0,Math.PI*2); ctx.fill();
                 const d=ctx.getImageData(0,0,330,210).data; let t=0;
                 for(let i=3;i<d.length;i+=4) if(d[i]===0) t++;
-                if(t>d.length/4*0.5){
-                    can.remove(); const r=Math.random();
-                    state.discount=r<0.5?1:(r<0.9?2:3);
-                    state.lastLuck=Date.now(); save(); 
-                    render('shop'); // Обновляем шоп после выигрыша скидки
+                if(t>d.length/4*0.5){ // Если стерто более 50%
+                    can.remove(); // Удаляем канвас
+                    const r=Math.random();
+                    state.discount=r<0.5?1:(r<0.9?2:3); // Выдаем новую скидку
+                    state.lastLuck=Date.now(); // Обновляем время последнего использования
+                    save(); render('luck'); // Сохраняем и перерисовываем
                 }
             };
             can.addEventListener('mousedown',()=>active=true); can.addEventListener('touchstart',()=>active=true);
@@ -273,8 +280,7 @@
         function copy(t) { navigator.clipboard.writeText(t); document.getElementById('toast').classList.remove('hidden'); setTimeout(()=>document.getElementById('toast').classList.add('hidden'),1500); tg.HapticFeedback.impactOccurred('medium'); }
         function closeM() { document.getElementById('m-pay').classList.add('hidden'); }
 
-        render('shop');
+        render('shop'); // Изначально рендерим страницу "Шоп"
     </script>
 </body>
 </html>
-                
