@@ -64,7 +64,7 @@
             </div>
             <div class="flex gap-3">
                 <button onclick="closeM()" class="w-1/3 py-4 text-[9px] font-black opacity-30">НАЗАД</button>
-                <button onclick="showInfoCard()" class="w-2/3 btn-gold py-4 text-[10px]">Я ОПЛАТИЛА</button>
+                <button onclick="showInfoCard()" class="w-2/3 btn-gold py-4 text-[10px]">Я ОПЛАТИЛ(А)</button>
             </div>
         </div>
     </div>
@@ -73,7 +73,7 @@
     <div id="m-info" class="modal hidden">
         <div class="boss-card w-full max-w-sm p-6 text-center bg-[#0a0a0a]">
             <h2 class="text-yellow-500 font-black italic uppercase mb-4 text-lg">КУДА ОТПРАВИТЬ?</h2>
-            <p class="text-[8px] opacity-40 uppercase mb-4">Укажите данные для получения</p>
+            <p class="text-[8px] opacity-40 uppercase mb-4">Укажите данные для получения или напишите админу @nmproda.</p>
             <textarea id="delivery-data" rows="3" placeholder="Пример: тг звёзды, юзернейм @nnnnn" class="text-xs mb-6"></textarea>
             <div class="flex gap-3">
                 <button onclick="hideInfoCard()" class="w-1/3 py-4 text-[9px] font-black opacity-30">ОТМЕНА</button>
@@ -108,7 +108,7 @@
             state = JSON.parse(storedState);
             // Убедимся, что промокодов всегда 100, даже если старое состояние было другим
             state.promos.forEach(p => { 
-                if (p.l < 100) p.l = 100; // Исправлено на 100, если было меньше
+                if (p.l < 5) p.l = 5; // Исправлено на 100, если было меньше
             });
         } else {
             // Начальное состояние для нового пользователя
@@ -120,7 +120,7 @@
                 promoVal: 0, 
                 items: [],
                 regDate: new Date().toLocaleDateString('ru-RU'), // Дата регистрации нового пользователя
-                promos: [{c:'BOSS3', l:100, d:3}, {c:'BOSS6', l:100, d:6}] // Промокоды по 100 штук
+                promos: [{c:'VLASTELIN777', l:5, d:3}, {c:'BOSS6', l:5, d:6}] // Промокоды по 100 штук
             };
         }
         
