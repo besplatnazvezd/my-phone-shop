@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BOSS STORE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Светлая тема (Бежевый/Голубой) */
+            --bg: #F5F5DC; --text: #333333; --accent: #5dade2; --card: #FFFFFF; --border: rgba(0,0,0,0.1);
+        }
+        body.dark-theme {
+            /* Темная тема (Темно-сине-фиолетовый) */
+            --bg: #1A1A2E; --text: #E0E0E0; --accent: #87CEEB; --card: #282828; --border: rgba(255,255,255,0.1);
+        }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; margin: 0; padding-bottom: 100px; }
+        .glass { background: var(--card); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .boss-card { background: linear-gradient(135deg, #222, #000); color: #fff; border: 1px solid var(--accent); position: relative; overflow: hidden; border-radius: 25px; }
+        .progress-fill { height: 100%; background: var(--accent); transition: 1s ease-out; box-shadow: 0 0 10px var(--accent); }
+        .nav-bar { position: fixed; bottom: 15px; left: 15px; right: 15px; height: 70px; display: flex; justify-content: space-around; align-items: center; z-index: 1000; border-radius: 20px; }
+        .nav-item { opacity: 0.5; font-size: 10px; font-weight: 900; text-align: center; }
+        .nav-item.active { opacity: 1; color: var(--accent); transform: scale(1.1); }
+        .mine-cell { aspect-ratio: 1; background: rgba(0,0,0,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid var(--border); }
+        .frame-boss { outline: 3px solid var(--accent); outline-offset: 2px; }
+        .tab-btn { padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 900; transition: 0.2s; }
+        .tab-active { background: var(--accent); color: #fff; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="dark-theme">
+
+    <!-- Header -->
+      <header class="p-5 flex justify-between items-center">
+        <div>
+            <p id="greet" class="text-[10px] uppercase font-bold opacity-60">Доброе утро</p>
+            <h1 class="text-xl font-black"><span id="u-name">БОСС</span> <span style="color: var(--accent)">STORE</span></h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="toggleTheme()" class="w-10 h-10 glass flex items-center justify-center">🌓</button>
+            <div id="u-avatar-wrap" class="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
+                <img id="u-avatar" src="" class="w-full h-full object-cover">
+            </div>
+        </div>
+    </header>
+
+    <!-- BOSS CARD -->
+    <section class="px-5 mb-6">
+        <div class="boss-card p-6 shadow-2xl">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-[8px] uppercase opacity-60">ID: <span id="u-id">0000</span></p>
+                    <h2 id="u-level" class="text-xl font-black italic tracking-tighter">НОВИЧОК</h2>
+                </div>
+                <div class="text-right">
+                    <p class="text-[8px] uppercase opacity-60">Баланс</p>
+                    <p id="u-balance" class="text-xl font-black">0.00 ₽</p>
+                </div>
+            </div>
+            <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden mb-2">
+                <div id="u-progress" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-[9px] font-black uppercase">
+                <span id="u-lvl-text">До Постоянного</span>
+                <span id="u-spent-total">0 / 5 000 ₽</span>
+            </div>
+            <div class="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
+                <span class="text-[9px] opacity-60">Рефералы: <span id="u-refs">0</span></span>
+                <button onclick="copyRef()" class="text-[9px] font-bold text-sky-300 underline">Пригласить (3% скидка)</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SHOP PAGE -->
+    <div id="page-shop" class="page-content px-5">
+              <input type="text" id="search" oninput="doSearch()" placeholder="Поиск (Stars, Тг, Скидки...)" class="w-full glass p-4 mb-4 outline-none font-bold text-sm">
+        
+        <div class="flex gap-2 overflow-x-auto no-scrollbar mb-4" id="cat-list">
+            <!-- Категории -->
+        </div>
+
+        <div id="product-grid" class="grid grid-cols-2 gap-3">
+            <!-- Товары -->
+        </div>
+    </div>
+
+    <!-- GAME PAGE (MINER) -->
+    <div id="page-game" class="page-content hidden px-5">
+        <div class="glass p-6 text-center">
+            <h2 class="text-xl font-black mb-1">ИГРА "МИНЁР"</h2>
+            <p class="text-[10px] opacity-60 mb-6">Найди 5 алмазов без бомб - получи 15% скидку!</p>
+            <div id="mine-board" class="grid grid-cols-5 gap-2 mb-6"></div>
+            <p id="game-info" class="text-xs font-bold text-red-500"></p>
+        </div>
+    </div>
+
+    <!-- ORDERS PAGE -->
+    <div id="page-orders" class="page-content hidden px-5">
+        <h2 class="font-black mb-4 uppercase">Мои покупки</h2>
+        <div id="orders-list" class="flex flex-col gap-3"></div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <nav class="nav-bar glass">
+        <div onclick="showPage('shop')" id="n-shop" class="nav-item active"><div>🛒</div><div>Шоп</div></div>
+        <div onclick="showPage('game')" id="n-game" class="nav-item"><div>💣</div><div>Минёр</div></div>
+        <div onclick="showPage('orders')" id="n-orders" class="nav-item"><div>📦</div><div>Заказы</div></div>
+        <div onclick="showPage('support')" class="nav-item"><div>🎧</div><div>Саппорт</div></div>
+    </nav>
+
+    <!-- MODAL -->
+    <div id="modal" class="fixed inset-0 bg-black/90 z-[2000] hidden flex items-center justify-center p-6">
+        <div class="glass w-full max-w-xs p-8 text-center bg-[var(--card)]">
+            <h3 id="m-name" class="text-lg font-black uppercase mb-4">Товар</h3>
+            <div class="flex items-center justify-center gap-4 mb-6">
+                <button onclick="changeQty(-1)" class="w-10 h-10 glass font-bold">-</button>
+                <input type="number" id="m-qty" value="1" class="w-16 bg-transparent text-center font-black text-xl">
+                <button onclick="changeQty(1)" class="w-10 h-10 glass font-bold">+</button>
+            </div>
+            <div id="m-price" class="text-3xl font-black mb-8" style="color: var(--accent)">0.00 ₽</div>
+            <button onclick="buyNow()" class="w-full py-4 rounded-xl font-black uppercase text-sm" style="background: var(--accent); color: #fff;">Купить сейчас</button>
+            <button onclick="closeModal()" class="mt-4 text-[10px] opacity-50 font-bold uppercase">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        const SB_URL = 'https://smyzxklndhuccxscfbfi.supabase.co/rest/v1/';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNteXp4a2xuZGh1Y2N4c2NmYmZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4MzYxMDUsImV4cCI6MjA5NDQxMjEwNX0.JiJ7epQTdHjfyGNWc5s3JfSfYSkfqN-j8MIKC_Y9cWA';
+        const sb = supabase.createClient(SB_URL, SB_KEY);
+
+        const ADMIN_ID = 7727345054;
+        const BOT_TOKEN = '8780961369:AAHsqP2Fi4N1swLkpe2Jxn74fvv4qitJLM';
+
+        // ТВОИ ТАБЛИЦЫ
+        const URL_TG = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv';
+        const URL_OTHER = 'https://docs.google.com/spreadsheets/d/1bxpXTKxDHUwk5VX79PeXbjxrJxAkzaZag6opznV_Kq8/export?format=csv';
+
+        let user, products = [], currentCat = 'all', selProd, discount = 0;
+
+        async function init() {
+            tg.ready(); tg.expand();
+            const u = tg.initDataUnsafe?.user || { id: 7727345054, first_name: 'Boss', username: 'boss' };
+            
+            let { data } = await sb.from('profiles').select('*').eq('id', u.id).single();
+            if(!data) {
+                const { data: n } = await sb.from('profiles').insert([{ id: u.id, first_name: u.first_name, username: u.username, avatar_url: u.photo_url }]).select().single();
+                data = n;
+            }
+            user = data;
+
+            updateProfileUI();
+            await loadAllProducts();
+            setGreeting();
+        }
+
+        function setGreeting() {
+            const h = new Date().getHours();
+            const g = h < 6 ? "Доброй ночи" : h < 12 ? "Доброе утро" : h < 18 ? "Добрый день" : "Добрый вечер";
+            document.getElementById('greet').innerText = g;
+            document.getElementById('u-name').innerText = user.first_name.toUpperCase();
+            document.getElementById('u-avatar').src = user.avatar_url || 'https://via.placeholder.com/100';
+            document.getElementById('u-id').innerText = user.id;
+        }
+
+        function updateProfileUI() {
+            document.getElementById('u-balance').innerText = `${user.balance.toFixed(2)} ₽`;
+            document.getElementById('u-level').innerText = user.loyalty_level;
+            document.getElementById('u-refs').innerText = user.referral_count || 0;
+            
+            const spent = user.total_spent || 0;
+            let target = 5000, label = "До Постоянного";
+            if(spent >= 5000) { target = 20000; label = "До VIP"; }
+            if(spent >= 20000) { target = 100000; label = "До БОССА"; }
+            if(spent >= 100000) { target = spent; label = "МАКСИМАЛЬНЫЙ УРОВЕНЬ"; }
+
+            const perc = (spent/target)*100;
+            document.getElementById('u-progress').style.width = Math.min(perc, 100) + '%';
+            document.getElementById('u-spent-total').innerText = `${spent.toFixed(0)} / ${target.toFixed(0)} ₽`;
+            document.getElementById('u-lvl-text').innerText = label;
+
+            if(user.loyalty_level === 'БОСС') document.getElementById('u-avatar-wrap').classList.add('frame-boss');
+        }
+
+        async function loadAllProducts() {
+            const [r1, r2] = await Promise.all([fetch(URL_TG), fetch(URL_OTHER)]);
+            const t1 = await r1.text(); const t2 = await r2.text();
+            products = [...parse(t1, 'TG'), ...parse(t2, 'OTHER')];
+            renderCats(); renderShop();
+        }
+
+        function parse(csv, type) {
+            const rows = csv.split('\n').slice(1);
+            return rows.map(r => {
+                const [cat, name, price, desc, img, stock] = r.split(',');
+                return { cat: cat?.trim(), name: name?.trim(), price: parseFloat(price), desc, img, stock: parseInt(stock), type };
+            }).filter(p => p.name);
+        }
+
+        function renderCats() {
+            const cats = ['all', ...new Set(products.map(p => p.cat))];
+            document.getElementById('cat-list').innerHTML = cats.map(c => `
+                <button onclick="setCat('${c}')" class="tab-btn glass whitespace-nowrap ${currentCat === c ? 'tab-active' : ''}">${c.toUpperCase()}</button>
+            `).join('');
+        }
+
+        function renderShop(list = products) {
+            const grid = document.getElementById('product-grid');
+            const filtered = currentCat === 'all' ? list : list.filter(p => p.cat === currentCat);
+            grid.innerHTML = filtered.map(p => `
+                <div class="glass p-3 relative">
+                    <img src="${p.img}" class="w-full aspect-square object-cover rounded-xl mb-3">
+                    <h3 class="text-[10px] font-black uppercase truncate">${p.name}</h3>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-xs font-black text-[var(--accent)]">${p.price.toFixed(2)} ₽</span>
+                        <button onclick="openModal('${p.name}')" class="w-8 h-8 glass flex items-center justify-center font-bold text-lg">+</button>
+                    </div>
+                    <div class="absolute top-2 left-2 text-[7px] bg-black/50 text-white px-2 py-1 rounded-full">STOCK: ${p.stock}</div>
+                </div>
+            `).join('');
+        }
+
+        function doSearch() {
+            const q = document.getElementById('search').value.toLowerCase();
+            const res = products.filter(p => p.name.toLowerCase().includes(q) || (q==='stars' && p.name.toLowerCase().includes('звезды')));
+            renderShop(res);
+        }
+
+        function openModal(name) {
+            selProd = products.find(p => p.name === name);
+            document.getElementById('m-name').innerText = selProd.name;
+            document.getElementById('m-qty').value = 1;
+            updateModalPrice();
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function updateModalPrice() {
+            const q = parseInt(document.getElementById('m-qty').value);
+            let final = selProd.price * q;
+            if(discount > 0) final *= (1 - discount/100);
+            document.getElementById('m-price').innerText = final.toFixed(2) + ' ₽';
+        }
+
+        async function buyNow() {
+            const q = parseInt(document.getElementById('m-qty').value);
+            const total = parseFloat(document.getElementById('m-price').innerText);
+            
+            if(user.balance < total) return alert("Недостаточно баланса!");
+
+            // Логика покупки
+            const adminMsg = `💎 <b>НОВАЯ ПОКУПКА</b>\n👤 Клиент: ${user.first_name} (@${user.username})\n🆔 ID: ${user.id}\n📦 Товар: ${selProd.name}\n🔢 Кол-во: ${q}\n💰 Сумма: ${total.toFixed(2)} ₽`;
+            
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(adminMsg)}&parse_mode=HTML`);
+            
+            alert("Заказ оформлен! Админ скоро выдаст товар.");
+            closeModal();
+        }
+
+        // ИГРА МИНЕР
+        let gameActive = true, diamonds = 0;
+        function initMines() {
+            const b = document.getElementById('mine-board'); b.innerHTML = '';
+            const bombs = Array(25).fill(0).map((_,i)=>i).sort(()=>Math.random()-0.5).slice(0, 15);
+            diamonds = 0; gameActive = true;
+            for(let i=0; i<25; i++) {
+                const c = document.createElement('div'); c.className = 'mine-cell';
+                c.onclick = () => {
+                    if(!gameActive) return;
+                    if(bombs.includes(i)) {
+                        c.innerText = '💣'; c.style.background = '#ff4757';
+                        document.getElementById('game-info').innerText = 'ВЗРЫВ! ПОПЫТКА ОКОНЧЕНА';
+                        gameActive = false;
+                    } else {
+                        if(c.innerText === '💎') return;
+                        c.innerText = '💎'; c.style.border = '1px solid var(--accent)';
+                        diamonds++;
+                        if(diamonds === 5) {
+                            discount = 15;
+                            document.getElementById('game-info').innerText = 'ПОБЕДА! СКИДКА 15% АКТИВИРОВАНА';
+                            gameActive = false;
+                        }
+                    }
+                };
+                b.appendChild(c);
+            }
+        }
+
+        function showPage(p) {
+            document.querySelectorAll('.page-content').forEach(e => e.classList.add('hidden'));
+            document.getElementById('page-'+p)?.classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+            document.getElementById('n-'+p)?.classList.add('active');
+            if(p === 'game') initMines();
+            if(p === 'support') tg.openTelegramLink('https://t.me/boss_store_support');
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+        }
+
+        function changeQty(v) {
+            let i = document.getElementById('m-qty');
+            let val = parseInt(i.value) + v;
+            if(val >= 1 && val <= selProd.stock) { i.value = val; updateModalPrice(); }
+        }
+
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+        function setCat(c) { currentCat = c; renderCats(); renderShop(); }
+
+        init();
+    </script>
+</body>
+</html>
