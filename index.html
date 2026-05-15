@@ -1,1 +1,305 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BOSS STORE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F5F5DC; --text: #333333; --accent: #5dade2; --card: #FFFFFF; --border: rgba(0,0,0,0.1);
+        }
+        body.dark-theme {
+            --bg: #1A1A2E; --text: #E0E0E0; --accent: #87CEEB; --card: #282828; --border: rgba(255,255,255,0.1);
+        }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; padding-bottom: 110px; overflow-x: hidden; }
+        
+        .glass { background: var(--card); border: 1px solid var(--border); border-radius: 24px; }
+        
+        /* Та самая карточка BOSS STORE */
+        .boss-card { 
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); 
+            color: #fff; border-radius: 30px; border: 1px solid var(--accent);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .progress-fill { height: 100%; background: var(--accent); border-radius: 10px; transition: 1s; box-shadow: 0 0 15px var(--accent); }
 
+        /* Популярные товары */
+        .pop-card { min-width: 140px; height: 180px; position: relative; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
+        .pop-img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.7); }
+        .pop-info { position: absolute; bottom: 10px; left: 10px; right: 10px; }
+
+        .nav-bar { position: fixed; bottom: 20px; left: 20px; right: 20px; height: 75px; z-index: 5000; border-radius: 25px; }
+        .nav-item { opacity: 0.4; font-size: 10px; font-weight: 900; text-align: center; transition: 0.3s; }
+        .nav-item.active { opacity: 1; color: var(--accent); transform: scale(1.1); }
+
+        .btn-info { background: var(--accent); color: #fff; padding: 12px; border-radius: 15px; font-weight: 900; font-size: 12px; text-transform: uppercase; text-align: center; width: 48%; }
+        
+        /* Поиск */
+              .search-box { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 15px; width: 100%; font-weight: bold; outline: none; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .frame-boss { border: 3px solid #FFD700 !important; box-shadow: 0 0 15px #FFD700 !important; }
+    </style>
+</head>
+<body class="dark-theme">
+
+    <!-- HEADER -->
+    <header class="p-6 flex justify-between items-center">
+        <div>
+            <p id="greet" class="text-[10px] uppercase font-black opacity-50 tracking-widest">ДОБРОЕ УТРО</p>
+            <h1 class="text-2xl font-black italic">БОСС <span style="color: var(--accent)">STORE</span></h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <button onclick="toggleTheme()" class="w-11 h-11 glass flex items-center justify-center text-lg">🌓</button>
+            <div id="u-avatar-wrap" class="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
+                <img id="u-avatar" src="https://via.placeholder.com/100" class="w-full h-full object-cover">
+            </div>
+        </div>
+    </header>
+
+    <div id="page-shop">
+        <!-- КАРТОЧКА СТАТИСТИКИ (Пункт 6) -->
+        <section class="px-6 mb-8">
+            <div class="boss-card p-6">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <p class="text-[8px] font-black opacity-60">ID: <span id="u-id">0000</span></p>
+                        <h2 id="u-level" class="text-2xl font-black italic tracking-tighter">НОВИЧОК</h2>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[8px] font-black opacity-60 uppercase">БАЛАНС</p>
+                        <p id="u-balance" class="text-2xl font-black">0.00 ₽</p>
+                    </div>
+                </div>
+                <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden mb-3">
+                    <div id="u-progress" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between text-[10px] font-black uppercase opacity-80">
+                                      <span id="u-lvl-text">ДО ПОСТОЯННОГО</span>
+                    <span id="u-spent">0 / 5 000 ₽</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ПОПУЛЯРНОЕ (Пункт 3) -->
+        <section class="mb-8">
+            <div class="px-6 flex justify-between items-center mb-4">
+                <h3 class="font-black text-sm uppercase">Популярные товары</h3>
+                <span class="text-[10px] font-black opacity-50">1.2k ❤️</span>
+            </div>
+            <div class="flex gap-4 overflow-x-auto px-6 no-scrollbar" id="popular-list">
+                <!-- Сюда вставим PUBG, Brawl и т.д. -->
+                <div class="pop-card"><img src="https://img.tapimg.net/market/l_icon/978cc5d0317e089f25754020a6358c21.png" class="pop-img"><div class="pop-info font-black text-[10px] text-white">PUBG MOBILE</div></div>
+                <div class="pop-card"><img src="https://m.media-amazon.com/images/I/41-lSIdF9sL.png" class="pop-img"><div class="pop-info font-black text-[10px] text-white">BRAWL STARS</div></div>
+                <div class="pop-card"><img src="https://play-lh.googleusercontent.com/6X9m7sFwzJj9eYn_XFzXf_Hn-H9Mv7H1W2Z2W6w7L5kRj6M-XvH-Yn6w5-F_E_H1W8" class="pop-img"><div class="pop-info font-black text-[10px] text-white">GENSHIN</div></div>
+            </div>
+        </section>
+
+        <!-- ИНСТРУКЦИИ (Пункт 5) -->
+        <section class="px-6 mb-8 flex justify-between">
+            <a href="https://example.com/1" class="btn-info">Инструкция 1</a>
+            <a href="https://example.com/2" class="btn-info">Инструкция 2</a>
+        </section>
+
+        <!-- ПОИСК И КАТЕГОРИИ (Пункт 7) -->
+        <section class="px-6 mb-8">
+            <input type="text" id="search" oninput="handleSearch()" placeholder="Поиск (Stars, Тг, Скидки...)" class="search-box mb-4">
+            <div id="cats" class="flex gap-2 overflow-x-auto no-scrollbar">
+                <!-- Категории подгрузятся из таблиц -->
+            </div>
+        </section>
+
+        <!-- ТОВАРЫ -->
+        <section id="prods" class="px-6 grid grid-cols-2 gap-4 pb-10"></section>
+    </div>
+
+    <!-- PAGE: GAME -->
+    <div id="page-game" class="hidden px-6 pt-5">
+        <div class="glass p-8 text-center">
+            <h2 class="text-2xl font-black mb-2 uppercase">МИНЁР</h2>
+            <p class="text-[10px] font-bold opacity-50 mb-8">НАЙДИ 5 АЛМАЗОВ - ПОЛУЧИ 15% СКИДКУ</p>
+            <div id="mine-grid" class="grid grid-cols-5 gap-2 mb-6"></div>
+            <p id="game-status" class="text-xs font-black text-yellow-500 uppercase"></p>
+        </div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <nav class="nav-bar glass flex justify-around items-center px-4">
+        <div onclick="showPage('shop')" id="n-shop" class="nav-item active">
+            <div class="text-2xl">🛒</div><div>ШОП</div>
+        </div>
+        <div onclick="showPage('game')" id="n-game" class="nav-item">
+            <div class="text-2xl">💣</div><div>МИНЕР</div>
+        </div>
+        <div onclick="showPage('orders')" id="n-orders" class="nav-item">
+            <div class="text-2xl">📦</div><div>ЗАКАЗЫ</div>
+        </div>
+        <div onclick="openSupport()" class="nav-item">
+            <div class="text-2xl">🎧</div><div>САППОРТ</div>
+        </div>
+    </nav>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        const SB_URL = 'https://smyzxklndhuccxscfbfi.supabase.co/rest/v1/';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNteXp4a2xuZGh1Y2N4c2NmYmZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4MzYxMDUsImV4cCI6MjA5NDQxMjEwNX0.JiJ7epQTdHjfyGNWc5s3JfSfYSkfqN-j8MIKC_Y9cWA';
+        const sb = supabase.createClient(SB_URL, SB_KEY);
+
+        const ADMIN_ID = 7727345054;
+        const BOT_TOKEN = '8780961369:AAHsqP2Fi4N1swLkpe2Jxn74fvv4qitJLM';
+
+        // ТВОИ ТАБЛИЦЫ (Вставь свои ссылки на CSV)
+        const URL_TG = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv';
+        const URL_OTHER = 'https://docs.google.com/spreadsheets/d/1bxpXTKxDHUwk5VX79PeXbjxrJxAkzaZag6opznV_Kq8/export?format=csv';
+
+        let user = null, products = [], currentCat = 'all', discount = 0;
+
+        async function init() {
+            tg.ready(); tg.expand();
+            const u = tg.initDataUnsafe?.user || { id: 7727345054, first_name: 'Boss', username: 'boss' };
+            
+            let { data } = await sb.from('profiles').select('*').eq('id', u.id).single();
+            if(!data) {
+                const { data: n } = await sb.from('profiles').insert([{ id: u.id, first_name: u.first_name, username: u.username, avatar_url: u.photo_url }]).select().single();
+                data = n;
+            }
+            user = data;
+
+            updateUI();
+            setGreeting();
+            loadProducts();
+        }
+
+        function setGreeting() {
+            const h = new Date().getHours();
+            const g = h<6?"ДОБРОЙ НОЧИ":h<12?"ДОБРОЕ УТРО":h<18?"ДОБРЫЙ ДЕНЬ":"ДОБРЫЙ ВЕЧЕР";
+            document.getElementById('greet').innerText = g;
+            document.getElementById('u-avatar').src = user.avatar_url || 'https://via.placeholder.com/100';
+            document.getElementById('u-id').innerText = user.id;
+            if(user.loyalty_level === 'БОСС') document.getElementById('u-avatar-wrap').classList.add('frame-boss');
+        }
+
+        function updateUI() {
+            document.getElementById('u-balance').innerText = `${user.balance.toFixed(2)} ₽`;
+          document.getElementById('u-level').innerText = user.loyalty_level.toUpperCase();
+            
+            const spent = user.total_spent || 0;
+            let target = 5000, label = "ДО ПОСТОЯННОГО";
+            if(spent >= 5000) { target = 20000; label = "ДО VIP"; }
+            if(spent >= 20000) { target = 100000; label = "ДО БОССА"; }
+            
+            const perc = (spent/target)*100;
+            document.getElementById('u-progress').style.width = Math.min(perc, 100) + '%';
+            document.getElementById('u-spent').innerText = `${Math.floor(spent)} / ${target} ₽`;
+            document.getElementById('u-lvl-text').innerText = label;
+        }
+
+        async function loadProducts() {
+            try {
+                const [r1, r2] = await Promise.all([fetch(URL_TG), fetch(URL_OTHER)]);
+                const t1 = await r1.text(); const t2 = await r2.text();
+                products = [...parse(t1), ...parse(t2)];
+                renderCats();
+                renderProds();
+            } catch(e) {
+                console.log("Ошибка загрузки таблиц. Проверь ссылки CSV!");
+                // Демо-данные если таблицы пусты
+                products = [{ cat: 'Звезды', name: 'Telegram Stars', price: 150, img: 'https://cdn-icons-png.flaticon.com/512/1828/1828884.png', stock: 50 }];
+                renderCats(); renderProds();
+            }
+        }
+
+        function parse(csv) {
+            const rows = csv.split('\n').slice(1);
+            return rows.map(r => {
+                const c = r.split(',');
+                return { cat: c[0]?.trim(), name: c[1]?.trim(), price: parseFloat(c[2]), img: c[4]?.trim(), stock: parseInt(c[5]) };
+            }).filter(p => p.name);
+        }
+
+        function renderCats() {
+            const cs = ['all', ...new Set(products.map(p => p.cat))];
+            document.getElementById('cats').innerHTML = cs.map(c => `
+                <button onclick="setCat('${c}')" class="glass px-6 py-2 text-[10px] font-black uppercase whitespace-nowrap ${currentCat===c?'bg-sky-500 text-white':''}">${c === 'all' ? 'ВСЕ' : c}</button>
+            `).join('');
+        }
+
+        function renderProds(data = products) {
+            const f = currentCat === 'all' ? data : data.filter(p => p.cat === currentCat);
+            document.getElementById('prods').innerHTML = f.map(p => `
+                <div class="glass p-4 relative">
+                    <img src="${p.img}" class="w-full aspect-square object-cover rounded-xl mb-3">
+                    <h3 class="text-[10px] font-black uppercase truncate">${p.name}</h3>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-xs font-black text-sky-500">${p.price.toFixed(2)} ₽</span>
+                        <button class="w-8 h-8 glass flex items-center justify-center font-bold">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function handleSearch() {
+            const q = document.getElementById('search').value.toLowerCase();
+            const res = products.filter(p => 
+                p.name.toLowerCase().includes(q) || 
+                (q === 'stars' && p.name.toLowerCase().includes('звезды')) || 
+                (q === 'звезды' && p.name.toLowerCase().includes('stars'))
+            );
+            renderProds(res);
+        }
+
+        function setCat(c) { currentCat = c; renderCats(); renderProds(); }
+
+        function showPage(p) {
+            document.getElementById('page-shop').classList.toggle('hidden', p !== 'shop');
+            document.getElementById('page-game').classList.toggle('hidden', p !\ 
+== 'game');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('n-'+p)?.classList.add('active');
+            if(p === 'game') initMines();
+        }
+
+        function openSupport() {
+            tg.openTelegramLink('https://t.me/nmproda');
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+        }
+
+        // Логика игры
+        let gameActive = true, diamonds = 0;
+        function initMines() {
+            const g = document.getElementById('mine-grid'); g.innerHTML = '';
+            const bombs = Array(25).fill(0).map((_,i)=>i).sort(()=>Math.random()-0.5).slice(0, 15);
+            diamonds = 0; gameActive = true;
+            for(let i=0; i<25; i++) {
+                const c = document.createElement('div'); c.className = 'w-full aspect-square glass flex items-center justify-center text-xl cursor-pointer';
+                c.onclick = () => {
+                    if(!gameActive) return;
+                    if(bombs.includes(i)) {
+                        c.innerText = '💣'; c.style.background = '#ff4b5c';
+                        document.getElementById('game-status').innerText = 'ВЗРЫВ! ЗАВТРА ПОВЕЗЕТ';
+                        gameActive = false;
+                    } else {
+                        if(c.innerText === '💎') return;
+                        c.innerText = '💎'; c.style.border = '1px solid var(--accent)';
+                        diamonds++;
+                        if(diamonds === 5) {
+                            discount = 15; document.getElementById('game-status').innerText = 'ПОБЕДА! СКИДКА 15% ТВОЯ';
+                            gameActive = false;
+                        }
+                    }
+                };
+                g.appendChild(c);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
