@@ -3,164 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BOSS STORE</title>
+    <title>BOSS STORE PREMIUM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #F5F5DC; --text: #333333; --accent: #5dade2; --card: #FFFFFF; --border: rgba(0,0,0,0.1);
-        }
-        body.dark-theme {
-            --bg: #1A1A2E; --text: #E0E0E0; --accent: #87CEEB; --card: #282828; --border: rgba(255,255,255,0.1);
-        }
-        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; padding-bottom: 110px; overflow-x: hidden; }
+        :root { --bg: #F5F5DC; --text: #333; --accent: #5dade2; --card: #FFF; --border: rgba(0,0,0,0.1); }
+        body.dark-theme { --bg: #1A1A2E; --text: #E0E0E0; --accent: #87CEEB; --card: #282828; --border: rgba(255,255,255,0.1); }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: var(--text); transition: 0.3s; padding-bottom: 100px; overflow-x: hidden; }
         
-        .glass { background: var(--card); border: 1px solid var(--border); border-radius: 24px; }
+        .glass { background: var(--card); border: 1px solid var(--border); border-radius: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.05); }
+        .boss-card { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #fff; border-radius: 28px; border: 1px solid var(--accent); }
+        .progress-fill { height: 100%; background: var(--accent); border-radius: 10px; transition: 1.5s cubic-bezier(0.19, 1, 0.22, 1); box-shadow: 0 0 15px var(--accent); }
         
-        /* Та самая карточка BOSS STORE */
-        .boss-card { 
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); 
-            color: #fff; border-radius: 30px; border: 1px solid var(--accent);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        .progress-fill { height: 100%; background: var(--accent); border-radius: 10px; transition: 1s; box-shadow: 0 0 15px var(--accent); }
+        .nav-bar { position: fixed; bottom: 15px; left: 15px; right: 15px; height: 75px; z-index: 5000; border-radius: 24px; display: flex; justify-content: space-around; align-items: center; }
+        .nav-item { opacity: 0.4; font-size: 9px; font-weight: 900; text-align: center; transition: 0.3s; }
+        .nav-item.active { opacity: 1; color: var(--accent); transform: translateY(-5px); }
 
-        /* Популярные товары */
-        .pop-card { min-width: 140px; height: 180px; position: relative; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
-        .pop-img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.7); }
-        .pop-info { position: absolute; bottom: 10px; left: 10px; right: 10px; }
+        .mine-cell { aspect-ratio: 1; background: rgba(0,0,0,0.05); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 1px solid var(--border); transition: 0.2s; }
+        .frame-boss { outline: 3px solid #FFD700; outline-offset: 3px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); } }
 
-        .nav-bar { position: fixed; bottom: 20px; left: 20px; right: 20px; height: 75px; z-index: 5000; border-radius: 25px; }
-        .nav-item { opacity: 0.4; font-size: 10px; font-weight: 900; text-align: center; transition: 0.3s; }
-        .nav-item.active { opacity: 1; color: var(--accent); transform: scale(1.1); }
+        .pop-card { min-width: 150px; height: 200px; border-radius: 22px; position: relative; overflow: hidden; border: 1px solid var(--border); }
+                .pop-img { width: 100%; height: 100%; object-fit: cover; }
+        .pop-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); }
 
-        .btn-info { background: var(--accent); color: #fff; padding: 12px; border-radius: 15px; font-weight: 900; font-size: 12px; text-transform: uppercase; text-align: center; width: 48%; }
-        
-        /* Поиск */
-              .search-box { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 15px; width: 100%; font-weight: bold; outline: none; }
-        
+        .live-feed { font-size: 10px; background: rgba(0,0,0,0.03); padding: 5px 15px; border-radius: 50px; animation: slideUp 3s infinite; }
+        @keyframes slideUp { 0% { transform: translateY(10px); opacity: 0; } 10% { transform: translateY(0); opacity: 1; } 90% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-10px); opacity: 0; } }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .frame-boss { border: 3px solid #FFD700 !important; box-shadow: 0 0 15px #FFD700 !important; }
     </style>
 </head>
 <body class="dark-theme">
 
+    <audio id="snd-click" src="https://www.soundjay.com/buttons/button-16.mp3"></audio>
+    <audio id="snd-win" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+    <audio id="snd-bomb" src="https://www.soundjay.com/button/sounds/button-10.mp3"></audio>
+
     <!-- HEADER -->
     <header class="p-6 flex justify-between items-center">
-        <div>
-            <p id="greet" class="text-[10px] uppercase font-black opacity-50 tracking-widest">ДОБРОЕ УТРО</p>
+        <div onclick="secretTap()">
+            <p id="time-greet" class="text-[9px] font-black opacity-50 tracking-widest uppercase">Добрый день</p>
             <h1 class="text-2xl font-black italic">БОСС <span style="color: var(--accent)">STORE</span></h1>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex gap-3">
             <button onclick="toggleTheme()" class="w-11 h-11 glass flex items-center justify-center text-lg">🌓</button>
-            <div id="u-avatar-wrap" class="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
-                <img id="u-avatar" src="https://via.placeholder.com/100" class="w-full h-full object-cover">
+            <div id="u-avatar-wrap" class="w-11 h-11 rounded-full overflow-hidden border-2 border-white/20">
+                <img id="u-avatar" src="" class="w-full h-full object-cover">
             </div>
         </div>
     </header>
 
-    <div id="page-shop">
-        <!-- КАРТОЧКА СТАТИСТИКИ (Пункт 6) -->
-        <section class="px-6 mb-8">
-            <div class="boss-card p-6">
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <p class="text-[8px] font-black opacity-60">ID: <span id="u-id">0000</span></p>
-                        <h2 id="u-level" class="text-2xl font-black italic tracking-tighter">НОВИЧОК</h2>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[8px] font-black opacity-60 uppercase">БАЛАНС</p>
-                        <p id="u-balance" class="text-2xl font-black">0.00 ₽</p>
-                    </div>
-                </div>
-                <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden mb-3">
-                    <div id="u-progress" class="progress-fill" style="width: 0%"></div>
-                </div>
-                <div class="flex justify-between text-[10px] font-black uppercase opacity-80">
-                                      <span id="u-lvl-text">ДО ПОСТОЯННОГО</span>
-                    <span id="u-spent">0 / 5 000 ₽</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- ПОПУЛЯРНОЕ (Пункт 3) -->
-        <section class="mb-8">
-            <div class="px-6 flex justify-between items-center mb-4">
-                <h3 class="font-black text-sm uppercase">Популярные товары</h3>
-                <span class="text-[10px] font-black opacity-50">1.2k ❤️</span>
-            </div>
-            <div class="flex gap-4 overflow-x-auto px-6 no-scrollbar" id="popular-list">
-                <!-- Сюда вставим PUBG, Brawl и т.д. -->
-                <div class="pop-card"><img src="https://img.tapimg.net/market/l_icon/978cc5d0317e089f25754020a6358c21.png" class="pop-img"><div class="pop-info font-black text-[10px] text-white">PUBG MOBILE</div></div>
-                <div class="pop-card"><img src="https://m.media-amazon.com/images/I/41-lSIdF9sL.png" class="pop-img"><div class="pop-info font-black text-[10px] text-white">BRAWL STARS</div></div>
-                <div class="pop-card"><img src="https://play-lh.googleusercontent.com/6X9m7sFwzJj9eYn_XFzXf_Hn-H9Mv7H1W2Z2W6w7L5kRj6M-XvH-Yn6w5-F_E_H1W8" class="pop-img"><div class="pop-info font-black text-[10px] text-white">GENSHIN</div></div>
-            </div>
-        </section>
-
-        <!-- ИНСТРУКЦИИ (Пункт 5) -->
-        <section class="px-6 mb-8 flex justify-between">
-            <a href="https://example.com/1" class="btn-info">Инструкция 1</a>
-            <a href="https://example.com/2" class="btn-info">Инструкция 2</a>
-        </section>
-
-        <!-- ПОИСК И КАТЕГОРИИ (Пункт 7) -->
-        <section class="px-6 mb-8">
-            <input type="text" id="search" oninput="handleSearch()" placeholder="Поиск (Stars, Тг, Скидки...)" class="search-box mb-4">
-            <div id="cats" class="flex gap-2 overflow-x-auto no-scrollbar">
-                <!-- Категории подгрузятся из таблиц -->
-            </div>
-        </section>
-
-        <!-- ТОВАРЫ -->
-        <section id="prods" class="px-6 grid grid-cols-2 gap-4 pb-10"></section>
+    <!-- LIVE FEED (Social Proof) -->
+    <div class="px-6 mb-4">
+        <div id="live-feed" class="live-feed font-bold text-center"></div>
     </div>
 
-    <!-- PAGE: GAME -->
-    <div id="page-game" class="hidden px-6 pt-5">
-        <div class="glass p-8 text-center">
-            <h2 class="text-2xl font-black mb-2 uppercase">МИНЁР</h2>
-            <p class="text-[10px] font-bold opacity-50 mb-8">НАЙДИ 5 АЛМАЗОВ - ПОЛУЧИ 15% СКИДКУ</p>
-            <div id="mine-grid" class="grid grid-cols-5 gap-2 mb-6"></div>
-            <p id="game-status" class="text-xs font-black text-yellow-500 uppercase"></p>
+    <!-- MAIN SHOP VIEW -->
+    <div id="page-shop" class="page">
+        <!-- SEARCH & POPULAR -->
+        <section class="px-6 mb-6">
+            <input type="text" id="search-input" oninput="handleSearch()" placeholder="Поиск (Stars, Тг, Скидки...)" class="w-full glass p-4 mb-6 outline-none font-bold text-sm">
+            
+            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-black text-xs uppercase tracking-tighter">Популярные товары</h3>
+                <span class="text-[10px] font-black opacity-40">1.2k ❤️</span>
+            </div>
+            <div id="pop-list" class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+                <!-- PUBG, Brawl etc -->
+            </div>
+        </section>
+
+        <!-- CATEGORIES -->
+        <section class="px-6 mb-6">
+            <div id="cat-list" class="flex gap-2 overflow-x-auto no-scrollbar"></div>
+        </section>
+
+        <!-- PRODUCT GRID -->
+        <section id="prod-grid" class="px-6 grid grid-cols-2 gap-4 pb-12"></section>
+
+        <!-- REVIEWS BLOCK -->
+        <section class="px-6 py-8 text-center opacity-40">
+            <div class="text-2xl font-black">4.9/5</div>
+            <div class="text-[9px] font-black uppercase">На основе 500+ отзывов</div>
+        </section>
+    </div>
+
+    <!-- LOYALTY STATUS VIEW (Separate Section) -->
+    <div id="page-status" class="page hidden px-6 pt-4">
+        <div class="boss-card p-6 mb-6">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <p class="text-[8px] font-black opacity-50">ID: <span id="u-id">0</span></p>
+                    <h2 id="u-level" class="text-2xl font-black italic tracking-tighter text-sky-300">НОВИЧОК</h2>
+                </div>
+                <divclass="text-right">
+                    <p class="text-[8px] font-black opacity-50">КОШЕЛЕК</p>
+                    <p id="u-balance" class="text-2xl font-black">0.00 ₽</p>
+                </div>
+            </div>
+            <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden mb-3">
+                <div id="u-progress" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-[10px] font-black opacity-80 uppercase">
+                <span id="u-lvl-text">ДО ПОСТОЯННОГО</span>
+                <span id="u-spent">0 / 5 000 ₽</span>
+            </div>
         </div>
+
+        <div class="glass p-6 text-center mb-6">
+            <h3 class="font-black text-sm mb-2 uppercase">Реферальная система</h3>
+            <p class="text-[10px] opacity-60 mb-4">Пригласи друга - оба получите 3% скидки!</p>
+            <button onclick="copyRef()" class="w-full py-4 bg-sky-500 text-white rounded-xl font-black text-xs uppercase">Копировать ссылку</button>
+        </div>
+        
+        <div id="lootbox-area" class="hidden glass p-6 text-center border-dashed border-2 border-sky-400">
+            <div class="text-3xl mb-2">🎁</div>
+            <div class="font-black text-xs uppercase mb-2">Твой Loot Box!</div>
+            <button onclick="openLootBox()" class="text-[10px] font-black text-sky-400 underline">ОТКРЫТЬ</button>
+        </div>
+    </div>
+
+    <!-- GAME VIEW -->
+    <div id="page-game" class="page hidden px-6 pt-4">
+        <div class="glass p-8 text-center">
+            <h2 class="text-2xl font-black mb-1 uppercase italic">МИНЁР</h2>
+            <p class="text-[10px] font-bold opacity-40 mb-8 uppercase tracking-widest">1 попытка в сутки • Скидка 15%</p>
+            <div id="mine-grid" class="grid grid-cols-5 gap-2 mb-8"></div>
+            <div id="game-status" class="text-xs font-black text-sky-500 uppercase"></div>
+        </div>
+    </div>
+
+    <!-- INFO VIEW (Instructions) -->
+    <div id="page-info" class="page hidden px-6 pt-4">
+        <h2 class="font-black text-xl mb-6 italic uppercase">Информация</h2>
+        <div class="flex flex-col gap-4">
+            <a href="https://instructions-nine.vercel.app/" target="_blank" class="glass p-6 flex justify-between items-center">
+                <span class="font-black text-xs uppercase">Инструкция по аккаунтам</span>
+                <span>➡️</span>
+            </a>
+            <a href="https://promo-art.vercel.app/" target="_blank" class="glass p-6 flex justify-between items-center">
+                <span class="font-black text-xs uppercase">Инструкция по товарам</span>
+                <span>➡️</span>
+            </a>
+            <div class="glass p-6 mt-4">
+                <p class="text-[10px] font-bold opacity-50 uppercase mb-4">Поддержка</p>
+                <button onclick="openSupport()" class="w-full py-4 bg-white text-black rounded-xl font-black text-xs uppercase">Написать @nmproda</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ORDERS VIEW -->
+    <div id="page-orders" class="page hidden px-6 pt-4">
+        <h2 class="font-black text-xl mb-6 italic uppercase">Заказы</h2>
+        <div id="order-list" class="flex flex-col gap-3"></div>
     </div>
 
     <!-- NAVIGATION -->
-    <nav class="nav-bar glass flex justify-around items-center px-4">
-        <div onclick="showPage('shop')" id="n-shop" class="nav-item active">
-            <div class="text-2xl">🛒</div><div>ШОП</div>
-        </div>
-        <div onclick="showPage('game')" id="n-game" class="nav-item">
-            <div class="text-2xl">💣</div><div>МИНЕР</div>
-        </div>
-        <div onclick="showPage('orders')" id="n-orders" class="nav-item">
-            <div class="text-2xl">📦</div><div>ЗАКАЗЫ</div>
-        </div>
-        <div onclick="openSupport()" class="nav-item">
-            <div class="text-2xl">🎧</div><div>САППОРТ</div>
-        </div>
+    <nav class="nav-bar glass">
+        <div onclick="showPage('shop')" id="n-shop" class="nav-item active"><div>🛒</div><div>ШОП</div></div>
+        <div onclick="showPage('status')" id="n-status" class="nav-item"><div>👑</div><div>СТАТУС</div></div>
+        <div onclick="showPage('game')" id="n-game" class="nav-item"><div>💣</div><div>ИГРА</div></div>
+        <div onclick="showPage('orders')" id="n-orders" class="nav-item"><div>📦</div><div>ЗАКАЗЫ</div></div>
+        <div onclick="showPage('info')" id="n-info" class="nav-item"><div>📖</div><div>ИНФО</div></div>
     </nav>
+
+    <!-- MODAL BUY -->
+    <div id="modal-buy" class="fixed inset-0 bg-black/90 z-[6000] hidden flex items-center justify-center p-6 backdrop-blur-sm">
+        <div class="glass w-full max-w-xs p-8 text-center bg-[var(--card)]">
+            <div id="m-img" class="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden border-2 border-sky-400"></div>
+            <h3 id="m-name" class="text-xl font-black uppercase mb-1">Товар</h3>
+            <p id="m-stock" class="text-[9px] font-bold text-green-500 uppercase mb-6"></p>
+            
+            <div class="flex items-center justify-center gap-4 mb-6">
+                <button onclick="changeQty(-1)" class="w-12 h-12 glass text-xl font-black">-</button>
+                <input type="number" id="m-qty" value="1" class="w-16 bg-transparent text-center font-black text-2xl outline-none">
+                <button onclick="changeQty(1)" class="w-12 h-12 glass text-xl font-black">+</button>
+            </div>
+            
+            <div id="m-price" class="text-4xl font-black text-sky-400 mb-8 tracking-tighter">0.00 ₽</div>
+            
+            <button onclick="confirmPurchase()" class="w-full py-5 rounded-2xl bg-sky-500 text-white font-black uppercase text-sm shadow-lg shadow-sky-500/30">Оплатить сейчас</button>
+            <button onclick="closeModal()" class="mt-6 text-[9px] font-black opacity-40 uppercase tracking-widest">Отмена</button>
+        </div>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        const SB_URL = 'https://smyzxklndhuccxscfbfi.supabase.co/rest/v1/';
+        const SB_URL = 'https://smyzxklndhuccxscfbfi.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNteXp4a2xuZGh1Y2N4c2NmYmZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4MzYxMDUsImV4cCI6MjA5NDQxMjEwNX0.JiJ7epQTdHjfyGNWc5s3JfSfYSkfqN-j8MIKC_Y9cWA';
         const sb = supabase.createClient(SB_URL, SB_KEY);
 
         const ADMIN_ID = 7727345054;
         const BOT_TOKEN = '8780961369:AAHsqP2Fi4N1swLkpe2Jxn74fvv4qitJLM';
 
-        // ТВОИ ТАБЛИЦЫ (Вставь свои ссылки на CSV)
-        const URL_TG = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv';
-        const URL_OTHER = 'https://docs.google.com/spreadsheets/d/1bxpXTKxDHUwk5VX79PeXbjxrJxAkzaZag6opznV_Kq8/export?format=csv';
+        const URL_1 = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv';
+        const URL_2 = 'https://docs.google.com/spreadsheets/d/1bxpXTKxDHUwk5VX79PeXbjxrJxAkzaZag6opznV_Kq8/export?format=csv';
 
-        let user = null, products = [], currentCat = 'all', discount = 0;
+        let user = null, products = [], activeCat = 'all', selProd = null, discount = 0;
 
         async function init() {
             tg.ready(); tg.expand();
-            const u = tg.initDataUnsafe?.user || { id: 7727345054, first_name: 'Boss', username: 'boss' };
+            const u = tg.initDataUnsafe?.user || { id: 7727345054, first_name: 'BOSS', username: 'boss_user' };
             
             let { data } = await sb.from('profiles').select('*').eq('id', u.id).single();
             if(!data) {
@@ -169,134 +214,195 @@
             }
             user = data;
 
-            updateUI();
             setGreeting();
-            loadProducts();
+            updateProfileUI();
+            await fetchAllProducts();
+            startLiveFeed();
         }
 
         function setGreeting() {
             const h = new Date().getHours();
-            const g = h<6?"ДОБРОЙ НОЧИ":h<12?"ДОБРОЕ УТРО":h<18?"ДОБРЫЙ ДЕНЬ":"ДОБРЫЙ ВЕЧЕР";
-            document.getElementById('greet').innerText = g;
+            const g = h<6?"Доброй ночи":h<12?"Доброе утро":h<18?"Добрый день":"Добрый вечер";
+            document.getElementById('time-greet').innerText = g;
             document.getElementById('u-avatar').src = user.avatar_url || 'https://via.placeholder.com/100';
             document.getElementById('u-id').innerText = user.id;
             if(user.loyalty_level === 'БОСС') document.getElementById('u-avatar-wrap').classList.add('frame-boss');
         }
 
-        function updateUI() {
-            document.getElementById('u-balance').innerText = `${user.balance.toFixed(2)} ₽`;
-          document.getElementById('u-level').innerText = user.loyalty_level.toUpperCase();
-            
-            const spent = user.total_spent || 0;
-            let target = 5000, label = "ДО ПОСТОЯННОГО";
-            if(spent >= 5000) { target = 20000; label = "ДО VIP"; }
-            if(spent >= 20000) { target = 100000; label = "ДО БОССА"; }
-            
-            const perc = (spent/target)*100;
-            document.getElementById('u-progress').style.width = Math.min(perc, 100) + '%';
-            document.getElementById('u-spent').innerText = `${Math.floor(spent)} / ${target} ₽`;
-            document.getElementById('u-lvl-text').innerText = label;
-        }
-
-        async function loadProducts() {
+        async function fetchAllProducts() {
             try {
-                const [r1, r2] = await Promise.all([fetch(URL_TG), fetch(URL_OTHER)]);
+                const [r1, r2] = await Promise.all([fetch(URL_1), fetch(URL_2)]);
                 const t1 = await r1.text(); const t2 = await r2.text();
-                products = [...parse(t1), ...parse(t2)];
+                products = [...parseCSV(t1), ...parseCSV(t2)];
                 renderCats();
-                renderProds();
-            } catch(e) {
-                console.log("Ошибка загрузки таблиц. Проверь ссылки CSV!");
-                // Демо-данные если таблицы пусты
-                products = [{ cat: 'Звезды', name: 'Telegram Stars', price: 150, img: 'https://cdn-icons-png.flaticon.com/512/1828/1828884.png', stock: 50 }];
-                renderCats(); renderProds();
-            }
+                renderShop();
+                renderPopular();
+            } catch(e) { console.error("CSV Load Error", e); }
         }
 
-        function parse(csv) {
-            const rows = csv.split('\n').slice(1);
-            return rows.map(r => {
-                const c = r.split(',');
-                return { cat: c[0]?.trim(), name: c[1]?.trim(), price: parseFloat(c[2]), img: c[4]?.trim(), stock: parseInt(c[5]) };
-            }).filter(p => p.name);
+        function parseCSV(csv) {
+            return csv.split('\n').slice(1).map(row => {
+                const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                return { cat: c[0]?.trim(), name: c[1]?.trim(), price: parseFloat(c[2]), desc: c[3], img: c[4]?.trim(), stock: parseInt(c[5]) };
+            }).filter(p => p.name && p.price);
         }
 
         function renderCats() {
-            const cs = ['all', ...new Set(products.map(p => p.cat))];
-            document.getElementById('cats').innerHTML = cs.map(c => `
-                <button onclick="setCat('${c}')" class="glass px-6 py-2 text-[10px] font-black uppercase whitespace-nowrap ${currentCat===c?'bg-sky-500 text-white':''}">${c === 'all' ? 'ВСЕ' : c}</button>
+            const cats = ['all', ...new Set(products.map(p => p.cat))];
+            document.getElementById('cat-list').innerHTML = cats.map(c => `
+                <button onclick="setCat('${c}')" class="glass px-6 py-2 text-[10px] font-black uppercase whitespace-nowrap ${activeCat === c ? 'bg-sky-500 text-white' : ''}">${c === 'all' ? 'ВСЕ' : c}</button>
             `).join('');
         }
 
-        function renderProds(data = products) {
-            const f = currentCat === 'all' ? data : data.filter(p => p.cat === currentCat);
-            document.getElementById('prods').innerHTML = f.map(p => `
-                <div class="glass p-4 relative">
-                    <img src="${p.img}" class="w-full aspect-square object-cover rounded-xl mb-3">
-                    <h3 class="text-[10px] font-black uppercase truncate">${p.name}</h3>
-                    <div class="flex justify-between items-center mt-2">
+        function renderPopular() {
+            const pop = products.slice(0, 5);
+            document.getElementById('pop-list').innerHTML = pop.map(p => `
+                <div class="pop-card" onclick="openBuy('${p.name}')">
+                    <img src="${p.img}" class="pop-img">
+                    <div class="pop-overlay"></div>
+                    <div class="absolute bottom-3 left-3 right-3 text-[10px] font-black text-white uppercase truncate">${p.name}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderShop(data = products) {
+            const f = activeCat === 'all' ? data : data.filter(p => p.cat === activeCat);
+            document.getElementById('prod-grid').innerHTML = f.map(p => `
+                <div class="glass p-4 relative" onclick="openBuy('${p.name}')">
+                    <img src="${p.img}" class="w-full aspect-square object-cover rounded-2xl mb-3">
+                    <h3 class="text-[10px] font-black uppercase truncate mb-1">${p.name}</h3>
+                    <div class="flex justify-between items-center">
                         <span class="text-xs font-black text-sky-500">${p.price.toFixed(2)} ₽</span>
-                        <button class="w-8 h-8 glass flex items-center justify-center font-bold">+</button>
+                        <div class="text-[7px] font-black opacity-40 uppercase">Stock: ${p.stock}</div>
                     </div>
                 </div>
             `).join('');
         }
 
         function handleSearch() {
-            const q = document.getElementById('search').value.toLowerCase();
-            const res = products.filter(p => 
-                p.name.toLowerCase().includes(q) || 
-                (q === 'stars' && p.name.toLowerCase().includes('звезды')) || 
-                (q === 'звезды' && p.name.toLowerCase().includes('stars'))
-            );
-            renderProds(res);
+            const q = document.getElementById('search-input').value.toLowerCase();
+            const synonyms = { 'stars': 'звезды', 'звезды': 'stars', 'тг': 'telegram', 'telegram': 'тг' };
+            const res = products.filter(p => p.name.toLowerCase().includes(q) || (synonyms[q] && p.name.toLowerCase().includes(synonyms[q])));
+            renderShop(res);
         }
 
-        function setCat(c) { currentCat = c; renderCats(); renderProds(); }
-
-        function showPage(p) {
-            document.getElementById('page-shop').classList.toggle('hidden', p !== 'shop');
-            document.getElementById('page-game').classList.toggle('hidden', p !\ 
-== 'game');
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('n-'+p)?.classList.add('active');
-            if(p === 'game') initMines();
+        function setCat(c) { 
+            activeCat = c; 
+            playSound('snd-click');
+            renderCats(); 
+            renderShop(); 
         }
 
-        function openSupport() {
-            tg.openTelegramLink('https://t.me/nmproda');
+        function openBuy(name) {
+            selProd = products.find(p => p.name === name);
+            document.getElementById('m-name').innerText = selProd.name;
+            document.getElementById('m-img').style.backgroundImage = `url(${selProd.img})`;
+            document.getElementById('m-img').style.backgroundSize = 'cover';
+            document.getElementById('m-stock').innerText = `В наличии: ${selProd.stock} шт.`;
+            document.getElementById('m-qty').value = 1;
+            calcTotal();
+            document.getElementById('modal-buy').style.display = 'flex';
         }
 
-        function toggleTheme() {
-            document.body.classList.toggle('dark-theme');
+        function calcTotal() {
+            const q = parseInt(document.getElementById('m-qty').value);
+            let total = selProd.price * q;
+            if(discount > 0) total *= (1 - discount/100);
+            document.getElementById('m-price').innerText = total.toFixed(2) + ' ₽';
         }
 
-        // Логика игры
+        async function confirmPurchase() {
+            const q = parseInt(document.getElementById('m-qty').value);
+            const total = parseFloat(document.getElementById('m-price').innerText);
+            
+            if(user.balance < total) return alert("Недостаточно средств на балансе!");
+
+            // API Telegram
+            const msg = `💎 <b>НОВЫЙ ЗАКАЗ</b>\n👤 Клиент: ${user.first_name} (@${user.username})\n🆔 ID: ${user.id}\n📦 Товар: ${selProd.name}\n🔢 Кол-во: ${q}\n💰 Сумма: ${total.toFixed(2)} ₽`;
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(msg)}&parse_mode=HTML`);
+
+            alert("Заказ принят! Данные будут отправлены в бот.");
+            closeModal();
+        }
+
+        // МИНЕР
         let gameActive = true, diamonds = 0;
-        function initMines() {
+        async function initMines() {
+            const today = new Date().toISOString().split('T')[0];
+            if(user.last_mines_game === today) {
+                document.getElementById('mine-grid').innerHTML = '<div class="col-span-5 py-10 opacity-30 font-black">ПРИХОДИ ЗАВТРА</div>';
+                return;
+            }
+
             const g = document.getElementById('mine-grid'); g.innerHTML = '';
             const bombs = Array(25).fill(0).map((_,i)=>i).sort(()=>Math.random()-0.5).slice(0, 15);
             diamonds = 0; gameActive = true;
+            
             for(let i=0; i<25; i++) {
-                const c = document.createElement('div'); c.className = 'w-full aspect-square glass flex items-center justify-center text-xl cursor-pointer';
-                c.onclick = () => {
+                const c = document.createElement('div'); c.className = 'mine-cell';
+                c.onclick = async () => {
                     if(!gameActive) return;
                     if(bombs.includes(i)) {
-                        c.innerText = '💣'; c.style.background = '#ff4b5c';
-                        document.getElementById('game-status').innerText = 'ВЗРЫВ! ЗАВТРА ПОВЕЗЕТ';
+                        c.innerText = '💣'; c.style.background = '#ff4757';
+                        playSound('snd-bomb');
                         gameActive = false;
+                        document.getElementById('game-status').innerText = 'ВЗРЫВ! ПОПЫТКА ИСПОЛЬЗОВАНА';
+                        await sb.from('profiles').update({ last_mines_game: today }).eq('id', user.id);
                     } else {
                         if(c.innerText === '💎') return;
-                        c.innerText = '💎'; c.style.border = '1px solid var(--accent)';
+                        c.innerText = '💎'; playSound('snd-click');
                         diamonds++;
                         if(diamonds === 5) {
-                            discount = 15; document.getElementById('game-status').innerText = 'ПОБЕДА! СКИДКА 15% ТВОЯ';
-                            gameActive = false;
+                            discount = 15; gameActive = false; playSound('snd-win');
+                            document.getElementById('game-status').innerText = 'ПОБЕДА! СКИДКА 15% ВАША';
+                            await sb.from('profiles').update({ last_mines_game: today }).eq('id', user.id);
                         }
                     }
                 };
                 g.appendChild(c);
             }
+        }
+
+        function showPage(p) {
+            document.querySelectorAll('.page').forEach(e => e.classList.add('hidden'));
+            document.getElementById('page-'+p).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+            document.getElementById('n-'+p).classList.add('active');
+            if(p === 'game') initMines();
+            playSound('snd-click');
+        }
+
+        function updateProfileUI() {
+            const spent = user.total_spent || 0;
+            document.getElementById('u-balance').innerText = `${user.balance.toFixed(2)} ₽`;
+            document.getElementById('u-level').innerText = user.loyalty_level;
+            
+            let target = 5000, label = "ДО ПОСТОЯННОГО";
+            if(spent >= 5000) { target = 20000; label = "ДО VIP"; }
+            if(spent >= 20000) { target = 100000; label = "ДО БОССА"; }
+
+            document.getElementById('u-progress').style.width = Math.min((spent/target)*100, 100) + '%';
+            document.getElementById('u-spent').innerText = `${Math.floor(spent)} / ${target} ₽`;
+            document.getElementById('u-lvl-text').innerText = label;
+        }
+
+        function startLiveFeed() {
+            const names = ['Алексей', 'Дмитрий', 'Мария', 'Boss_77', 'Killa', 'Ivan'];
+            const items = ['TG Stars', 'Аккаунт TG', 'Brawl Pass', 'Genshin Crystal'];
+            setInterval(() => {
+                const n = names[Math.floor(Math.random()*names.length)];
+                const i = items[Math.floor(Math.random()*items.length)];
+                document.getElementById('live-feed').innerText = `${n} только что купил ${i} 🔥`;
+            }, 5000);
+        }
+
+        function playSound(id) { document.getElementById(id).play().catch(()=>{}); }
+        function toggleTheme() { document.body.classList.toggle('dark-theme'); }
+        function openSupport() { tg.openTelegramLink('https://t.me/nmproda'); }
+        function closeModal() { document.getElementById('modal-buy').style.display = 'none'; }
+        function changeQty(v) { 
+            let q = parseInt(document.getElementById('m-qty').value) + v;
+            if(q>=1 && q<=selProd.stock) { document.getElementById('m-qty').value = q; calcTotal(); }
         }
 
         init();
