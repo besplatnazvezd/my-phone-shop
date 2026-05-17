@@ -1,0 +1,21 @@
+<!-- Сохрани как support.html -->
+<div class="px-6 text-center">
+    <div class="text-4xl mb-6">✉️</div>
+    <h2 class="text-xl font-black italic uppercase mb-2">Связаться с БОССОМ</h2>
+    <p class="text-[10px] opacity-40 uppercase font-bold mb-8">Опиши проблему, и мы ответим в приложении</p>
+    
+    <textarea id="support-text" class="w-full h-40 glass p-5 outline-none font-bold text-sm mb-6 placeholder:opacity-20" placeholder="Твоё сообщение..."></textarea>
+    
+    <button onclick="sendTicket()" class="w-full py-5 btn-gradient rounded-2xl font-black uppercase text-xs">Отправить запрос</button>
+</div>
+
+<script>
+async function sendTicket() {
+    const text = document.getElementById('support-text').value;
+    if(!text) return alert("Напиши что-нибудь, Босс!");
+    
+    // Завтра пропишем логику отправки сообщения тебе в бот
+    alert("Сообщение отправлено! Ожидай ответ.");
+    document.getElementById('support-text').value = '';
+}
+</script>
