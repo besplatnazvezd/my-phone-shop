@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BOSS STORE | Ultimate Elite</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* -------- ROOT VARIABLES -------- */
+        :root { 
+            --emerald: #10b981; 
+            --dark: #020617; 
+            --gold: #facc15; 
+            --gold-gradient: linear-gradient(135deg, #facc15 0%, #eab308 100%); 
+        }
+
+        /* -------- GLOBAL STYLES -------- */
+        body { 
+            font-family: 'Manrope', sans-serif; 
+            background-color: var(--dark); 
+            color: #f8fafc; 
+            -webkit-tap-highlight-color: transparent; 
+            overflow-x: hidden; 
+        }
+        .glass { 
+            background: rgba(15, 23, 42, 0.6); 
+            backdrop-filter: blur(15px); 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+        }
+        .boss-card { 
+            background: linear-gradient(145deg, #1e293b 0%, #020617 100%); 
+            border: 1px solid rgba(16, 185, 129, 0.2); 
+        }
+        .emerald-glow { box-shadow: 0 0 30px rgba(16, 185, 129, 0.1); }
+        .gold-glow { box-shadow: 0 0 30px rgba(250, 204, 21, 0.15); }
+
+        /* -------- PAGE TRANSITIONS -------- */
+        .page { display: none; animation: fadeIn 0.4s ease-out forwards; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* -------- UTILITIES -------- */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .pulse { animation: pulse-emerald 2s infinite; }
+        @keyframes pulse-emerald { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+        .btn-press { transition: transform 0.1s ease-in-out; }
+              .btn-press:active { transform: scale(0.95); }
+
+        /* -------- SKELETON LOADER -------- */
+        .skeleton-box {
+            background: linear-gradient(90deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.6) 50%, rgba(30, 41, 59, 0.6) 100%);
+            background-size: 400% 400%;
+            animation: skeleton-pulse 2s ease-in-out infinite;
+            border-radius: 12px; /* Уменьшил радиус для большей солидности */
+        }
+        @keyframes skeleton-pulse {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- === HEADER === -->
+    <header class="p-6 sticky top-0 z-40 bg-[#020617]/90 backdrop-blur-xl flex justify-between items-center border-b border-white/5">
+        <div>
+            <p id="time-greet" class="text-[9px] font-black text-emerald-500 uppercase tracking-widest italic">Elite access</p>
+            <h1 id="user-name" class="text-xl font-black italic">БОСС</h1>
+        </div>
+        <div class="glass px-3 py-1.5 rounded-xl border-emerald-500/20 flex items-center gap-2">
+            <i data-lucide="gem" class="w-4 h-4 text-emerald-500"></i>
+            <span id="user-balance" class="font-black text-sm">0.00 ₽</span>
+        </div>
+    </header>
+
+    <!-- === MAIN CONTENT === -->
+    <main class="px-6 pb-32">
+
+        <!-- === HOME PAGE === -->
+        <section id="page-home" class="page active">
+            <div id="rank-card" class="boss-card p-6 rounded-[35px] mt-4 mb-8 relative overflow-hidden emerald-glow">
+                <div class="relative z-10">
+                    <div class="flex justify-between items-start mb-6">
+                        <span id="rank-name" class="bg-emerald-500 text-emerald-950 text-[10px] font-black px-3 py-1 rounded-lg uppercase">Новичок</span>
+                        <i data-lucide="crown" class="w-6 h-6 text-white/10"></i>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-2">
+                        <div id="rank-progress" class="h-full bg-emerald-500 transition-all duration-1000" style="width: 0%"></div>
+                                            </div>
+                    <p id="spent-info" class="text-[9px] text-slate-400 font-bold uppercase italic tracking-widest">Загрузка данных...</p>
+                </div>
+            </div>
+
+            <div class="relative mb-8">
+                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5"></i>
+                <input type="text" id="search" placeholder="Поиск услуг..." class="w-full bg-slate-900/50 border border-white/5 pl-12 pr-4 py-4 rounded-2xl outline-none focus:border-emerald-500/50 transition-all">
+            </div>
+
+            <div id="catalog" class="grid grid-cols-1 gap-4"></div>
+        </section>
+
+        <!-- === LEADERBOARD PAGE === -->
+        <section id="page-leaderboard" class="page px-6 pb-32">
+            <h2 class="text-3xl font-black italic mb-8 uppercase italic">TOP BOSSES</h2>
+            <div id="leader-list" class="space-y-3"></div>
+        </section>
+
+        <!-- === PROFILE PAGE === -->
+        <section id="page-profile" class="page px-6 pb-32">
+            <h2 class="text-3xl font-black italic mb-8 uppercase italic">Профиль</h2>
+            <div id="gift-card" class="glass p-8 rounded-[40px] mb-6 text-center border-emerald-500/20 relative overflow-hidden">
+                <i data-lucide="gift" class="w-16 h-16 text-emerald-500 mx-auto animate-bounce mb-4"></i>
+                <button id="gift-btn" onclick="claimGift()" class="w-full py-4 bg-emerald-500 text-emerald-950 font-black rounded-2xl text-xs uppercase btn-press">Открыть бокс</button>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="glass p-5 rounded-3xl"><p class="text-[9px] font-black text-slate-500 uppercase mb-2">Партнеры</p><span id="ref-count" class="text-2xl font-black">0</span></div>
+                <div class="glass p-5 rounded-3xl"><p class="text-[9px] font-black text-slate-500 uppercase mb-2">Траты</p><span id="total-spent" class="text-2xl font-black">0 ₽</span></div>
+            </div>
+            <button onclick="copyRefLink()" class="w-full py-5 boss-card rounded-2xl text-emerald-500 font-black uppercase text-xs pulse btn-press">Копировать ссылку</button>
+        </section>
+
+        <!-- === CART PAGE === -->
+        <section id="page-cart" class="page px-6 pb-32">
+            <h2 class="text-4xl font-black italic mb-8 uppercase italic">Корзина</h2>
+            <div id="cart-list" class="space-y-4"></div>
+            <div id="cart-empty" class="text-center py-20 text-slate-700 italic font-bold">Здесь пока пусто...</div>
+            <div id="cart-checkout" class="mt-10 hidden">
+                <div class="glass p-8 rounded-[40px]">
+                    <div class="flex justify-between items-center mb-6"><span class="text-[10px] font-black text-slate-500 uppercase">Итого</span><span id="cart-total" class="text-3xl font-black text-emerald-500">0 ₽</span></div>
+                    <input type="email" id="user-email" placeholder="Email для чека" class="w-full bg-slate-900 border border-white/5 p-4 rounded-2xl mb-6 outline-none focus:border-emerald-500 text-white">
+                    <button onclick="sendOrder()" class="w-full bg-emerald-500 py-5 rounded-[22px] text-emerald-950 font-black text-xl btn-press">КУПИТЬ</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- === MODAL WINDOW === -->
+    <div id="modal" class="fixed inset-0 z-[60] bg-black/95 backdrop-blur-md hidden flex items-end justify-center">
+        <div class="w-full max-w-lg bg-[#020617] rounded-t-[50px] p-8 border-t border-emerald-500/30">
+            <div class="w-12 h-1.5 bg-slate-800 rounded-full mx-auto mb-8"></div>
+            <div class="flex gap-6 mb-6">
+                <img id="modal-img" src="" class="w-24 h-24 rounded-3xl object-cover shadow-2xl" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3081/3081840.png'">
+                <div><h2 id="modal-title" class="text-2xl font-black italic leading-tight"></h2><p id="modal-price" class="text-emerald-500 font-black text-xl mt-2"></p></div>
+            </div>
+            
+            <!-- === DESCRIPTION LOGIC BLOCK === -->
+            <div class="mb-6">
+                <p id="modal-desc-text" class="text-slate-400 text-xs leading-relaxed"></p>
+                <button id="modal-desc-toggle" class="text-emerald-500 text-[10px] font-black uppercase mt-2 hidden btn-press">ПОКАЗАТЬ ПОЛНОСТЬЮ</button>
+            </div>
+
+            <textarea id="modal-input" placeholder="Введите данные для заказа..." class="w-full bg-slate-900 border border-white/5 p-5 rounded-[25px] h-24 mb-6 outline-none focus:border-emerald-500 text-white"></textarea>
+            <div class="flex gap-4">
+                <button onclick="closeModal()" class="flex-1 font-bold text-slate-600">ОТМЕНА</button>
+                <button onclick="addToCart()" class="flex-[2] bg-emerald-500 text-emerald-950 py-5 rounded-[20px] font-black btn-press">ДОБАВИТЬ</button>
+            </div>
+        </div>
+    </div>
+    <!-- === NAVIGATION BAR === -->
+    <nav class="fixed bottom-6 left-5 right-5 z-50">
+        <div class="glass max-w-md mx-auto rounded-[35px] p-2 flex justify-around items-center border border-white/10 shadow-2xl">
+            <button onclick="switchPage('home')" id="nav-home" class="p-4 text-emerald-500"><i data-lucide="layout-grid"></i></button>
+            <button onclick="switchPage('cart')" id="nav-cart" class="p-4 text-slate-500 relative"><i data-lucide="shopping-cart"></i><span id="cart-badge" class="absolute top-3 right-3 w-2 h-2 bg-rose-500 rounded-full hidden"></span></button>
+            <button onclick="switchPage('leaderboard')" id="nav-leaderboard" class="p-4 text-slate-500"><i data-lucide="award"></i></button>
+            <button onclick="switchPage('profile')" id="nav-profile" class="p-4 text-slate-500"><i data-lucide="user"></i></button>
+        </div>
+    </nav>
+
+    <!-- === JAVASCRIPT === -->
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const SUPABASE_URL = 'https://smyzxklndhuccxscfbfi.supabase.co/rest/v1/';
+        const SUPABASE_KEY = 'sb_publishable_d14F1MM_7g9tHDiVR0CrIQ_Yn4lMM33';
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/1bxpXTKxDHUwk5VX79PeXbjxrJxAkzaZag6opznV_Kq8/export?format=csv';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let state = {
+            user: { id: tg.initDataUnsafe.user?.id || 123, name: tg.initDataUnsafe.user?.first_name || 'БОСС', balance: 0, spent: 0, rank: 'Новичок' },
+            items: [], cart: [], selected: null
+        };
+
+        // --- INITIALIZATION ---
+        window.onload = async () => {
+            lucide.createIcons();
+            await syncUser();
+            await loadCatalog();
+            document.getElementById('user-name').innerText = state.user.name.toUpperCase();
+        };
+
+        // --- USER SYNC AND UI UPDATES ---
+        async function syncUser() {
+            const { data } = await supabaseClient.from('profiles').select('*').eq('id', state.user.id).single();
+            if (data) {
+                state.user = { ...state.user, ...data, spent: data.total_spent };
+            } else {
+                await supabaseClient.from('profiles').insert([{ id: state.user.id, username: state.user.name }]);
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('user-balance').innerText = state.user.balance.toFixed(0) + ' ₽';
+            document.getElementById('total-spent').innerText = state.user.spent.toFixed(0) + ' ₽';
+            document.getElementById('rank-name').innerText = state.user.rank;
+            const s = state.user.spent;
+            let next = s < 5000 ? 5000 : s < 20000 ? 20000 : s < 50000 ? 50000 : 100000;
+            document.getElementById('rank-progress').style.width = Math.min((s/next)*100, 100) + '%';
+            document.getElementById('spent-info').innerText = `Траты: ${s.toFixed(0)} / ${next} ₽`;
+
+            if (state.user.rank === 'LEGEND BOSS') {
+                document.getElementById('rank-card').style.background = 'var(--gold-gradient)';
+                document.getElementById('rank-card').classList.add('gold-glow');
+            }
+        }
+
+        // --- CATALOG LOADING & RENDERING ---
+        async function loadCatalog() {
+            const cat = document.getElementById('catalog');
+            // Skeleton loaders for better UX
+            cat.innerHTML = '<div class="skeleton-box h-24 w-full"></div>'.repeat(4);
+            
+            const res = await fetch(CSV_URL);
+            const text = await res.text();
+            const rows = text.split('\n').slice(1);
+            state.items = rows.map(r => {
+                const c = r.split(',');
+                // A-Category, B-Name, C-Price, D-Description, E-Image
+                return { cat: c[0], name: c[1], price: parseFloat(c[2]), desc: c[3], img: c[4]?.trim() };
+            }).filter(x => x.name); // Filter out empty entries
+            renderCatalog(state.items);
+        }
+
+        function renderCatalog(data) {
+            document.getElementById('catalog').innerHTML = data.map((it, i) => `
+                <div onclick="openModal(${i})" class="glass p-4 rounded-[30px] flex items-center gap-5 btn-press">
+                    <img src="${it.img}" class="w-16 h-16 rounded-2xl object-cover" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3081/3081840.png'">
+                    <div class="flex-1">
+                        <p class="text-[8px] font-black text-emerald-500 uppercase mb-1">${it.cat}</p>
+                        <h4 class="font-bold text-sm italic">${it.name}</h4>
+                        <p class="font-black text-white mt-1">${it.price.toFixed(0)} ₽</p>
+                    </div>
+                    <i data-lucide="plus-circle" class="text-slate-700"></i>
+                </div>
+            `).join('');
+            lucide.createIcons(); // Re-render icons after injecting HTML
+        }
+
+        // --- MODAL AND DESCRIPTION LOGIC ---
+        function openModal(i) {
+            state.selected = state.items[i];
+            document.getElementById('modal-title').innerText = state.selected.name;
+            document.getElementById('modal-price').innerText = state.selected.price.toFixed(0) + ' ₽';
+            document.getElementById('modal-img').src = state.selected.img;
+
+            // YOUR SPECIFIC DESCRIPTION LOGIC
+            const MAX_DESC_LENGTH = 100;
+            const descText = state.selected.desc || 'Нет описания.';
+            const descEl = document.getElementById('modal-desc-text');
+            const toggleBtn = document.getElementById('modal-desc-toggle');
+
+            if (descText.length > MAX_DESC_LENGTH) {
+                descEl.innerText = descText.substring(0, MAX_DESC_LENGTH) + '...';
+                toggleBtn.classList.remove('hidden');
+                toggleBtn.innerText = 'ПОКАЗАТЬ ПОЛНОСТЬЮ';
+                toggleBtn.onclick = () => {
+                    if (descEl.innerText.includes('...')) {
+                        descEl.innerText = descText; // Show full text
+                        toggleBtn.innerText = 'СКРЫТЬ'; // Change button to "Hide"
+                    } else {
+                        descEl.innerText = descText.substring(0, MAX_DESC_LENGTH) + '...'; // Show truncated text
+                        toggleBtn.innerText = 'ПОКАЗАТЬ ПОЛНОСТЬЮ'; // Change button back
+                    }
+                    tg.HapticFeedback.impactOccurred('light');
+                };
+            } else {
+                descEl.innerText = descText; // Show full text if it's short
+                toggleBtn.classList.add('hidden'); // Hide toggle button
+            }
+            // END OF YOUR DESCRIPTION LOGIC
+
+            document.getElementById('modal-input').value = '';
+            document.getElementById('modal').classList.remove('hidden');
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        // --- CART AND ORDERING ---
+        function addToCart() {
+            const comment = document.getElementById('modal-input').value;
+            if(!comment) return tg.showAlert("Босс, введи данные!");
+            state.cart.push({...state.selected, comment});
+            updateCartUI();
+            closeModal();
+            confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
+            tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        function updateCartUI() {
+            const badge = document.getElementById('cart-badge');
+            const list = document.getElementById('cart-list');
+            const footer = document.getElementById('cart-checkout');
+            const empty = document.getElementById('cart-empty');
+            if(state.cart.length > 0) {
+                badge.classList.remove('hidden'); empty.classList.add('hidden'); footer.classList.remove('hidden');
+                let t = 0;
+                list.innerHTML = state.cart.map((it, i) => {
+                    t += it.price;
+                    return `<div class="glass p-4 rounded-2xl flex items-center gap-4"><img src="${it.img}" class="w-12 h-12 rounded-xl object-cover" onerror="this.onerror=null;this.src='https://cdn-icons-png.flaticon.com/512/3081/3081840.png';"><div class="flex-1 font-bold text-[10px] uppercase"><p>${it.name}</p><p class="text-emerald-500">${it.price} ₽</p></div><button onclick="state.cart.splice(${i},1);updateCartUI();" class="text-rose-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`;
+                }).join('');
+                document.getElementById('cart-total').innerText = t.toFixed(0) + ' ₽';
+            } else { badge.classList.add('hidden'); empty.classList.remove('hidden'); footer.classList.add('hidden'); list.innerHTML = ''; }
+            lucide.createIcons();
+        }
+
+        function sendOrder() {
+            const email = document.getElementById('user-email').value;
+            if(!email.includes('@')) return tg.showAlert("Введите Email!");
+            tg.sendData(JSON.stringify({ id: state.user.id, items: state.cart.map(i => `${i.name} (${i.comment})`).join('\n'), sum: document.getElementById('cart-total').innerText }));
+            tg.close();
+        }
+
+        // --- LEADERBOARD FUNCTIONS ---
+        async function loadLeaders() {
+            const { data } = await supabaseClient.from('profiles').select('username, total_spent').order('total_spent', { ascending: false }).limit(10);
+            document.getElementById('leader-list').innerHTML = data.map((u, i) => `
+                <div class="glass p-5 rounded-2xl flex items-center gap-4">
+                    <span class="w-8 font-black text-xl text-slate-600">#${i+1}</span>
+                    <span class="flex-1 font-bold italic truncate">${u.username}</span>
+                    <span class="font-black text-emerald-500">${u.total_spent.toFixed(0)} ₽</span>
+                </div>
+            `).join('');
+        }
+
+        // --- NAVIGATION AND OTHER UTILS ---
+        function switchPage(p) {
+            document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+            document.getElementById('page-' + p).classList.add('active');
+            document.querySelectorAll('nav button').forEach(b => b.classList.replace('text-emerald-500', 'text-slate-500'));
+            document.getElementById('nav-' + p).classList.replace('text-slate-500', 'text-emerald-500');
+            if(p === 'leaderboard') loadLeaders();
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function copyRefLink() {
+            navigator.clipboard.writeText(`https://t.me/Boss_storesvzbot?start=${state.user.id}`);
+            tg.showAlert("Ссылка скопирована!");
+        }
+        
+        // CLAIM GIFT FUNCTION (REMAINING FROM PREVIOUS)
+        function claimGift() {
+            // Placeholder for actual gift claim logic (e.g., API call to Supabase)
+            tg.showPopup({ title: 'БОНУС', message: 'Вы получили 50 ₽ на баланс!' });
+            confetti({ particleCount: 150, spread: 70, origin: { y:0.6 } });
+            // update UI or sync user state after claim
+        }
+    </script>
+</body>
+</html>
