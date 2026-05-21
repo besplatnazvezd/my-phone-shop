@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BOSS STORE | EliteServis</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root { --emerald: #10b981; --dark: #020617; --gold: #facc15; }
+        body { font-family: 'Manrope', sans-serif; background-color: var(--dark); color: #f8fafc; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        
+        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .boss-card { background: linear-gradient(145deg, #1e293b 0%, #020617 100%); border: 1px solid rgba(16, 185, 129, 0.2); }
+        
+        .page { display: none; animation: fadeIn 0.3s ease-out; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+        .cat-btn.active { background: var(--emerald); color: #020617; font-weight: 800; transform: scale(1.05); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Стили для игры */
+        .card-game { perspective: 1000px; width: 100px; height: 140px; }
+        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; cursor: pointer; }
+        .card-inner.flipped { transform: rotateY(180deg); }
+        .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 15px; display: flex; align-items: center; justify-content: center; }
+        .card-front { background: linear-gradient(45deg, #1e293b, #334155); border: 2px solid var(--emerald); }
+        .card-back { background: var(--emerald); color: #020617; transform: rotateY(180deg); }
+
+        .btn-press:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+  
+
+    <!-- Тост-уведомление -->
+      <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-[100] glass px-6 py-3 rounded-full border border-emerald-500/50 text-xs font-bold transition-all duration-500 translate-y-[-200%]"></div>
+
+    <header class="p-6 sticky top-0 z-40 bg-[#020617]/90 backdrop-blur-xl border-b border-white/5">
+        <div class="flex justify-between items-center mb-4">
+            <div>
+                <p class="text-[9px] font-black text-emerald-500 uppercase tracking-[0.3em]">Boss Store</p>
+                <h1 id="user-name" class="text-xl font-black italic">ELITE</h1>
+            </div>
+            <div class="glass px-3 py-1.5 rounded-xl border-emerald-500/20 flex items-center gap-2">
+                <i data-lucide="gem" class="w-4 h-4 text-emerald-500"></i>
+                <span id="user-balance" class="font-black text-sm">0 ₽</span>
+            </div>
+        </div>
+        
+        <!-- Поиск -->
+        <div class="relative mb-4">
+            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4"></i>
+            <input type="text" id="search" placeholder="Найти услугу..." class="w-full bg-slate-900/50 border border-white/5 pl-10 pr-4 py-3 rounded-xl outline-none focus:border-emerald-500/50 text-sm">
+        </div>
+
+        <!-- Категории -->
+        <div id="categories-scroll" class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+            <button onclick="filterCat('Все')" class="cat-btn active glass px-4 py-2 rounded-full text-[10px] uppercase whitespace-nowrap">Все</button>
+        </div>
+    </header>
+
+    <main class="px-6 pb-32">
+        
+        <!-- КАТАЛОГ -->
+        <section id="page-home" class="page active mt-4">
+            <div id="catalog" class="grid grid-cols-1 gap-3">
+                <!-- Загрузка -->
+                <div class="h-24 glass rounded-3xl animate-pulse"></div>
+                <div class="h-24 glass rounded-3xl animate-pulse"></div>
+            </div>
+        </section>
+
+        <!-- ИГРА -->
+        <section id="page-game" class="page">
+            <h2 class="text-2xl font-black italic mb-2 uppercase">Boss Lucky Card</h2>
+                        <p class="text-slate-500 text-[10px] font-bold uppercase mb-8">Выбери карту и получи скидку 3%</p>
+            
+            <div class="flex justify-around gap-4 mt-10" id="game-container">
+                <div class="card-game" onclick="playGame(this)">
+                    <div class="card-inner">
+                        <div class="card-front"><i data-lucide="crown" class="text-emerald-500/20 w-10 h-10"></i></div>
+                        <div class="card-back font-black">3%</div>
+                    </div>
+                </div>
+                <div class="card-game" onclick="playGame(this)">
+                    <div class="card-inner">
+                        <div class="card-front"><i data-lucide="crown" class="text-emerald-500/20 w-10 h-10"></i></div>
+                        <div class="card-back font-black text-rose-600">X</div>
+                    </div>
+                </div>
+                <div class="card-game" onclick="playGame(this)">
+                    <div class="card-inner">
+                        <div class="card-front"><i data-lucide="crown" class="text-emerald-500/20 w-10 h-10"></i></div>
+                        <div class="card-back font-black">3%</div>
+                    </div>
+                </div>
+            </div>
+            <p id="game-status" class="text-center mt-10 text-xs font-bold text-slate-500 uppercase tracking-widest"></p>
+        </section>
+
+        <!-- КОРЗИНА -->
+        <section id="page-cart" class="page">
+          <h2 class="text-3xl font-black italic mb-6 uppercase">Корзина</h2>
+            <div id="cart-list" class="space-y-3"></div>
+            <div id="cart-empty" class="text-center py-20 text-slate-700 italic font-bold">Пусто, Босс...</div>
+            
+            <div id="cart-checkout" class="mt-8 hidden">
+                <div class="glass p-6 rounded-[30px]">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">К оплате</span>
+                        <div class="text-right">
+                            <span id="cart-total-old" class="text-xs text-slate-500 line-through mr-2 hidden"></span>
+                            <span id="cart-total" class="text-2xl font-black text-emerald-500">0 ₽</span>
+                        </div>
+                    </div>
+                    <input type="text" id="order-data" placeholder="ID или ссылка" class="w-full bg-slate-900 border border-white/5 p-4 rounded-xl mb-4 outline-none focus:border-emerald-500 text-white text-sm">
+                    <button onclick="startCheckout()" id="btn-pay" class="w-full bg-emerald-500 py-4 rounded-xl text-emerald-950 font-black text-lg btn-press">ПОДТВЕРДИТЬ ЗАКАЗ</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Модалка товара -->
+    <div id="modal" class="fixed inset-0 z-[60] bg-black/95 backdrop-blur-md hidden flex items-end">
+        <div class="w-full bg-[#020617] rounded-t-[40px] p-8 border-t border-emerald-500/20">
+            <div class="w-12 h-1 bg-slate-800 rounded-full mx-auto mb-6"></div>
+            <div class="flex gap-5 mb-6">
+                <img id="modal-img" class="w-20 h-20 rounded-2xl object-cover glass">
+                <div>
+                    <h2 id="modal-title" class="text-xl font-black italic"></h2>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span id="modal-price-old" class="text-xs text-slate-500 line-through hidden"></span>
+                        <span id="modal-price" class="text-emerald-500 font-black text-lg"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-6">
+                <p id="modal-desc" class="text-slate-400 text-xs leading-relaxed"></p>
+                <button id="modal-toggle" class="text-emerald-500 text-[10px] font-black mt-2 hidden">РАЗВЕРНУТЬ</button>
+            </div>
+            <button onclick="addToCart()" class="w-full bg-emerald-500 py-4 rounded-xl text-emerald-950 font-black uppercase tracking-widest btn-press">В корзину</button>
+            <button onclick="closeModal()" class="w-full py-4 text-slate-500 font-bold text-xs mt-2">ЗАКРЫТЬ</button>
+        </div>
+    </div>
+
+    <!-- Экран успеха (Безопасность) -->
+    <div id="success-screen" class="fixed inset-0 z-[100] bg-dark hidden flex flex-col items-center justify-center text-center p-10">
+        <div class="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mb-6">
+            <i data-lucide="check-circle" class="w-12 h-12 text-emerald-500"></i>
+        </div>
+        <h2 class="text-2xl font-black italic mb-2">ЗАКАЗ ПРИНЯТ</h2>
+        <p class="text-slate-500 text-sm italic">Босс, мы уже начали работу. <br>Данные переданы администратору.</p>
+        <div class="mt-10 w-full max-w-[200px] h-1 bg-slate-800 rounded-full overflow-hidden">
+            <div class="h-full bg-emerald-500 animate-[progress_2s_linear]"></div>
+        </div>
+    </div>
+
+    <nav class="fixed bottom-6 left-5 right-5 z-50">
+        <div class="glass max-w-md mx-auto rounded-[30px] p-2 flex justify-around items-center border border-white/10 shadow-2xl">
+            <button onclick="switchPage('home')" id="nav-home" class="p-4 text-emerald-500"><i data-lucide="layout-grid"></i></button>
+            <button onclick="switchPage('game')" id="nav-game" class="p-4 text-slate-500"><i data-lucide="dices"></i></button>
+            <button onclick="switchPage('cart')" id="nav-cart" class="p-4 text-slate-500 relative"><i data-lucide="shopping-cart"></i><span id="cart-badge" class="absolute top-3 right-3 w-2 h-2 bg-rose-500 rounded-full hidden"></span></button>
+        </div>
+    </nav>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv';
+        const ADMIN_ID = "7727345054";
+
+        let state = {
+            items: [],
+            cart: [],
+            categories: ['Все'],
+            activeCat: 'Все',
+            selected: null,
+            discount: 1.0, // 1.0 = нет скидки, 0.97 = 3% скидка
+            gamePlayed: false
+        };
+
+        window.onload = async () => {
+            lucide.createIcons();
+            await loadCatalog();
+            document.getElementById('user-name').innerText = (tg.initDataUnsafe.user?.first_name || 'БОСС').toUpperCase();
+        };
+
+        async function loadCatalog() {
+            try {
+                const res = await fetch(CSV_URL);
+                const text = await res.text();
+                const rows = text.split('\n').slice(1);
+                
+                state.items = rows.map(r => {
+                    const c = r.split(',');
+                    return { cat: c[0]?.trim(), name: c[1]?.trim(), price: parseFloat(c[2]), desc: c[3]?.trim(), img: c[4]?.trim() };
+                }).filter(x => x.name);
+
+                // Собираем уникальные категории
+                const uniqueCats = [...new Set(state.items.map(i => i.cat))];
+                state.categories = ['Все', ...uniqueCats];
+                
+                renderCategories();
+                renderCatalog(state.items);
+            } catch (e) {
+                showToast("Ошибка загрузки CSV!");
+            }
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categories-scroll');
+            container.innerHTML = state.categories.map(c => `
+                <button onclick="filterCat('${c}')" class="cat-btn ${state.activeCat === c ? 'active' : ''} glass px-5 py-2.5 rounded-full text-[10px] uppercase whitespace-nowrap transition-all">
+                    ${c}
+                </button>
+            `).join('');
+        }
+
+        function renderCatalog(data) {
+            const container = document.getElementById('catalog');
+            container.innerHTML = data.map((it, i) => {
+                const hasDiscount = state.discount < 1;
+                const finalPrice = (it.price * state.discount).toFixed(0);
+                
+                return `
+                <div onclick="openModal('${it.name}')" class="glass p-4 rounded-[25px] flex items-center gap-4 btn-press">
+                    <img src="${it.img}" class="w-14 h-14 rounded-xl object-cover glass">
+                    <div class="flex-1">
+                        <p class="text-[7px] font-black text-emerald-500 uppercase tracking-widest">${it.cat}</p>
+                        <h4 class="font-bold text-sm italic">${it.name}</h4>
+                        <div class="flex items-center gap-2">
+                            ${hasDiscount ? `<span class="text-[10px] text-slate-500 line-through">${it.price} ₽</span>` : ''}
+                            <span class="font-black text-white">${finalPrice} ₽</span>
+                        </div>
+                    </div>
+                    <i data-lucide="plus-circle" class="text-slate-700 w-5 h-5"></i>
+                </div>
+            `}).join('');
+            lucide.createIcons();
+        }
+
+        function filterCat(c) {
+            state.activeCat = c;
+            renderCategories();
+            const filtered = c === 'Все' ? state.items : state.items.filter(i => i.cat === c);
+            renderCatalog(filtered);
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
+        // Поиск
+        document.getElementById('search').oninput = (e) => {
+            const val = e.target.value.toLowerCase();
+            const filtered = state.items.filter(i => 
+                (i.name.toLowerCase().includes(val) || i.cat.toLowerCase().includes(val)) &&
+                (state.activeCat === 'Все' || i.cat === state.activeCat)
+            );
+            renderCatalog(filtered);
+        };
+
+        function openModal(name) {
+            const it = state.items.find(x => x.name === name);
+            state.selected = it;
+            
+            document.getElementById('modal-title').innerText = it.name;
+            document.getElementById('modal-img').src = it.img;
+            
+            const finalPrice = (it.price * state.discount).toFixed(0);
+            if(state.discount < 1) {
+                document.getElementById('modal-price-old').innerText = it.price + ' ₽';
+                document.getElementById('modal-price-old').classList.remove('hidden');
+            } else {
+                document.getElementById('modal-price-old').classList.add('hidden');
+            }
+            document.getElementById('modal-price').innerText = finalPrice + ' ₽';
+
+            // Описание (Развернуть/Свернуть)
+            const descEl = document.getElementById('modal-desc');
+            const toggleBtn = document.getElementById('modal-toggle');
+            const fullDesc = it.desc || 'Нет описания';
+            
+            if(fullDesc.length > 80) {
+                descEl.innerText = fullDesc.substring(0, 80) + '...';
+                toggleBtn.classList.remove('hidden');
+                toggleBtn.onclick = () => {
+                    if(descEl.innerText.includes('...')) {
+                        descEl.innerText = fullDesc;
+                        toggleBtn.innerText = 'СВЕРНУТЬ';
+                    } else {
+                        descEl.innerText = fullDesc.substring(0, 80) + '...';
+                        toggleBtn.innerText = 'РАЗВЕРНУТЬ';
+                    }
+                };
+            } else {
+                descEl.innerText = fullDesc;
+                toggleBtn.classList.add('hidden');
+            }
+
+            document.getElementById('modal').classList.remove('hidden');
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        function addToCart() {
+            state.cart.push({ ...state.selected, finalPrice: (state.selected.price * state.discount) });
+            updateCartUI();
+            closeModal();
+            showToast("Добавлено в корзину!");
+            tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        function updateCartUI() {
+            const badge = document.getElementById('cart-badge');
+            const list = document.getElementById('cart-list');
+            const checkout = document.getElementById('cart-checkout');
+            const empty = document.getElementById('cart-empty');
+
+            if(state.cart.length > 0) {
+                badge.classList.remove('hidden'); empty.classList.add('hidden'); checkout.classList.remove('hidden');
+                let total = 0;
+                let oldTotal = 0;
+                list.innerHTML = state.cart.map((it, i) => {
+                    total += it.finalPrice;
+                    oldTotal += it.price;
+                    return `
+                    <div class="glass p-4 rounded-2xl flex items-center gap-4">
+                        <img src="${it.img}" class="w-10 h-10 rounded-lg object-cover">
+                        <div class="flex-1 font-bold text-[10px]">
+                            <p>${it.name}</p>
+                            <p class="text-emerald-500">${it.finalPrice.toFixed(0)} ₽</p>
+                        </div>
+                        <button onclick="state.cart.splice(${i},1);updateCartUI();" class="text-rose-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                `}).join('');
+                document.getElementById('cart-total').innerText = total.toFixed(0) + ' ₽';
+                if(state.discount < 1) {
+                    document.getElementById('cart-total-old').innerText = oldTotal.toFixed(0) + ' ₽';
+                    document.getElementById('cart-total-old').classList.remove('hidden');
+                }
+            } else {
+                badge.classList.add('hidden'); empty.classList.remove('hidden'); checkout.classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        // ИГРА
+        function playGame(el) {
+            if(state.gamePlayed) return showToast("Босс, игра только 1 раз!");
+            
+            const card = el.querySelector('.card-inner');
+            card.classList.add('flipped');
+            state.gamePlayed = true;
+
+            const win = card.querySelector('.card-back').innerText === '3%';
+            if(win) {
+                state.discount = 0.97;
+                document.getElementById('game-status').innerText = "ПОБЕДА! СКИДКА 3% АКТИВИРОВАНА";
+                document.getElementById('game-status').classList.replace('text-slate-500', 'text-emerald-500');
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                renderCatalog(state.items); // Перерисовать цены
+            } else {
+                document.getElementById('game-status').innerText = "НЕ ПОВЕЗЛО, ПОПРОБУЙ ЗАВТРА";
+            }
+            tg.HapticFeedback.notificationOccurred('warning');
+        }
+
+        function startCheckout() {
+            const data = document.getElementById('order-data').value;
+            if(!data) return showToast("Босс, введи данные!");
+
+            document.getElementById('btn-pay').innerText = "ОБРАБОТКА...";
+            
+            // Имитация безопасности
+            setTimeout(() => {
+                document.getElementById('success-screen').classList.remove('hidden');
+                
+                const orderText = `📦 НОВЫЙ ЗАКАЗ\n👤 От: ${tg.initDataUnsafe.user?.username || 'Guest'}\n💰 Сумма: ${document.getElementById('cart-total').innerText}\n📝 Данные: ${data}\n🛒 Товары:\n` + 
+                state.cart.map(i => `- ${i.name}`).join('\n');
+
+                // Отправляем боту
+                tg.sendData(JSON.stringify({
+                    admin_id: ADMIN_ID,
+                    message: orderText
+                }));
+
+                // Закрываем через 2.5 сек
+                setTimeout(() => tg.close(), 2500);
+            }, 1500);
+        }
+
+        function switchPage(p) {
+            document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+            document.getElementById('page-' + p).classList.add('active');
+            document.querySelectorAll('nav button').forEach(b => b.classList.replace('text-emerald-500', 'text-slate-500'));
+            document.getElementById('nav-' + p).classList.replace('text-slate-500', 'text-emerald-500');
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function showToast(text) {
+            const t = document.getElementById('toast');
+            t.innerText = text;
+            t.style.transform = 'translateY(0) translateX(-50%)';
+            setTimeout(() => t.style.transform = 'translateY(-200%) translateX(-50%)', 3000);
+        }
+    </script>
+
+    <style>
+        @keyframes progress { from { width: 0%; } to { width: 100%; } }
+    </style>
+</body>
+</html>
