@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BOSS NEURAL OS v.2100</title>
+
+    <!-- СИСТЕМНЫЕ ЗАВИСИМОСТИ -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ГЛОБАЛЬНЫЕ ТЕМЫ */
+        :root[data-theme="dark"] {
+            --bg: #05060a;
+            --panel: rgba(15, 20, 30, 0.8);
+            --accent: #00f2ff;
+            --accent-glow: rgba(0, 242, 255, 0.5);
+            --text-main: #ffffff;
+            --text-dim: #6b7280;
+            --border: rgba(0, 242, 255, 0.2);
+            --card-bg: rgba(255, 255, 255, 0.03);
+        }
+
+        :root[data-theme="light"] {
+            --bg: #f0f4f8;
+            --panel: rgba(255, 255, 255, 0.9);
+            --accent: #0070f3;
+            --accent-glow: rgba(0, 112, 243, 0.3);
+            --text-main: #1a1a1a;
+            --text-dim: #4b5563;
+            --border: rgba(0, 112, 243, 0.2);
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg);
+            color: var(--text-main);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* КИБЕР-ЭЛЕМЕНТЫ */
+        .cyber-grid {
+            position: fixed; inset: 0;
+            background-image: 
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+            mask-image: radial-gradient(circle at 50% 50%, black, transparent 90%);
+            opacity: 0.3;
+        }
+
+        .glass {
+            background: var(--panel);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .neon-text { text-shadow: 0 0 15px var(--accent-glow); }
+              .font-sync { font-family: 'Syncopate', sans-serif; }
+        .font-orb { font-family: 'Orbitron', sans-serif; }
+
+        /* АНИМАЦИИ */
+        @keyframes scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(400%); } }
+        .scanner::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--accent); animation: scan 2s linear infinite; opacity: 0.5;
+        }
+
+        .page { display: none; animation: slideUp 0.5s ease-out forwards; }
+        .page.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* КНОПКИ */
+        .btn-cyber {
+            position: relative; overflow: hidden;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            transition: all 0.3s;
+        }
+        .btn-cyber:active { transform: scale(0.95); filter: brightness(1.2); }
+
+        /* КАРТОЧКА ТОВАРА */
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            transition: 0.4s;
+        }
+        .product-card:hover { border-color: var(--accent); transform: translateY(-5px); }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* FAQ ACCORDION */
+        .faq-item { border-bottom: 1px solid var(--border); }
+        .faq-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .faq-item.open .faq-content { max-height: 200px; padding-bottom: 1rem; }
+        .faq-item.open i { transform: rotate(180deg); }
+
+        /* TOGGLE SWITCH */
+        .switch-box { width: 50px; height: 24px; background: var(--border); border-radius: 20px; position: relative; cursor: pointer; }
+        .switch-dot { width: 18px; height: 18px; background: var(--accent); border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: 0.3s; }
+        .active .switch-dot { left: 29px; background: #fff; }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <div class="cyber-grid"></div>
+
+    <!-- HEADER -->
+    <header class="p-6 sticky top-0 z-50 glass border-b border-white/5">
+              <div class="flex justify-between items-start">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="text-[8px] uppercase tracking-[3px] opacity-60 font-orb" id="sys-status">System: Secure</span>
+                </div>
+                <h1 id="user-name" class="text-xl font-bold font-sync neon-text tracking-tighter">NEO-BOSS</h1>
+            </div>
+            
+            <div class="flex gap-3">
+                <!-- Lang Switch -->
+                <button onclick="toggleLang()" class="w-10 h-10 glass rounded-lg flex items-center justify-center text-[10px] font-bold" id="lang-btn">EN</button>
+                <!-- Theme Switch -->
+                <button onclick="toggleTheme()" class="w-10 h-10 glass rounded-lg flex items-center justify-center">
+                    <i data-lucide="sun" id="theme-icon" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main class="px-5 pt-6 pb-32">
+        
+        <!-- ГЛАВНАЯ (КАТАЛОГ) -->
+        <section id="page-home" class="page active">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="relative flex-1">
+                    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40"></i>
+                    <input type="text" id="search" placeholder="Поиск в системе..." class="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-xs focus:border-cyan-500 outline-none">
+                </div>
+            </div>
+
+            <div id="categories" class="flex gap-2 overflow-x-auto no-scrollbar mb-8"></div>
+            
+            <div id="catalog" class="grid grid-cols-1 gap-5">
+                <!-- Скелетоны -->
+                <div class="h-40 glass rounded-3xl animate-pulse"></div>
+                <div class="h-40 glass rounded-3xl animate-pulse"></div>
+            </div>
+        </section>
+
+        <!-- РЕФЕРАЛКА -->
+        <section id="page-ref" class="page text-center">
+            <div class="glass p-8 rounded-[40px] mb-6">
+                <i data-lucide="users" class="w-12 h-12 mx-auto mb-4 text-cyan-400"></i>
+                <h2 class="text-2xl font-sync mb-2 uppercase" data-t="ref_title">Нейро-Сеть</h2>
+                <p class="text-xs opacity-60 leading-relaxed mb-6" data-t="ref_desc">Приглашайте новых пользователей и получайте 10% от их энергозатрат на свой баланс.</p>
+                
+                <div class="bg-black/20 p-4 rounded-2xl border border-white/5 mb-4 select-all font-mono text-[10px]">
+                    https://t.me/BossStoreBot?start=ref7727345054
+                </div>
+                <button class="w-full btn-cyber bg-cyan-500 text-black py-4 font-bold text-xs uppercase" onclick="copyRef()" data-t="ref_copy">Скопировать линк</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass p-5 rounded-3xl">
+                    <p class="text-[10px] uppercase opacity-50 mb-1" data-t="ref_count">Приглашено</p>
+                    <p class="text-xl font-orb">0</p>
+                </div>
+                <div class="glass p-5 rounded-3xl">
+                    <p class="text-[10px] uppercase opacity-50 mb-1" data-t="ref_earn">Заработано</p>
+                    <p class="text-xl font-orb text-green-400">0</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section id="page-faq" class="page">
+            <h2 class="text-2xl font-sync mb-8 uppercase tracking-tighter" data-t="faq_title">Инфо-Центр</h2>
+            <div class="space-y-4" id="faq-container"></div>
+            
+            <div class="mt-12 p-6 glass rounded-3xl text-center">
+                <p class="text-xs opacity-50 mb-4" data-t="support_text">Нужна прямая связь с администратором?</p>
+                <div class="flex gap-3">
+                    <a href="https://t.me/nmproda" class="flex-1 bg-white/5 py-4 rounded-xl text-[10px] font-bold uppercase flex items-center justify-center gap-2">
+                        <i data-lucide="send" class="w-3 h-3"></i> Telegram
+                    </a>
+                    <a href="mailto: supportnmproda@gmail.com" class="flex-1 bg-white/5 py-4 rounded-xl text-[10px] font-bold uppercase flex items-center justify-center gap-2">
+                        <i data-lucide="mail" class="w-3 h-3"></i> Email
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- КОРЗИНА -->
+        <section id="page-cart" class="page">
+            <div id="cart-items" class="space-y-4 mb-8"></div>
+            <div id="cart-empty" class="py-20 text-center opacity-30 text-xs uppercase tracking-[5px]" data-t="cart_empty">Корзина пуста</div>
+            
+            <div id="cart-footer" class="hidden">
+                <div class="glass p-6 rounded-[35px] border-cyan-500/30">
+                    <div class="flex justify-between items-end mb-8">
+                        <span class="text-xs uppercase opacity-50 font-orb" data-t="total">Итого</span>
+                        <span id="cart-total" class="text-3xl font-orb font-bold text-cyan-400">0</span>
+                    </div>
+
+                    <!-- Форма заказа -->
+                    <div class="space-y-4 mb-8">
+                        <input type="text" id="order-dest" placeholder="Куда отправить? (Email / Telegram)" class="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-xs outline-none focus:border-cyan-500">
+                        <textarea id="order-note" placeholder="Дополнительные уточнения..." class="w-full bg-black/40 border border-white/10 p-4 rounded-xl text-xs outline-none focus:border-cyan-500 h-24"></textarea>
+                    </div>
+
+                    <!-- Выбор оплаты -->
+                    <p class="text-[10px] uppercase opacity-40 mb-3 ml-2" data-t="pay_method">Метод оплаты</p>
+                    <div class="grid grid-cols-2 gap-3 mb-8">
+                        <button class="pay-btn active glass p-4 rounded-xl border-cyan-500 text-[10px] font-bold uppercase flex flex-col items-center gap-2" onclick="selectPay('card')">
+                            <i data-lucide="credit-card"></i> Карта РФ
+                        </button>
+                        <button class="pay-btn glass p-4 rounded-xl border-white/10 text-[10px] font-bold uppercase flex flex-col items-center gap-2" onclick="selectPay('crypto')">
+                            <i data-lucide="bitcoin"></i> Crypto
+                        </button>
+                    </div>
+
+                    <button onclick="processOrder()" class="w-full btn-cyber bg-white text-black py-5 font-black text-sm uppercase tracking-widest" data-t="buy_btn">Оплатить через ЮKassa</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- МОДАЛКА -->
+    <div id="modal" class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl hidden flex items-center justify-center p-5">
+        <div class="w-full glass rounded-[40px] p-8 relative scanner overflow-hidden">
+            <button onclick="closeModal()" class="absolute top-6 right-6 opacity-40"><i data-lucide="x"></i></button>
+            <img id="modal-img" class="w-full h-52 object-cover rounded-2xl mb-6 shadow-2xl">
+            <h2 id="modal-title" class="text-xl font-sync mb-2 uppercase"></h2>
+            <div id="modal-price" class="text-2xl font-orb text-cyan-400 mb-6"></div>
+            <p id="modal-desc" class="text-xs opacity-60 leading-relaxed mb-8 italic"></p>
+            <button onclick="addToCart()" class="w-full btn-cyber bg-cyan-500 text-black py-4 font-bold uppercase text-xs tracking-widest" data-t="add_to_cart">Добавить в корзину</button>
+        </div>
+    </div>
+
+    <!-- NAV -->
+    <nav class="fixed bottom-6 left-6 right-6 z-50">
+        <div class="glass rounded-[25px] p-2 flex justify-around items-center border-white/10">
+            <button onclick="switchPage('home')" id="nav-home" class="p-4 text-cyan-400 transition-all"><i data-lucide="layout-grid"></i></button>
+            <button onclick="switchPage('ref')" id="nav-ref" class="p-4 text-gray-500 transition-all"><i data-lucide="share-2"></i></button>
+            <button onclick="switchPage('faq')" id="nav-faq" class="p-4 text-gray-500 transition-all"><i data-lucide="help-circle"></i></button>
+            <button onclick="switchPage('cart')" id="nav-cart" class="p-4 text-gray-500 relative transition-all">
+                <i data-lucide="shopping-bag"></i>
+                <span id="cart-badge" class="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full hidden"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- СКРИПТЫ -->
+    <script>
+        /* ЗАРЕГИСТРИРОВАННЫЕ СИСТЕМНЫЕ ДАННЫЕ (ЗАШИФРОВАНО) */
+        const _CORE_REGISTRY = {
+            CSV_SOURCE: 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv',
+            ADMIN_TARGET: "7727345054",
+            SHOP_NAME: "BOSS STORE | super",
+            CURRENCY: "", 
+            LANG: localStorage.getItem('boss_lang') || 'RU',
+            THEME: localStorage.getItem('boss_theme') || 'dark'
+        };
+
+        const i18n = {
+            RU: {
+                ref_title: "Нейро-Сеть",
+                ref_desc: "Развивайте сеть и получайте 10% от транзакций ваших рефералов.",
+                ref_copy: "Копировать линк",
+                ref_count: "Узлов в сети",
+                ref_earn: "Энергии получено",
+                faq_title: "Инфо-Центр",
+                cart_empty: "Сигнал пуст",
+                total: "Итоговая мощность",
+                buy_btn: "Оплатить через ЮKassa",
+                add_to_cart: "Синхронизировать",
+                pay_method: "Метод передачи",
+                support_text: "Нужна связь с архитектором?",
+                search: "Поиск в базе..."
+            },
+            EN: {
+                ref_title: "Neural Network",
+                ref_desc: "Expand the network and get 10% from your referrals transactions.",
+                ref_copy: "Copy Link",
+                ref_count: "Network Nodes",
+                ref_earn: "Energy Earned",
+                faq_title: "Info Center",
+                cart_empty: "Signal is empty",
+                total: "Total Power",
+                buy_btn: "Pay via Yookassa",
+                add_to_cart: "Synchronize",
+                pay_method: "Transfer Method",
+                support_text: "Contact the Architect?",
+                search: "Search database..."
+            }
+        };
+
+        const FAQ_DATA = [
+            { q: "Как я получу товар?", a: "После подтверждения оплаты данные и ваши пожелания будут автоматически отправлены в ваш Telegram или на указанную почту после выполнения заказа." },
+            { q: "Какие гарантии?", a: "Мы работаем через официальный шлюз ЮKassa. Каждая транзакция защищена протоколом Neural-Shield 2100." },
+            { q: "Можно ли вернуть средства?", a: "Возврат возможен только в случае технической неисправности данных до их активации." },
+            { q: "Как работает рефералка?", a: "Вы получаете 10% от каждой покупки приглашенного друга сразу на свой баланс в боте." }
+        ];
+
+        const tg = window.Telegram.WebApp;
+        let state = { items: [], cart: [], activeCat: 'Все', payMethod: 'card' };
+
+        // ИНИЦИАЛИЗАЦИЯ
+        window.onload = () => {
+            document.documentElement.setAttribute('data-theme', _CORE_REGISTRY.THEME);
+            applyThemeUI();
+            applyLang();
+            loadCatalog();
+            renderFAQ();
+            lucide.createIcons();
+            tg.expand();
+            document.getElementById('user-name').innerText = (tg.initDataUnsafe.user?.first_name || 'NEO-BOSS').toUpperCase();
+        };
+
+        // ТЕМЫ
+        function toggleTheme() {
+            _CORE_REGISTRY.THEME = _CORE_REGISTRY.THEME === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', _CORE_REGISTRY.THEME);
+            localStorage.setItem('boss_theme', _CORE_REGISTRY.THEME);
+            applyThemeUI();
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        function applyThemeUI() {
+            const icon = document.getElementById('theme-icon');
+            if(_CORE_REGISTRY.THEME === 'light') {
+                icon.setAttribute('data-lucide', 'moon');
+            } else {
+                icon.setAttribute('data-lucide', 'sun');
+            }
+            lucide.createIcons();
+        }
+      // ЯЗЫКИ
+        function toggleLang() {
+            _CORE_REGISTRY.LANG = _CORE_REGISTRY.LANG === 'RU' ? 'EN' : 'RU';
+            localStorage.setItem('boss_lang', _CORE_REGISTRY.LANG);
+            applyLang();
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function applyLang() {
+            const dict = i18n[_CORE_REGISTRY.LANG];
+            document.querySelectorAll('[data-t]').forEach(el => {
+                el.innerText = dict[el.getAttribute('data-t')];
+            });
+            document.getElementById('lang-btn').innerText = _CORE_REGISTRY.LANG;
+            document.getElementById('search').placeholder = dict.search;
+        }
+
+        // КАТАЛОГ
+        async function loadCatalog() {
+            try {
+                const res = await fetch(_CORE_REGISTRY.CSV_SOURCE);
+                const text = await res.text();
+                const rows = text.split(/\r?\n/).slice(1);
+                state.items = rows.map(row => {
+                    const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    return {
+                        cat: c[0]?.replace(/"/g, '').trim(),
+                        name: c[1]?.replace(/"/g, '').trim(),
+                        price: parseFloat(c[2]),
+                        desc: c[3]?.replace(/"/g, '').trim(),
+                        img: c[4]?.replace(/"/g, '').trim()
+                    };
+                }).filter(it => it.name && !isNaN(it.price));
+
+                renderCategories();
+                renderCatalog(state.items);
+            } catch (e) {
+                console.error("Critical Load Error");
+            }
+        }
+
+        function renderCategories() {
+            const cats = ['Все', ...new Set(state.items.map(i => i.cat))];
+            document.getElementById('categories').innerHTML = cats.map(c => `
+                <button onclick="filterCat('${c}')" class="cat-chip glass rounded-xl ${state.activeCat === c ? 'active' : ''}">${c}</button>
+            `).join('');
+        }
+
+        function renderCatalog(data) {
+            const container = document.getElementById('catalog');
+            container.innerHTML = data.map(it => `
+                <div onclick="openModal('${it.name}')" class="product-card p-4 flex items-center gap-4">
+                    <img src="${it.img}" class="w-20 h-20 object-cover rounded-2xl border border-white/5 shadow-lg">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <span class="text-[8px] uppercase text-cyan-400 font-orb mb-1">${it.cat}</span>
+                        </div>
+                        <h3 class="font-bold text-sm uppercase tracking-tight">${it.name}</h3>
+                        <p class="text-lg font-orb font-black mt-1">${it.price.toLocaleString()}</p>
+                    </div>
+                    <i data-lucide="plus-circle" class="opacity-20"></i>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function filterCat(c) {
+            state.activeCat = c;
+            renderCategories();
+            renderCatalog(c === 'Все' ? state.items : state.items.filter(i => i.cat === c));
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
+        // МОДАЛКА
+        function openModal(name) {
+            const it = state.items.find(x => x.name === name);
+            state.selected = it;
+            document.getElementById('modal-title').innerText = it.name;
+            document.getElementById('modal-img').src = it.img;
+            document.getElementById('modal-price').innerText = it.price.toLocaleString();
+          document.getElementById('modal-desc').innerText = it.desc || 'No description provided for this neural node.';
+            document.getElementById('modal').classList.remove('hidden');
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        function addToCart() {
+            state.cart.push(state.selected);
+            updateCartUI();
+            closeModal();
+            tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        function updateCartUI() {
+            const badge = document.getElementById('cart-badge');
+            const footer = document.getElementById('cart-footer');
+            const list = document.getElementById('cart-items');
+            const empty = document.getElementById('cart-empty');
+
+            if(state.cart.length > 0) {
+                badge.classList.remove('hidden');
+                footer.classList.remove('hidden');
+                empty.classList.add('hidden');
+                let total = 0;
+                list.innerHTML = state.cart.map((it, i) => {
+                    total += it.price;
+                    return `
+                    <div class="glass p-4 rounded-2xl flex items-center gap-4">
+                        <img src="${it.img}" class="w-12 h-12 object-cover rounded-lg">
+                        <div class="flex-1"><p class="font-bold text-xs uppercase">${it.name}</p></div>
+                        <button onclick="state.cart.splice(${i},1);updateCartUI();" class="text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>`;
+                }).join('');
+                document.getElementById('cart-total').innerText = total.toLocaleString();
+            } else {
+                badge.classList.add('hidden');
+                footer.classList.add('hidden');
+                empty.classList.remove('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        // ПОКУПКА
+        function selectPay(type) {
+            state.payMethod = type;
+            document.querySelectorAll('.pay-btn').forEach(btn => btn.classList.remove('active', 'border-cyan-500'));
+            event.currentTarget.classList.add('active', 'border-cyan-500');
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function processOrder() {
+            const dest = document.getElementById('order-dest').value;
+            const note = document.getElementById('order-note').value;
+            if(!dest) return tg.showAlert("Укажите адрес доставки!");
+
+            tg.showConfirm("Перейти к оплате через ЮKassa?", (ok) => {
+                if(ok) {
+                    document.getElementById('success-screen').classList.remove('hidden');
+                    const orderMsg = `🔥 [НОВЫЙ ЗАКАЗ]\n\n👤 Клиент: @${tg.initDataUnsafe.user?.username || 'anon'}\n💰 Сумма: ${document.getElementById('cart-total').innerText}\n📍 Куда: ${dest}\n📝 Заметка: ${note}\n💳 Метод: ${state.payMethod}\n\n📦 Товары:\n` + state.cart.map(i => `- ${i.name}`).join('\n');
+                    
+                    tg.sendData(JSON.stringify({ 
+                        admin_id: _CORE_REGISTRY.ADMIN_TARGET, 
+                        message: orderMsg 
+                    }));
+                    
+                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                    setTimeout(() => tg.close(), 3000);
+                }
+            });
+        }
+
+        // FAQ RENDER
+        function renderFAQ() {
+            const container = document.getElementById('faq-container');
+            container.innerHTML = FAQ_DATA.map((item, i) => `
+                <div class="faq-item glass rounded-2xl p-4" onclick="this.classList.toggle('open')">
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-xs font-bold uppercase tracking-wider">${item.q}</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform"></i>
+                    </div>
+                    <div class="faq-content text-[10px] opacity-60 leading-relaxed">${item.a}</div>
+                </div>
+            `).join('');
+        }
+
+        function copyRef() {
+            const link = "https://t.me/BossStoreBot?start=ref" + (tg.initDataUnsafe.user?.id || '7727345054');
+            navigator.clipboard.writeText(link);
+            tg.showAlert("Реферальная ссылка скопирована!");
+        }
+
+        function switchPage(p) {
+            document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+            document.getElementById('page-' + p).classList.add('active');
+            document.querySelectorAll('nav button').forEach(b => b.classList.replace('text-cyan-400', 'text-gray-500'));
+            document.getElementById('nav-' + p).classList.replace('text-gray-500', 'text-cyan-400');
+            tg.HapticFeedback.impactOccurred('medium');
+            window.scrollTo(0,0);
+        }
+
+        document.getElementById('search').oninput = (e) => {
+            const val = e.target.value.toLowerCase();
+            renderCatalog(state.items.filter(i => i.name.toLowerCase().includes(val)));
+        };
+    </script>
+</body>
+</html>
