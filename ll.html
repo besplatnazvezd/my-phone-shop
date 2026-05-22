@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEURAL INTERFACE 2100</title>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --accent: #00f2ff;
+            --danger: #ff0055;
+            --bg: #050505;
+            --panel: rgba(20, 25, 35, 0.7);
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg);
+            color: #fff;
+            overflow-x: hidden;
+            letter-spacing: -0.5px;
+        }
+
+        /* КИБЕР-ФОН */
+        .cyber-grid {
+            position: fixed;
+            inset: 0;
+            background: 
+                linear-gradient(transparent 99%, rgba(0, 242, 255, 0.05) 100%),
+                linear-gradient(90deg, transparent 99%, rgba(0, 242, 255, 0.05) 100%);
+            background-size: 50px 50px;
+            z-index: -1;
+            perspective: 1000px;
+        }
+        .cyber-grid::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, transparent 20%, #050505 80%);
+        }
+
+        /* НЕОНОВЫЕ ЭФФЕКТЫ */
+        .neon-glow { text-shadow: 0 0 15px var(--accent); }
+        .cyber-border { 
+            clip-path: polygon(0 0, 90% 0, 100% 10%, 100% 100%, 10% 100%, 0 90%);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            background: var(--panel);
+            backdrop-filter: blur(15px);
+        }
+
+        /* КАРТОЧКА ТОВАРА 2100 */
+        .neural-card {
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-left: 3px solid transparent;
+        }
+        .neural-card:active { transform: scale(0.98) translateX(10px); border-left-color: var(--accent); }
+        
+        .scan-line {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+                      background: var(--accent);
+            opacity: 0;
+            z-index: 20;
+            pointer-events: none;
+        }
+        .scanning .scan-line { animation: scan 1.5s ease-in-out infinite; opacity: 1; }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        /* КАТЕГОРИИ */
+        .cat-chip {
+            padding: 8px 20px;
+            font-family: 'Orbitron';
+            font-size: 10px;
+            text-transform: uppercase;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+        .cat-chip.active {
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 0 20px var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* ТЕРМИНАЛ */
+        #terminal {
+            font-size: 9px;
+            color: var(--accent);
+            opacity: 0.7;
+            height: 40px;
+            overflow: hidden;
+        }
+
+        .page { display: none; animation: fadeIn 0.4s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; filter: blur(10px); } to { opacity: 1; filter: blur(0); } }
+
+        .price-tag { font-family: 'Orbitron'; font-weight: 900; font-size: 20px; color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="cyber-grid"></div>
+
+    <!-- ТЕРМИНАЛЬНАЯ ШАПКА -->
+    <header class="p-6 sticky top-0 z-50 bg-black/50 backdrop-blur-md border-b border-cyan-500/20">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                    <span class="text-[9px] uppercase tracking-[4px] text-gray-400">System: Online</span>
+                </div>
+                <h1 id="user-name" class="text-xl font-bold neon-glow font-['Syncopate']">ACCESSING...</h1>
+            </div>
+            <div class="text-right">
+                <p class="text-[8px] text-cyan-500/50 uppercase">Network Latency</p>
+                <p class="text-xs font-bold font-['Orbitron']">14ms</p>
+            </div>
+        </div>
+
+        <!-- КАТЕГОРИИ -->
+              <div id="categories-scroll" class="flex gap-2 overflow-x-auto no-scrollbar pb-2"></div>
+    </header>
+
+    <main class="px-4 pt-4 pb-32">
+        
+        <!-- КАТАЛОГ -->
+        <section id="page-home" class="page active">
+            <div class="relative mb-6">
+                <input type="text" id="search" placeholder="> SEARCH_DATABASE..." class="w-full bg-white/5 border-b border-cyan-500/30 p-4 outline-none focus:border-cyan-500 transition-all font-mono text-xs text-cyan-400">
+            </div>
+            
+            <div id="catalog" class="space-y-4">
+                <!-- Скелетоны -->
+                <div class="h-32 cyber-border animate-pulse"></div>
+                <div class="h-32 cyber-border animate-pulse"></div>
+            </div>
+        </section>
+
+        <!-- КОРЗИНА -->
+        <section id="page-cart" class="page">
+            <h2 class="text-2xl font-bold font-['Syncopate'] mb-6 uppercase tracking-tighter">Selected Data</h2>
+            <div id="cart-list" class="space-y-3"></div>
+            <div id="cart-empty" class="py-20 text-center text-gray-600 text-xs uppercase tracking-[5px]">No Data Encrypted</div>
+            
+            <div id="cart-checkout" class="mt-10 hidden">
+                <div class="cyber-border p-6 relative">
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="text-xs uppercase text-gray-400">Final Protocol</span>
+                        <span id="cart-total" class="price-tag">0</span>
+                    </div>
+                    <input type="text" id="order-data" placeholder="ENTER NEURAL_LINK ID" class="w-full bg-black/40 border border-cyan-500/30 p-4 rounded mb-4 text-xs font-mono outline-none focus:border-cyan-500">
+                    <button onclick="startCheckout()" class="w-full bg-cyan-500 text-black py-4 font-bold uppercase text-xs tracking-widest hover:bg-white transition-all">Execute Transfer</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ТЕРМИНАЛ ЛОГОВ -->
+        <div id="terminal-box" class="mt-10 p-4 border-t border-white/5">
+            <div id="terminal">> Initializing Neural Link...</div>
+        </div>
+    </main>
+
+    <!-- МОДАЛКА -->
+    <div id="modal" class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-md cyber-border p-8 relative overflow-hidden">
+            <div class="scan-line opacity-30"></div>
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500"><i data-lucide="x"></i></button>
+            
+            <img id="modal-img" class="w-full h-48 object-cover rounded-lg mb-6 grayscale hover:grayscale-0 transition-all duration-700">
+            <div class="flex justify-between items-start mb-4">
+                <h2 id="modal-title" class="text-xl font-bold font-['Orbitron'] uppercase tracking-wider"></h2>
+                <span id="modal-price" class="price-tag"></span>
+            </div>
+            <p id="modal-desc" class="text-gray-400 text-xs leading-relaxed font-light mb-8 italic"></p>
+            
+            <button onclick="addToCart()" class="w-full bg-white text-black py-4 font-black uppercase text-xs tracking-[4px] active:scale-95 transition-all">Connect to Bay</button>
+        </div>
+    </div>
+
+    <!-- УСПЕХ -->
+    <div id="success-screen" class="fixed inset-0 z-[200] bg-black hidden flex flex-col items-center justify-center">
+        <div class="text-cyan-500 font-mono text-xs animate-pulse mb-4">>> TRANSFER AUTHORIZED <<</div>
+        <div class="text-4xl font-bold font-['Syncopate'] neon-glow uppercase">Done</div>
+    </div>
+
+    <!-- НАВИГАЦИЯ -->
+    <nav class="fixed bottom-6 left-6 right-6 z-50">
+        <div class="bg-black/80 backdrop-blur-2xl rounded-2xl p-2 flex justify-around items-center border border-white/10 shadow-2xl">
+            <button onclick="switchPage('home')" id="nav-home" class="p-4 text-cyan-400 transition-all"><i data-lucide="component"></i></button>
+            <button onclick="switchPage('cart')" id="nav-cart" class="p-4 text-gray-500 relative transition-all">
+                <i data-lucide="database"></i>
+                <span id="cart-badge" class="absolute top-3 right-3 w-1.5 h-1.5 bg-cyan-400 rounded-full hidden animate-ping"></span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/1q9vPlWM9t934ACzIwbZU4_EDtvpJdfO09-jodyIi9Ew/export?format=csv'; // ЗАМЕНИ НА СВОЮ
+        const ADMIN_ID = "7727345054";
+
+        let state = {
+            items: [], cart: [], categories: ['ALL'], activeCat: 'ALL', selected: null,
+            logs: ['> Neural Link Established', '> Waiting for command...']
+        };
+
+        function addLog(msg) {
+            state.logs.push(`> ${msg}`);
+            if(state.logs.length > 3) state.logs.shift();
+            document.getElementById('terminal').innerHTML = state.logs.join('<br>');
+        }
+      window.onload = async () => {
+            lucide.createIcons();
+            document.getElementById('user-name').innerText = (tg.initDataUnsafe.user?.first_name || 'NEO-USER').toUpperCase();
+            await loadCatalog();
+        };
+
+        async function loadCatalog() {
+            try {
+                const res = await fetch(CSV_URL);
+                const text = await res.text();
+                const rows = text.split(/\r?\n/).slice(1);
+                state.items = rows.map(row => {
+                    const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    return {
+                        cat: c[0]?.replace(/"/g, '').trim(),
+                        name: c[1]?.replace(/"/g, '').trim(),
+                        price: parseFloat(c[2]),
+                        desc: c[3]?.replace(/"/g, '').trim(),
+                        img: c[4]?.replace(/"/g, '').trim()
+                    };
+                }).filter(it => it.name && !isNaN(it.price));
+
+                state.categories = ['ALL', ...new Set(state.items.map(i => i.cat))];
+                renderCategories();
+                renderCatalog(state.items);
+                addLog('Database Scanned Successfully');
+            } catch (e) {
+                addLog('CRITICAL_ERROR: Database Offline');
+            }
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categories-scroll');
+            container.innerHTML = state.categories.map(c => `
+                <button onclick="filterCat('${c}')" class="cat-chip cyber-border ${state.activeCat === c ? 'active' : ''}">
+                    ${c}
+                </button>
+            `).join('');
+        }
+
+        function renderCatalog(data) {
+            const container = document.getElementById('catalog');
+            container.classList.add('scanning');
+            
+            setTimeout(() => {
+                container.innerHTML = data.map(it => `
+                    <div onclick="openModal('${it.name}')" class="neural-card cyber-border p-4 flex items-center gap-5 group">
+                        <div class="relative w-16 h-16 flex-shrink-0">
+                            <img src="${it.img}" class="w-full h-full object-cover rounded-sm grayscale group-hover:grayscale-0 transition-all shadow-[0_0_10px_rgba(0,242,255,0.1)]">
+                            <div class="absolute -bottom-1 -right-1 text-[8px] bg-cyan-500 text-black px-1 font-bold">V.21</div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start">
+                                <span class="text-[8px] text-cyan-500 uppercase tracking-widest mb-1">${it.cat}</span>
+                                <span class="text-[8px] text-gray-500">ID:${Math.floor(Math.random()*999)}</span>
+                            </div>
+                            <h4 class="font-bold text-sm tracking-tight truncate uppercase font-['Orbitron']">${it.name}</h4>
+                            <div class="mt-2 flex items-center justify-between">
+                                <span class="price-tag text-lg">${it.price.toLocaleString()}</span>
+                                <div class="w-2 h-2 rounded-full bg-cyan-500/20 group-hover:bg-cyan-500 transition-all"></div>
+                            </div>
+                        </div>
+                        <div class="scan-line"></div>
+                    </div>
+                `).join('');
+                container.classList.remove('scanning');
+            }, 300);
+            lucide.createIcons();
+        }
+
+        function filterCat(c) {
+            state.activeCat = c;
+            renderCategories();
+            renderCatalog(c === 'ALL' ? state.items : state.items.filter(i => i.cat === c));
+            addLog(`Switching to channel: ${c}`);
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        document.getElementById('search').oninput = (e) => {
+            const val = e.target.value.toLowerCase();
+            const filtered = state.items.filter(i => i.name.toLowerCase().includes(val));
+            renderCatalog(filtered);
+        };
+
+        function openModal(name) {
+            const it = state.items.find(x => x.name === name);
+            state.selected = it;
+            document.getElementById('modal-title').innerText = it.name;
+            document.getElementById('modal-img').src = it.img;
+            document.getElementById('modal-price').innerText = it.price.toLocaleString();
+            document.getElementById('modal-desc').innerText = it.desc || 'No decryption available for this data packet.';
+            document.getElementById('modal').classList.remove('hidden');
+            addLog(`Analyzing packet: ${name}`);
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        function addToCart() {
+            state.cart.push(state.selected);
+            updateCartUI();
+            closeModal();
+            addLog('Data packet synchronized with Bay');
+            tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        function updateCartUI() {
+            const list = document.getElementById('cart-list');
+            const checkout = document.getElementById('cart-checkout');
+            const empty = document.getElementById('cart-empty');
+            const badge = document.getElementById('cart-badge');
+
+            if(state.cart.length > 0) {
+                badge.classList.remove('hidden'); empty.classList.add('hidden'); checkout.classList.remove('hidden');
+                let total = 0;
+                list.innerHTML = state.cart.map((it, i) => {
+                    total += it.price;
+                    return `
+                    <div class="cyber-border p-4 flex items-center gap-4 bg-white/5">
+                        <img src="${it.img}" class="w-10 h-10 object-cover rounded-sm">
+                        <div class="flex-1"><p class="font-bold text-[10px] uppercase font-['Orbitron']">${it.name}</p></div>
+                        <button onclick="state.cart.splice(${i},1);updateCartUI();" class="text-red-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>`;
+                }).join('');
+                document.getElementById('cart-total').innerText = total.toLocaleString();
+            } else {
+                badge.classList.add('hidden'); empty.classList.remove('hidden'); checkout.classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        function startCheckout() {
+            const data = document.getElementById('order-data').value;
+            if(!data) return tg.showAlert("NEURAL LINK ID REQUIRED");
+            addLog('Starting encrypted transfer...');
+            setTimeout(() => {
+                document.getElementById('success-screen').classList.remove('hidden');
+                const orderMsg = `🌌 [NEURAL ORDER 2100]\n👤 FROM: ${tg.initDataUnsafe.user?.username || 'ANON'}\n💰 TOTAL: ${document.getElementById('cart-total').innerText}\n🆔 LINK: ${data}\n📦 PACKETS:\n` + state.cart.map(i => `- ${i.name}`).join('\n');
+                tg.sendData(JSON.stringify({ admin_id: ADMIN_ID, message: orderMsg }));
+                setTimeout(() => tg.close(), 2500);
+            }, 1500);
+        }
+
+        function switchPage(p) {
+            document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+            document.getElementById('page-' + p).classList.add('active');
+            document.querySelectorAll('nav button').forEach(b => b.classList.replace('text-cyan-400', 'text-gray-500'));
+            document.getElementById('nav-' + p).classList.replace('text-gray-500', 'text-cyan-400');
+            addLog(`Navigating to: ${p.toUpperCase()}`);
+            tg.HapticFeedback.impactOccurred('light');
+            window.scrollTo(0,0);
+        }
+    </script>
+</body>
+</html>
