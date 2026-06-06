@@ -248,45 +248,110 @@
         "Тайный хейтер", "Охотник за Stars", "Элитный спамер", "Крипто-инвестор (без баланса)",
         "Гиперактивный юзер", "Читатель каналов", "Мемный эксперт", "Админ тиктока"
     ];
+    // СТАБИЛЬНЫЙ ГЕНЕРАТОР КОЛЕБАНИЙ КУРСА
+function getDailyPrice(id) {
+    const today = new Date();
+    const yesterday = new Date(Date.now() - 86400000);
+
+    const todayStr = today.getFullYear() + "-" + (today.getMonth()+1) + "-" + today.getDate();
+    const yesterdayStr = yesterday.getFullYear() + "-" + (yesterday.getMonth()+1) + "-" + yesterday.getDate();
+
+    const getHash = (str) => {
+        let h = 0;
+        for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h << 5) - h);
+        return Math.abs(h);
+    };
+
+    const basePrice = Math.floor((id % 3000) + 800); // Базовая цена от 800 до 3800
+    const todayDelta = (getHash(id + todayStr) % 700) - 350; // Колебание от -350 до +350
+    const yesterdayDelta = (getHash(id + yesterdayStr) % 700) - 350;
+
+    const todayPrice = basePrice + todayDelta;
+    const yesterdayPrice = basePrice + yesterdayDelta;
+
+    return { todayPrice, yesterdayPrice, difference: todayPrice - yesterdayPrice };
+}
 
     function renderCard(user) {
         const id = Number(user.id);
+                   const id = Number(user.id);
         const tgData = getTelegramAge(id);
 
-        // Стабильная генерация на основе ID
-        let value = Math.floor((id % 6500) + 350); 
-        let aura = Math.floor((id % 12000) + 500);  
-        let toxicity = id % 100;                    
-        let psycho = psychoTypes[id % psychoTypes.length];
+        // 1. Определение СТИХИИ и её визуальных стилей
+        const elements = [
+            { name: "Огонь", textClass: "text-orange-500 shadow-orange-500/20", borderClass: "border-orange-500/40", glow: "rgba(249, 115, 22, 0.2)" },
+            { name: "Вода", textClass: "text-blue-400 shadow-blue-500/20", borderClass: "border-blue-500/40", glow: "rgba(96, 165, 250, 0.2)" },
+            { name: "Воздух", textClass: "text-zinc-300 shadow-white/10", borderClass: "border-zinc-500/30", glow: "rgba(255, 255, 255, 0.1)" },
+            { name: "Земля", textClass: "text-emerald-500 shadow-emerald-500/20", borderClass: "border-emerald-500/40", glow: "rgba(16, 185, 129, 0.2)" },
+            { name: "Пустота", textClass: "text-purple-500 shadow-purple-500/20", borderClass: "border-purple-500/40", glow: "rgba(168, 85, 247, 0.2)" },
+            { name: "Эфир", textClass: "text-cyan-400 shadow-cyan-500/20", borderClass: "border-cyan-500/40", glow: "rgba(34, 211, 238, 0.2)" }
+        ];
+        const el = elements[id % elements.length];
 
-        // Пасхалка для Павла Дурова
-        if (user.username?.toLowerCase() === 'durov' || id === 2) {
-            tgData.rank = "БОГ TG";
-            tgData.regYear = 2013;
-            tgData.age = new Date().getFullYear() - 2013;
-            value = 9999999;
-            aura = 999999;
-            toxicity = 0;
-            psycho = "Создатель Всея Руси";
+        // Применяем неоновое свечение рамки карточки и её фона
+        const card = document.getElementById('card-container');
+        if (card) {
+            card.style.boxShadow = `0 0 30px ${el.glow}`;
+            card.className = `bg-zinc-950/90 border-2 ${el.borderClass} rounded-[32px] p-5 transition-all duration-500 relative overflow-hidden my-auto max-w-sm mx-auto w-full`;
+        }
+        
+        const avBorder = document.getElementById('avatar-border');
+        if (avBorder) {
+            avBorder.className = `w-16 h-16 rounded-full border-2 ${el.borderClass} overflow-hidden bg-zinc-900 flex items-center justify-center transition-all duration-500`;
+        }
+        
+        const gBg1 = document.getElementById('glow-bg-1');
+        const gBg2 = document.getElementById('glow-bg-2');
+        if (gBg1) gBg1.style.backgroundColor = el.glow;
+        if (gBg2) gBg2.style.backgroundColor = el.glow;
+
+        const statEl = document.getElementById('stat-element');
+        if (statEl) {
+            statEl.innerText = el.name;
+            statEl.className = `font-black uppercase tracking-wider ${el.textClass}`;
         }
 
-        // Заполнение UI
+        // 2. СИНЯЯ ГАЛОЧКА
+        const verified = document.getElementById('verified-badge');
+        if (verified) {
+            if (user.is_premium || tgData.rank === "ЛЕГЕНДА" || tgData.rank === "ДРЕВНИЙ") {
+                              verified.classList.remove('hidden');
+            } else {
+                verified.classList.add('hidden');
+            }
+        }
+
+        // 3. РАСЧЕТ ДИНАМИКИ ЦЕНЫ
+        const priceData = getDailyPrice(id);
+        document.getElementById('stat-value').innerText = `${priceData.todayPrice.toLocaleString()} ⭐️`;
+        
+        const changeEl = document.getElementById('stat-price-change');
+        if (changeEl) {
+            const percentChange = ((priceData.difference / priceData.yesterdayPrice) * 100).toFixed(1);
+            if (priceData.difference >= 0) {
+                changeEl.innerText = `▲ +${priceData.difference} ⭐️ (+${percentChange}%)`;
+                changeEl.className = "text-[9px] font-bold mt-0.5 text-emerald-400";
+            } else {
+                changeEl.innerText = `▼ ${priceData.difference} ⭐️ (${percentChange}%)`;
+                changeEl.className = "text-[9px] font-bold mt-0.5 text-rose-500";
+            }
+        }
+
+        // Обычная статистика
+        const psychoTypes = ["Скрытый миллионер", "Душнила в чатах", "Любитель голосовых", "Призрак сети", "Мемный эксперт"];
         document.getElementById('user-name').innerText = user.username ? `@${user.username}` : user.first_name;
-                document.getElementById('user-rank').innerText = tgData.rank;
+        document.getElementById('user-rank').innerText = tgData.rank;
         document.getElementById('stat-id').innerText = id;
-        document.getElementById('stat-year').innerText = `~ ${tgData.regYear} год`;
+        document.getElementById('stat-year').innerText = `~ ${tgData.year} год`;
         document.getElementById('stat-age').innerText = `${tgData.age} ${getYearWord(tgData.age)}`;
-        document.getElementById('stat-premium').innerText = user.is_premium ? "АКТИВЕН" : "ОТСУТСТВУЕТ";
-        document.getElementById('stat-premium').className = user.is_premium ? "font-bold text-indigo-400" : "font-bold text-zinc-500";
-
-        // Новые хайп поля
-        document.getElementById('stat-value').innerText = `${value.toLocaleString()} ⭐️`;
-        document.getElementById('stat-status').innerText = psycho;
-        document.getElementById('stat-aura').innerText = `+${aura.toLocaleString()} XP`;
-        document.getElementById('stat-toxic-pct').innerText = `${toxicity}%`;
-        document.getElementById('stat-toxic-bar').style.width = `${toxicity}%`;
-        document.getElementById('stat-popular').innerText = `${Math.min(99, Math.max(5, id % 100))}%`;
-
+        document.getElementById('stat-status').innerText = psychoTypes[id % psychoTypes.length];
+        document.getElementById('stat-aura').innerText = `+${((id % 12000) + 100).toLocaleString()} XP`;
+        
+        const toxic = id % 100;
+        document.getElementById('stat-toxic-pct').innerText = `${toxic}%`;
+        document.getElementById('stat-toxic-bar').style.width = `${toxic}%`;
+        document.getElementById('stat-popular').innerText = `${(id % 95) + 4}%`;
+        
         // Отрисовка аватарки
         const avatarImg = document.getElementById('user-avatar');
         const fallback = document.getElementById('avatar-fallback');
@@ -398,5 +463,5 @@
     }
 </script>
         
-</body>
+</body> 
 </html>
