@@ -73,22 +73,25 @@
                         <span class="text-zinc-500">Premium Статус:</span>
                         <span id="stat-premium" class="font-bold text-zinc-500">ОТСУТСТВУЕТ</span>
                     </div>
+<!-- НОВАЯ СТАТИСТИКА -->
+<div class="w-full h-[1px] bg-zinc-900/60 my-2"></div>
 
-                    <!-- НОВАЯ СТАТИСТИКА -->
-                    <div class="w-full h-[1px] bg-zinc-900/60 my-2"></div>
+<div class="flex justify-between items-center text-[11px]">
+    <span class="text-zinc-500">Всего подарков в профиле:</span>
+    <span id="stat-gifts" class="font-bold text-indigo-400">0 шт.</span>
+</div>
 
-                    <div class="flex justify-between items-center text-[11px]">
-                                              <span class="text-zinc-500">Получено подарков в профиль:</span>
-                        <span id="stat-gifts" class="font-bold text-indigo-400">0 шт.</span>
-                    </div>
-                    <div class="flex justify-between items-center text-[11px]">
-                        <span class="text-zinc-500 font-medium">Главный даритель:</span>
-                        <span id="stat-top-sender" class="font-bold text-purple-400">Никто</span>
-                    </div>
-                    <div class="flex justify-between items-center text-[11px]">
-                        <span class="text-zinc-500">Индекс популярности:</span>
-                        <span id="stat-popular" class="font-bold text-emerald-400">12%</span>
-                    </div>
+<div class="flex flex-col gap-1 text-[11px] mt-2 pt-2 border-t border-zinc-900/40">
+    <span class="text-zinc-500 block mb-1">Список последних отправителей:</span>
+    <div id="senders-list" class="space-y-1 pl-1">
+        <!-- Сюда JS вставит реальные кликабельные ссылки -->
+    </div>
+</div>
+
+<div class="flex justify-between items-center text-[11px] mt-2">
+    <span class="text-zinc-500">Индекс популярности:</span>
+    <span id="stat-popular" class="font-bold text-emerald-400">12%</span>
+</div>
                 </div>
             </div>
         </div>
@@ -155,24 +158,12 @@
             const currentYear = new Date().getFullYear();
             const age = currentYear - regYear;
 
-            // --- ХИТРЫЙ ГЕНЕРАТОР ПОДАРКОВ И ДАРИТЕЛЕЙ НА ОСНОВЕ ID ПОЛЬЗОВАТЕЛЯ ---
-            // Благодаря этой формуле у nmproda ВСЕГДА будет одно и то же число подарков, 
-            // которое выглядит абсолютно реально!
-            const seed = id % 100;
-            const giftsCount = Math.floor((id % 35) + (user.is_premium ? 10 : 0));
-            
-            // Список возможных дарителей
-            const potentialSenders = [
-                "masha_love", "danya_prod", "boss_platform", "ton_king", "secret_fan", 
-                "anon_392", "kristina_sweet", "tg_star_sender", "vlad_crypto", "angel_666"
-            ];
-            const senderIndex = id % potentialSenders.length;
-            const topSender = giftsCount > 0 ? `@${potentialSenders[senderIndex]}` : "Отсутствует";
+                           // --- ГЕНЕРАТОР ПОДАРКОВ И ДАРИТЕЛЕЙ ---
+            const giftsCount = Math.floor((id % 15) + 3); 
+            const popularityIndex = Math.min(99, Math.max(5, Math.floor((id % 85) + 10)));
+            const potentialSenders = ["durov", "ton_king", "vlad_crypto", "secret_fan", "masha_love", "angel_666"];
 
-            // Индекс популярности (от 5% до 99%)
-            const popularityIndex = Math.min(99, Math.max(5, Math.floor((id % 85) + (user.is_premium ? 15 : 5))));
-
-            // Заполнение UI
+            // Заполнение основных данных
             document.getElementById('user-name').innerText = user.username ? `@${user.username}` : user.first_name;
             document.getElementById('user-rank').innerText = rank;
             document.getElementById('stat-id').innerText = id;
@@ -180,12 +171,26 @@
             document.getElementById('stat-age').innerText = `${age} ${getYearWord(age)}`;
             document.getElementById('stat-premium').innerText = user.is_premium ? "АКТИВЕН" : "ОТСУТСТВУЕТ";
             document.getElementById('stat-premium').className = user.is_premium ? "font-bold text-indigo-400" : "font-bold text-zinc-500";
-
-            // Выводим новые параметры
+            
             document.getElementById('stat-gifts').innerText = `${giftsCount} шт.`;
-            document.getElementById('stat-top-sender').innerText = topSender;
             document.getElementById('stat-popular').innerText = `${popularityIndex}%`;
 
+            // Создаем список отправителей
+            const sendersListDiv = document.getElementById('senders-list');
+            sendersListDiv.innerHTML = ''; 
+
+            for (let i = 0; i < 3; i++) {
+                const senderIndex = (id + i * 3) % potentialSenders.length;
+                const sName = potentialSenders[senderIndex];
+                const gType = (i % 2 === 0) ? "⭐️ Premium" : "🎁 Gift";
+
+                sendersListDiv.innerHTML += `
+                    <div class="flex justify-between items-center text-[10px] mb-1">
+                        <a href="https://t.me/${sName}" target="_blank" class="text-purple-400 hover:underline font-bold">@${sName}</a>
+                        <span class="text-zinc-600 text-[9px]">${gType}</span>
+                    </div>`;
+            }
+            
             if (user.photo_url) {
                 document.getElementById('user-avatar').src = user.photo_url;
                 document.getElementById('user-avatar').classList.remove('hidden');
@@ -193,6 +198,7 @@
             }
         }
 
+      
         function getYearWord(age) {
             if (age === 1) return "год";
             if (age > 1 && age < 5) return "года";
