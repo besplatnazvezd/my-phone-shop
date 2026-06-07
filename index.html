@@ -111,8 +111,8 @@
 
         <!-- Кнопки -->
         <div class="w-full max-w-sm mx-auto px-2 space-y-2.5 pb-4">
-            <button id="btn-compat" onclick="checkCompatibility()" class="hidden w-full bg-gradient-to-r from-pink-600 to-rose-600 text-white py-4 rounded-[22px] text-[10px] cyber-font font-bold uppercase tracking-widest shadow-lg shadow-rose-500/20">
-                ❤️ Совместимость
+            <button id="btn-compat" onclick="startPvP()" class="hidden w-full bg-gradient-to-r from-red-600 to-indigo-600 hover:from-red-700 hover:to-indigo-700 text-white py-4 rounded-[22px] text-[10px] cyber-font font-bold uppercase tracking-widest transition-all shadow-lg shadow-red-500/10 active:scale-98">
+    ⚔️ Вызвать на дуэль
             </button>
             <button onclick="shareResult()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-[22px] text-[10px] cyber-font font-bold uppercase tracking-widest transition-all">
                 Поделиться результатом
@@ -280,16 +280,245 @@
             startAnalysis({ id: fakeId, first_name: clean, username: clean, is_premium: hash % 3 === 0 }, false);
         }
 
-        function checkCompatibility() {
-            const p = ((myUser.id + currentViewedUser.id) % 95) + 5;
-            alert(`❤️ Совместимость с @${currentViewedUser.username}: ${p}%`);
+               // ВСПЛЫВАЮЩИЕ БОЕВЫЕ ТЕКСТЫ
+        function showCombatText(text) {
+            const combatEl = document.getElementById('battle-combat-text');
+            if (!combatEl) return;
+            combatEl.innerText = text;
+            combatEl.classList.remove('hidden');
+            setTimeout(() => combatEl.classList.add('hidden'), 1000);
         }
+
+        // КНОПКА ЗАКРЫТИЯ БИТВЫ
+        function closeBattle() {
+            document.getElementById('battle-screen').classList.add('hidden');
+            document.getElementById('battle-result-modal').classList.add('hidden');
+        }
+
+        // ЗАПУСК БИТВЫ (PVP)
+        async function startPvP() {
+            if (!currentViewedUser || currentViewedUser.id === myUser.id) return;
+
+            // Открываем экран боя
+            document.getElementById('battle-screen').classList.remove('hidden');
+            document.getElementById('battle-result-modal').classList.add('hidden');
+
+            const p1 = myUser; // Игрок 1 (Ты)
+            const p2 = currentViewedUser; // Игрок 2 (Оппонент)
+
+            // Заполнение аватарок и имен
+            document.getElementById('p1-name').innerText = p1.username ? `@${p1.username}` : p1.first_name;
+            document.getElementById('p2-name').innerText = p2.username ? `@${p2.username}` : p2.first_name;
+
+            const p1Img = document.getElementById('p1-avatar');
+            const p1Fall = document.getElementById('p1-fallback');
+            if (p1.photo_url) {
+                p1Img.src = p1.photo_url; p1Img.classList.remove('hidden'); p1Fall.classList.add('hidden');
+            } else {
+                p1Img.classList.add('hidden'); p1Fall.classList.remove('hidden');
+                p1Fall.innerText = (p1.username || p1.first_name || "U").substring(0,2).toUpperCase();
+            }
+
+            const p2Img = document.getElementById('p2-avatar');
+            const p2Fall = document.getElementById('p2-fallback');
+            if (p2.photo_url) {
+                p2Img.src = p2.photo_url; p2Img.classList.remove('hidden'); p2Fall.classList.add('hidden');
+            } else {
+                p2Img.classList.add('hidden'); p2Fall.classList.remove('hidden');
+                p2Fall.innerText = (p2.username || p2.first_name || "U").substring(0,2).toUpperCase();
+            }
+
+            // Математика раундов
+            const p1Age = getAge(Number(p1.id));
+            const p2Age = getAge(Number(p2.id));
+            const p1Price = getDailyPrice(Number(p1.id));
+            const p2Price = getDailyPrice(Number(p2.id));
+
+            // Сила стихий: Огонь > Воздух(нет, у нас Огонь>Вода и т.д.)
+            // Упростим: Огонь побеждает Воду, Вода тушит Эфир, Эфир сжимает Пустоту, Пустота гасит Огонь
+            const elements = ["Огонь", "Вода", "Эфир", "Пустота"];
+            const p1El = elements[Number(p1.id) % elements.length];
+            const p2El = elements[Number(p2.id) % elements.length];
+
+            let p1Score = 0;
+            let p2Score = 0;
+
+            const log = document.getElementById('battle-log');
+            const p1Bar = document.getElementById('p1-score-bar');
+            const p2Bar = document.getElementById('p2-score-bar');
+
+            // Сброс очков на экране
+            p1Bar.innerText = "Очки: 0";
+            p2Bar.innerText = "Очки: 0";
+
+            const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+            // РАУНД 1: Стаж аккаунта
+            log.innerText = "Раунд 1: Сравниваем возраст аккаунтов...";
+            await sleep(1500);
+            if (p1Age.year < p2Age.year) {
+                p1Score++; showCombatText("ДРЕВНИЙ УДАР!");
+                log.innerText = `У аккаунта ${p1.first_name} стаж больше! (+1)`;
+            } else if (p2Age.year < p1Age.year) {
+                p2Score++; showCombatText("ОТВЕТНЫЙ УДАР!");
+                log.innerText = `Аккаунт ${p2.first_name} старше! (+1)`;
+            } else {
+                log.innerText = "Ничья по возрасту аккаунтов!";
+            }
+            p1Bar.innerText = `Очки: ${p1Score}`; p2Bar.innerText = `Очки: ${p2Score}`;
+
+            // РАУНД 2: Оценка стоимости
+            await sleep(1800);
+            log.innerText = "Раунд 2: Битва кошельков. Чей аккаунт дороже?";
+            await sleep(1500);
+            if (p1Price.price > p2Price.price) {
+                p1Score++; showCombatText("КРИТИЧЕСКИЙ КУРС!");
+                log.innerText = `${p1.first_name} бьет монетой! (+1)`;
+            } else {
+                p2Score++; showCombatText("ФИНАНСОВЫЙ БЛОК!");
+                log.innerText = `${p2.first_name} оказался дороже! (+1)`;
+            }
+            p1Bar.innerText = `Очки: ${p1Score}`; p2Bar.innerText = `Очки: ${p2Score}`;
+
+            // РАУНД 3: Бонус Стихии
+            await sleep(1800);
+            log.innerText = `Раунд 3: Столкновение стихий! ${p1El} VS ${p2El}`;
+            await sleep(1500);
+            
+            let elementWinner = 0; // 1 = p1, 2 = p2
+            if ((p1El === "Огонь" && p2El === "Вода") || (p1El === "Вода" && p2El === "Эфир") || (p1El === "Эфир" && p2El === "Пустота") || (p1El === "Пустота" && p2El === "Огонь")) {
+                p1Score++; elementWinner = 1;
+                showCombatText("ПРЕВОСХОДСТВО!");
+                log.innerText = `Стихия ${p1El} доминирует над ${p2El}! (+1)`;
+            } else if (p1El !== p2El) {
+                p2Score++; elementWinner = 2;
+                showCombatText("СТИХИЙНЫЙ УРОН!");
+                log.innerText = `Стихия ${p2El} поглотила ${p1El}! (+1)`;
+            } else {
+                log.innerText = "Стихии одинаковы! Энергия поглощена!";
+            }
+            p1Bar.innerText = `Очки: ${p1Score}`; p2Bar.innerText = `Очки: ${p2Score}`;
+
+            // РАУНД 4: Синяя Галочка (Бонус тщеславия)
+            await sleep(1800);
+            log.innerText = "Раунд 4: Проверка верификации...";
+            await sleep(1200);
+            if ((p1.is_premium || p1Age.year < 2016) && !(p2.is_premium || p2Age.year < 2016)) {
+                p1Score += 2; showCombatText("БОЖЕСТВЕННЫЙ РАНГ!");
+                log.innerText = `У тебя есть СИНЯЯ ГАЛОЧКА! Наносим двойной урон! (+2)`;
+            } else if (!(p1.is_premium || p1Age.year < 2016) && (p2.is_premium || p2Age.year < 2016)) {
+                p2Score += 2; showCombatText("УДАР СВЕРХУ!");
+                log.innerText = `У соперника синяя галочка! Получаем по башке! (+2)`;
+            } else {
+                log.innerText = "Ни у кого нет преимущества по галочкам!";
+            }
+            p1Bar.innerText = `Очки: ${p1Score}`; p2Bar.innerText = `Очки: ${p2Score}`;
+
+            // ФИНАЛИЗАЦИЯ (Победитель)
+            await sleep(2000);
+            const winModal = document.getElementById('battle-result-modal');
+            const winText = document.getElementById('battle-winner-text');
+            const winTitle = document.getElementById('battle-winner-title');
+
+            const p1NameClean = p1.username ? `@${p1.username}` : p1.first_name;
+            const p2NameClean = p2.username ? `@${p2.username}` : p2.first_name;
+
+            const loserTitles = ["Бюджетный юзер", "Скрытый бот", "Душный новичок", "Жертва спама", "Тайный хейтер"];
+            const winnerTitles = ["Доминатор Групповых Чатов", "Крипто-Лорд", "Легенда Блокчейна", "Абсолютный Босс", "Гроза спамеров"];
+
+            const randomLoserTitle = loserTitles[Math.floor(Math.random() * loserTitles.length)];
+            const randomWinnerTitle = winnerTitles[Math.floor(Math.random() * winnerTitles.length)];
+
+            if (p1Score > p2Score) {
+                winText.innerText = `${p1NameClean} РАЗДОЛБАЛ ${p2NameClean} в пух и прах!`;
+                winTitle.innerText = randomWinnerTitle;
+                winTitle.className = "text-[9px] cyber-font bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full mt-3 uppercase tracking-widest font-black";
+            } else if (p2Score > p1Score) {
+                winText.innerText = `${p2NameClean} ОДОЛЕЛ ${p1NameClean}!`;
+                winTitle.innerText = `Твой ранг: ${randomLoserTitle}`;
+                winTitle.className = "text-[9px] cyber-font bg-red-500/20 text-red-400 px-3 py-1 rounded-full mt-3 uppercase tracking-widest font-black";
+            } else {
+                winText.innerText = `БОЕВАЯ НИЧЬЯ МЕЖДУ ${p1NameClean} и ${p2NameClean}!`;
+                winTitle.innerText = "Равные Силы";
+                winTitle.className = "text-[9px] cyber-font bg-zinc-500/20 text-zinc-400 px-3 py-1 rounded-full mt-3 uppercase tracking-widest font-black";
+            }
+
+            winModal.classList.remove('hidden');
+        }
+
+        // КНОПКА «ПОЗОР НА ВЕСЬ ЧАТ»
+        function shareBattleResult() {
+            const winText = document.getElementById('battle-winner-text').innerText;
+            const title = document.getElementById('battle-winner-title').innerText;
+            const text = `⚔️ ${winText}\n🏆 Статус боя: ${title}\n\nВызови меня на дуэль и проверь свой профиль в боте! 👇`;
+            tg.openTelegramLink(`https://t.me/share/url?url=https://t.me/Boss_storesvzbot&text=${encodeURIComponent(text)}`);
+                                                                       }
 
         function shareResult() {
             const text = `💎 Мой аккаунт оценили в ${document.getElementById('stat-value').innerText}! Узнай свою стоимость в боте:`;
             tg.openTelegramLink(`https://t.me/share/url?url=https://t.me/Boss_storesvzbot&text=${encodeURIComponent(text)}`);
         }
     </script>
+        <!-- ЭКРАН БИТВЫ (PVP) -->
+    <div id="battle-screen" class="hidden fixed inset-0 z-50 bg-[#050505] flex flex-col justify-between overflow-hidden p-4 animate-fade">
+        
+        <!-- Верхний игрок (ТЫ) -->
+        <div class="h-[38%] flex flex-col items-center justify-center relative border-b border-zinc-900/50 bg-gradient-to-b from-indigo-950/20 to-transparent rounded-t-[40px] p-4">
+            <div id="p1-element-bg" class="absolute inset-0 opacity-10 blur-3xl transition-all duration-500"></div>
+            <div id="p1-avatar-border" class="w-16 h-16 rounded-full border-2 border-indigo-500/50 p-0.5 relative z-10 glow-transition">
+                <div class="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-zinc-800">
+                    <img id="p1-avatar" src="" class="w-full h-full object-cover hidden">
+                    <span id="p1-fallback" class="cyber-font text-xl font-bold">P1</span>
+                </div>
+            </div>
+            <h3 id="p1-name" class="text-sm font-black mt-2 relative z-10 text-indigo-400">@Player1</h3>
+            <span id="p1-score-bar" class="text-[10px] cyber-font text-zinc-500 mt-1 font-bold relative z-10 uppercase tracking-widest">Очки: 0</span>
+        </div>
+
+        <!-- Центральный разделитель (VS и Логи боя) -->
+        <div class="h-[24%] flex flex-col items-center justify-center relative z-20 px-4">
+            <!-- Neon VS -->
+            <div class="bg-[#030303] border-2 border-red-500 text-red-500 font-black cyber-font text-xs px-5 py-2 rounded-full shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-pulse">
+                VS
+            </div>
+            
+            <!-- Консоль логов боя -->
+            <div class="w-full max-w-xs bg-zinc-950/90 border border-zinc-900 rounded-2xl p-3 text-center h-20 flex flex-col justify-center items-center mt-3 shadow-inner">
+                <p id="battle-log" class="text-[9px] text-zinc-400 font-semibold uppercase tracking-wider">Ожидание игроков...</p>
+                <p id="battle-combat-text" class="text-[11px] text-red-500 font-extrabold cyber-font mt-1 tracking-widest uppercase hidden animate-bounce">CRITICAL HIT!</p>
+            </div>
+        </div>
+
+        <!-- Нижний игрок (ОППОНЕНТ) -->
+        <div class="h-[38%] flex flex-col items-center justify-center relative border-t border-zinc-900/50 bg-gradient-to-t from-rose-950/20 to-transparent rounded-b-[40px] p-4">
+                       <div id="p2-element-bg" class="absolute inset-0 opacity-10 blur-3xl transition-all duration-500"></div>
+            <div id="p2-avatar-border" class="w-16 h-16 rounded-full border-2 border-rose-500/50 p-0.5 relative z-10 glow-transition">
+                <div class="w-full h-full rounded-full overflow-hidden flex items-center justify-center bg-zinc-800">
+                    <img id="p2-avatar" src="" class="w-full h-full object-cover hidden">
+                    <span id="p2-fallback" class="cyber-font text-xl font-bold">P2</span>
+                </div>
+            </div>
+            <h3 id="p2-name" class="text-sm font-black mt-2 relative z-10 text-rose-400">@Player2</h3>
+            <span id="p2-score-bar" class="text-[10px] cyber-font text-zinc-500 mt-1 font-bold relative z-10 uppercase tracking-widest">Очки: 0</span>
+        </div>
+
+        <!-- Окно результатов (FATALITY) -->
+        <div id="battle-result-modal" class="hidden fixed inset-0 z-50 bg-[#030303]/95 flex flex-col items-center justify-center p-6 animate-fade">
+            <h2 class="cyber-font text-3xl font-black tracking-[0.2em] text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]">FATALITY</h2>
+            <p id="battle-winner-text" class="text-sm font-extrabold mt-4 text-center text-zinc-300">@Player1 РАЗДОЛБАЛ @Player2</p>
+            <p id="battle-winner-title" class="text-[9px] cyber-font bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-full mt-3 uppercase tracking-widest font-black">Доминатор Групповых Чатов</p>
+            
+            <div class="w-full max-w-xs space-y-3 mt-10">
+                <button onclick="shareBattleResult()" class="w-full bg-gradient-to-r from-red-600 to-amber-600 text-white py-4 rounded-2xl text-[10px] cyber-font font-black uppercase tracking-widest shadow-lg shadow-red-600/30 active:scale-95 transition-all">
+                    🔥 Позор на весь чат
+                </button>
+                <button onclick="closeBattle()" class="w-full bg-zinc-900 border border-zinc-800 text-zinc-400 py-3.5 rounded-2xl text-[10px] cyber-font font-bold uppercase tracking-wider">
+                    Вернуться назад
+                </button>
+            </div>
+        </div>
+    </div>
+    
 </body>
 </html>
               
