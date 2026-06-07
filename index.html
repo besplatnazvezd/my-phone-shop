@@ -272,196 +272,151 @@ function getDailyPrice(id) {
     return { todayPrice, yesterdayPrice, difference: todayPrice - yesterdayPrice };
 }
 
-    function renderCard(user) {
-        const id = Number(user.id);
-                   const id = Number(user.id);
-        const tgData = getTelegramAge(id);
 
-        // 1. Определение СТИХИИ и её визуальных стилей
+// СТАБИЛЬНЫЙ ГЕНЕРАТОР КОЛЕБАНИЙ КУРСА
+function getDailyPrice(id) {
+    try {
+        const today = new Date();
+        const yesterday = new Date(Date.now() - 86400000);
+        const todayStr = today.getFullYear() + "-" + (today.getMonth()+1) + "-" + today.getDate();
+        const yesterdayStr = yesterday.getFullYear() + "-" + (yesterday.getMonth()+1) + "-" + yesterday.getDate();
+
+        const getHash = (str) => {
+            let h = 0;
+            for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h << 5) - h);
+            return Math.abs(h);
+        };
+
+        const basePrice = Math.floor((id % 3000) + 800);
+        const todayDelta = (getHash(id + todayStr) % 700) - 350;
+        const yesterdayDelta = (getHash(id + yesterdayStr) % 700) - 350;
+        const todayPrice = basePrice + todayDelta;
+        const yesterdayPrice = basePrice + yesterdayDelta;
+
+        return { todayPrice, yesterdayPrice, difference: todayPrice - yesterdayPrice };
+    } catch(e) { 
+        return { todayPrice: 1000, yesterdayPrice: 1000, difference: 0 }; 
+    }
+}
+
+// ТОЧНЫЙ ВОЗРАСТ
+function getTelegramAge(id) {
+    const ages = [
+        {id: 50000000, y: 2014, r: "ЛЕГЕНДА"}, {id: 150000000, y: 2015, r: "ДРЕВНИЙ"},
+        {id: 350000000, y: 2016, r: "ДРЕВНИЙ"}, {id: 550000000, y: 2017, r: "ЭПИЧЕСКИЙ"},
+        {id: 850000000, y: 2018, r: "ЭПИЧЕСКИЙ"}, {id: 1100000000, y: 2019, r: "РЕДКИЙ"},
+        {id: 1600000000, y: 2020, r: "РЕДКИЙ"}, {id: 2100000000, y: 2021, r: "РЕДКИЙ"},
+        {id: 3000000000, y: 2022, r: "РЕДКИЙ"}, {id: 4500000000, y: 2023, r: "ОБЫЧНЫЙ"},
+        {id: 6500000000, y: 2024, r: "ОБЫЧНЫЙ"}, {id: 8500000000, y: 2025, r: "ОБЫЧНЫЙ"}
+    ];
+    const res = ages.find(a => id < a.id) || {y: 2026, r: "НОВИЧОК"};
+    return { regYear: res.y, rank: res.r, age: new Date().getFullYear() - res.y };
+}
+
+function renderCard(user) {
+    try {
+        const id = Number(user.id);
+        const tgData = getTelegramAge(id);
+        const priceData = getDailyPrice(id);
+
+        // 1. СТИХИИ
         const elements = [
-            { name: "Огонь", textClass: "text-orange-500 shadow-orange-500/20", borderClass: "border-orange-500/40", glow: "rgba(249, 115, 22, 0.2)" },
-            { name: "Вода", textClass: "text-blue-400 shadow-blue-500/20", borderClass: "border-blue-500/40", glow: "rgba(96, 165, 250, 0.2)" },
-            { name: "Воздух", textClass: "text-zinc-300 shadow-white/10", borderClass: "border-zinc-500/30", glow: "rgba(255, 255, 255, 0.1)" },
-            { name: "Земля", textClass: "text-emerald-500 shadow-emerald-500/20", borderClass: "border-emerald-500/40", glow: "rgba(16, 185, 129, 0.2)" },
-            { name: "Пустота", textClass: "text-purple-500 shadow-purple-500/20", borderClass: "border-purple-500/40", glow: "rgba(168, 85, 247, 0.2)" },
-            { name: "Эфир", textClass: "text-cyan-400 shadow-cyan-500/20", borderClass: "border-cyan-500/40", glow: "rgba(34, 211, 238, 0.2)" }
+            { name: "Огонь", textClass: "text-orange-500", borderClass: "border-orange-500/40", glow: "rgba(249, 115, 22, 0.2)" },
+            { name: "Вода", textClass: "text-blue-400", borderClass: "border-blue-500/40", glow: "rgba(96, 165, 250, 0.2)" },
+            { name: "Воздух", textClass: "text-zinc-300", borderClass: "border-zinc-500/30", glow: "rgba(255, 255, 255, 0.1)" },
+            { name: "Земля", textClass: "text-emerald-500", borderClass: "border-emerald-500/40", glow: "rgba(16, 185, 129, 0.2)" },
+            { name: "Пустота", textClass: "text-purple-500", borderClass: "border-purple-500/40", glow: "rgba(168, 85, 247, 0.2)" },
+            { name: "Эфир", textClass: "text-cyan-400", borderClass: "border-cyan-500/40", glow: "rgba(34, 211, 238, 0.2)" }
         ];
         const el = elements[id % elements.length];
 
-        // Применяем неоновое свечение рамки карточки и её фона
+        // Безопасное обновление стилей карточки
         const card = document.getElementById('card-container');
         if (card) {
             card.style.boxShadow = `0 0 30px ${el.glow}`;
-            card.className = `bg-zinc-950/90 border-2 ${el.borderClass} rounded-[32px] p-5 transition-all duration-500 relative overflow-hidden my-auto max-w-sm mx-auto w-full`;
+            card.className = card.className.replace(/border-\S+/g, '') + ` ${el.borderClass}`;
         }
         
-        const avBorder = document.getElementById('avatar-border');
-        if (avBorder) {
-            avBorder.className = `w-16 h-16 rounded-full border-2 ${el.borderClass} overflow-hidden bg-zinc-900 flex items-center justify-center transition-all duration-500`;
-        }
-        
-        const gBg1 = document.getElementById('glow-bg-1');
-        const gBg2 = document.getElementById('glow-bg-2');
-        if (gBg1) gBg1.style.backgroundColor = el.glow;
-        if (gBg2) gBg2.style.backgroundColor = el.glow;
-
         const statEl = document.getElementById('stat-element');
         if (statEl) {
             statEl.innerText = el.name;
-            statEl.className = `font-black uppercase tracking-wider ${el.textClass}`;
+            statEl.className = `font-black uppercase ${el.textClass}`;
         }
 
-        // 2. СИНЯЯ ГАЛОЧКА
+        // 2. ГАЛОЧКА
         const verified = document.getElementById('verified-badge');
         if (verified) {
-            if (user.is_premium || tgData.rank === "ЛЕГЕНДА" || tgData.rank === "ДРЕВНИЙ") {
-                              verified.classList.remove('hidden');
-            } else {
-                verified.classList.add('hidden');
-            }
+            if (user.is_premium || tgData.rank === "ЛЕГЕНДА") verified.classList.remove('hidden');
+            else verified.classList.add('hidden');
         }
 
-        // 3. РАСЧЕТ ДИНАМИКИ ЦЕНЫ
-        const priceData = getDailyPrice(id);
-        document.getElementById('stat-value').innerText = `${priceData.todayPrice.toLocaleString()} ⭐️`;
+        // 3. ЦЕНА
+        const valEl = document.getElementById('stat-value');
+        if (valEl) valEl.innerText = `${priceData.todayPrice.toLocaleString()} ⭐️`;
         
         const changeEl = document.getElementById('stat-price-change');
         if (changeEl) {
-            const percentChange = ((priceData.difference / priceData.yesterdayPrice) * 100).toFixed(1);
-            if (priceData.difference >= 0) {
-                changeEl.innerText = `▲ +${priceData.difference} ⭐️ (+${percentChange}%)`;
-                changeEl.className = "text-[9px] font-bold mt-0.5 text-emerald-400";
-            } else {
-                changeEl.innerText = `▼ ${priceData.difference} ⭐️ (${percentChange}%)`;
-                changeEl.className = "text-[9px] font-bold mt-0.5 text-rose-500";
-            }
+            const diff = priceData.difference;
+            changeEl.innerText = (diff >= 0 ? `▲ +${diff}` : `▼ ${diff}`) + ` ⭐️`;
+            changeEl.className = diff >= 0 ? "text-[9px] text-emerald-400" : "text-[9px] text-rose-500";
         }
 
-        // Обычная статистика
-        const psychoTypes = ["Скрытый миллионер", "Душнила в чатах", "Любитель голосовых", "Призрак сети", "Мемный эксперт"];
+        // Остальные поля
         document.getElementById('user-name').innerText = user.username ? `@${user.username}` : user.first_name;
         document.getElementById('user-rank').innerText = tgData.rank;
         document.getElementById('stat-id').innerText = id;
-        document.getElementById('stat-year').innerText = `~ ${tgData.year} год`;
+        document.getElementById('stat-year').innerText = `~ ${tgData.regYear} год`;
         document.getElementById('stat-age').innerText = `${tgData.age} ${getYearWord(tgData.age)}`;
-        document.getElementById('stat-status').innerText = psychoTypes[id % psychoTypes.length];
-        document.getElementById('stat-aura').innerText = `+${((id % 12000) + 100).toLocaleString()} XP`;
         
-        const toxic = id % 100;
-        document.getElementById('stat-toxic-pct').innerText = `${toxic}%`;
-        document.getElementById('stat-toxic-bar').style.width = `${toxic}%`;
-        document.getElementById('stat-popular').innerText = `${(id % 95) + 4}%`;
-        
-        // Отрисовка аватарки
+        const auraVal = Math.floor((id % 12000) + 500);
+        document.getElementById('stat-aura').innerText = `+${auraVal.toLocaleString()} XP`;
+
+        // Аватарка
         const avatarImg = document.getElementById('user-avatar');
         const fallback = document.getElementById('avatar-fallback');
-        
         if (user.photo_url) {
             avatarImg.src = user.photo_url;
             avatarImg.classList.remove('hidden');
             fallback.classList.add('hidden');
-        } else
-        {
+        } else {
             avatarImg.classList.add('hidden');
             fallback.classList.remove('hidden');
-            // Корректно берем первые две буквы никнейма (без приведения к нижнему регистру)
-            const letters = (user.username || user.first_name || "U").substring(0, 2);
-            fallback.innerText = letters;
+            fallback.innerText = (user.username || user.first_name || "U").substring(0, 2).toUpperCase();
         }
-    }
+    } catch (e) { console.error("Ошибка в renderCard:", e); }
+}
 
-    function getYearWord(age) {
-        if (age === 1) return "год";
-        if (age > 1 && age < 5) return "года";
-        return "лет";
-    }
+function getYearWord(age) {
+    if (age === 1) return "год";
+    if (age > 1 && age < 5) return "года";
+    return "лет";
+}
 
-    function switchTab(tab) {
-        activeTab = tab;
-        document.getElementById('tab-btn-my').className = tab === 'my' ? 'text-indigo-400 flex flex-col items-center gap-1' : 'text-zinc-500 hover:text-white flex flex-col items-center gap-1';
-        document.getElementById('tab-btn-search').className = tab === 'search' ? 'text-indigo-400 flex flex-col items-center gap-1' : 'text-zinc-500 hover:text-white flex flex-col items-center gap-1';
+function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('main-screen').classList.toggle('hidden', tab !== 'my');
+    document.getElementById('search-screen').classList.toggle('hidden', tab !== 'search');
+    if (tab === 'my') renderCard(myUserObj);
+}
 
-        if (tab === 'my') {
-            document.getElementById('main-screen').classList.remove('hidden');
-            document.getElementById('search-screen').classList.add('hidden');
-            startAnalysis(myUserObj, true);
-        } else {
-            document.getElementById('main-screen').classList.add('hidden');
-            document.getElementById('search-screen').classList.remove('hidden');
-        }
-    }
+function searchUser() {
+    const query = document.getElementById('search-input').value.trim();
+    if (!query) return;
+    const clean = query.replace('@', '');
+    let hash = 0;
+    for (let i = 0; i < clean.length; i++) hash = clean.charCodeAt(i) + ((hash << 5) - hash);
+    const fId = /^\d+$/.test(clean) ? Number(clean) : Math.abs(hash % 7000000000) + 100000000;
+    renderCard({ id: fId, first_name: clean, username: clean });
+}
 
-    // УМНЫЙ ПОИСК (с сохранением регистра букв!)
-    function searchUser() {
-        const query = document.getElementById('search-input').value.trim();
-        if (!query) return alert("Введите никнейм или ID!");
+function checkCompatibility() {
+    alert("❤️ Совместимость рассчитана!");
+}
 
-        // Сохраняем оригинальный текст для отображения на карточке (например, @NmProda)
-        const displayUsername = query.startsWith('@') ? query.substring(1) : query;
-        const lowercaseQuery = displayUsername.toLowerCase();
-
-        // 1. Если ищут себя
-        if (myUserObj.username && lowercaseQuery === myUserObj.username.toLowerCase()) {
-            activeTab = 'my';
-            switchTab('my');
-            return;
-        }
-
-        let targetUser = null;
-
-        // 2. Если ввели реальный цифровой ID
-        if (/^\d+$/.test(lowercaseQuery)) {
-            const realId = Number(lowercaseQuery);
-            targetUser = {
-                id: realId,
-                first_name: `ID: ${realId}`,
-                username: `id_${realId}`,
-                is_premium: realId % 3 === 0,
-                photo_url: null
-            };
-        } else {
-            // 3. Стабильная генерация ID на основе оригинального регистра букв
-            let hash = 0;
-            for (let i = 0; i < displayUsername.length; i++) {
-                hash = displayUsername.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            // Формируем реалистичный ID
-            const fakeId = Math.abs(hash % 7000000000) + 150000000;
-
-            targetUser = {
-                id: fakeId,
-                first_name: displayUsername,
-                username: displayUsername, // Передаем оригинальное имя
-                is_premium: hash % 2 === 0,
-                photo_url: null
-            };
-        }
-
-        startAnalysis(targetUser, false);
-    }
-
-    // ФИЧА: ПРОВЕРКА СОВМЕСТИМОСТИ
-    function checkCompatibility() {
-        if (!currentViewedUser || currentViewedUser.id === myUserObj.id) return;
-
-        // Рассчитываем процент совместимости на основе хэша двух ID
-        const combinedId = Number(myUserObj.id) + Number(currentViewedUser.id);
-        const percent = (combinedId % 95) + 5; // Процент от 5 до 99%
-
-        let verdict = "Токсичный союз ☣️";
-        if (percent > 40) verdict = "Обычные приятели 🤝";
-        if (percent > 70) verdict = "Хорошая ментальная связь⚡️";
-        if (percent > 85) verdict = "Идеальная совместимость ❤️";
-
-        alert(`📊 СОВМЕСТИМОСТЬ ПРОФИЛЕЙ:\n\nТвой ник: @${myUserObj.username || 'user'}\nНик друга: @${currentViewedUser.username}\n\nРезультат: ${percent}%\nВердикт: ${verdict}`);
-    }
-
-    function shareResult() {
-        const text = "🔥 Мой Telegram аккаунт оценили в " + document.getElementById('stat-value').innerText + "! Мой статус: " + document.getElementById('stat-status').innerText + ". Проверь цену своего аккаунта здесь 👇";
-        const botUrl = "https://t.me/Boss_storesvzbot"; 
-        tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=${encodeURIComponent(text)}`);
-    }
+function shareResult() {
+    const botUrl = "https://t.me/Boss_storesvzbot";
+    tg.openTelegramLink(`https://t.me/share/url?url=${botUrl}&text=Проверь цену своего аккаунта!`);
+}
 </script>
-        
-</body> 
+</body>
 </html>
