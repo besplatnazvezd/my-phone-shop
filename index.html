@@ -187,12 +187,38 @@
         let myUser = null;
         let currentViewedUser = null;
 
-        window.onload = () => {
-            if (tg) { tg.ready(); tg.expand(); }
+                window.onload = () => {
+            if (tg) { 
+                tg.ready(); 
+                tg.expand(); 
+            }
+            
+            // Твой профиль
             myUser = tg?.initDataUnsafe?.user || { id: 8491563038, first_name: "Boss", username: "boss_user", is_premium: true };
-            startAnalysis(myUser, true);
+
+            // ПРОВЕРКА: Если зашли по ссылке на битву
+            const params = new URLSearchParams(window.location.search);
+            const startParam = tg?.initDataUnsafe?.start_param || params.get('tgWebAppStartParam');
+
+            if (startParam && startParam.startsWith('battle_')) {
+                const opponentId = startParam.replace('battle_', '');
+                // Сначала анализируем себя, потом переходим к битве
+                startAnalysis(myUser, true).then(() => {
+                    // Автоматически ищем того, кто вызвал
+                    searchByTargetId(opponentId);
+                });
+            } else {
+                startAnalysis(myUser, true);
+            }
         };
 
+        // Вспомогательная функция для авто-поиска по ID
+        function searchByTargetId(id) {
+            const fakeUser = { id: id, first_name: "Оппонент", username: "id" + id };
+            currentViewedUser = fakeUser;
+            startPvP(); // Сразу запускаем бой
+        }
+        
         function startAnalysis(user, isMe) {
             currentViewedUser = user;
             document.getElementById('loading-screen').classList.remove('hidden');
@@ -524,11 +550,12 @@
         // КНОПКА «ПОЗОР НА ВЕСЬ ЧАТ»
         function shareBattleResult() {
             const winText = document.getElementById('battle-winner-text').innerText.replace(/\n/g, ' ');
-            const title = document.getElementById('battle-winner-title').innerText;
-            const text = `⚔️ БИТВА В РЕАЛЬНОМ ВРЕМЕНИ:\n🔥 ${winText}\n🏆 Получен статус: ${title}\n\nСразись со мной в дуэли и проверь свой профиль в боте! 👇`;
-            tg.openTelegramLink(`https://t.me/share/url?url=https://t.me/Boss_storesvzbot&text=${encodeURIComponent(text)}`);
+            // Ссылка на бота с параметром твоего ID
+            const battleLink = `https://t.me/Boss_storesvzbot?startapp=battle_${myUser.id}`;
+            const text = `⚔️ БИТВА В РЕАЛЬНОМ ВРЕМЕНИ:\n🔥 ${winText}\n\nВызываю тебя на дуэль! Жми на кнопку, чтобы принять вызов! 👇`;
+            
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(battleLink)}&text=${encodeURIComponent(text)}`);
         }
-
         // ОБЫЧНОЕ ПОДЕЛИТЬСЯ ПРОФИЛЕМ
         function shareResult() {
             const val = document.getElementById('stat-value') ? document.getElementById('stat-value').innerText : "1,157 ⭐️";
